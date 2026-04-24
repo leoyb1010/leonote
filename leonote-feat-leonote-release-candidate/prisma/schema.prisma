@@ -1,0 +1,69 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String      @id @default(cuid())
+  email        String      @unique
+  passwordHash String
+  name         String
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+  notes        Note[]
+  tags         Tag[]
+  dailyNotes   DailyNote[]
+}
+
+model Note {
+  id         String      @id @default(cuid())
+  title      String
+  content    String      @default("")
+  excerpt    String      @default("")
+  isFavorite Boolean     @default(false)
+  isPinned   Boolean     @default(false)
+  isArchived Boolean     @default(false)
+  deletedAt  DateTime?
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
+  userId     String
+  user       User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tags       NoteTag[]
+  dailyNotes DailyNote[]
+}
+
+model Tag {
+  id        String    @id @default(cuid())
+  name      String
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  notes     NoteTag[]
+  createdAt DateTime  @default(now())
+
+  @@unique([name, userId])
+}
+
+model NoteTag {
+  noteId String
+  tagId  String
+  note   Note   @relation(fields: [noteId], references: [id], onDelete: Cascade)
+  tag    Tag    @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([noteId, tagId])
+}
+
+model DailyNote {
+  id        String   @id @default(cuid())
+  date      DateTime
+  noteId    String
+  userId    String
+  note      Note     @relation(fields: [noteId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([date, userId])
+}
