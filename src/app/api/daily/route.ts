@@ -22,32 +22,35 @@ export async function GET() {
   if (!userId) return NextResponse.json({ ok: false, message: "未登录" }, { status: 401 });
 
   const today = startOfDay();
-  let daily = await prisma.dailyNote.findUnique({
-    where: { date_userId: { date: today, userId } },
-    include: { note: { include: { tags: { include: { tag: true } } } } },
+  const title = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")} 每日笔记`;
+
+  const daily = await prisma.$transaction(async (tx) => {
+    const existing = await tx.dailyNote.findUnique({
+      where: { date_userId: { date: today, userId } },
+      include: { note: { include: { project: true, tags: { include: { tag: true } } } } },
+    });
+    if (existing) return existing;
+
+    const note = await tx.note.create({ data: { title, content: "", excerpt: "", userId } });
+    try {
+      return await tx.dailyNote.create({
+        data: { date: today, userId, noteId: note.id },
+        include: { note: { include: { project: true, tags: { include: { tag: true } } } } },
+      });
+    } catch {
+      await tx.note.delete({ where: { id: note.id } }).catch(() => null);
+      return tx.dailyNote.findUniqueOrThrow({
+        where: { date_userId: { date: today, userId } },
+        include: { note: { include: { project: true, tags: { include: { tag: true } } } } },
+      });
+    }
   });
-
-  if (!daily) {
-    const note = await prisma.note.create({
-      data: {
-        title: `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")} 每日笔记`,
-        content: "",
-        excerpt: "",
-        userId,
-      },
-    });
-
-    daily = await prisma.dailyNote.create({
-      data: { date: today, userId, noteId: note.id },
-      include: { note: { include: { tags: { include: { tag: true } } } } },
-    });
-  }
 
   const recent = await prisma.dailyNote.findMany({
     where: { userId },
     orderBy: { date: "desc" },
     take: 7,
-    include: { note: { include: { tags: { include: { tag: true } } } } },
+    include: { note: { include: { project: true, tags: { include: { tag: true } } } } },
   });
 
   return NextResponse.json({

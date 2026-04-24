@@ -33,6 +33,19 @@ Leonote 是一个：
 
 ## 版本更新
 
+### v0.6.0 · 安全修复与产品基线升级（2026-04-24）
+- 修复链接导入 SSRF 风险：限制 http/https、拦截 localhost/私网/metadata 地址、增加 DNS 检查、超时与响应体大小上限
+- 修复 note 绑定 project 的 ownership 校验，不再信任任意 projectId
+- 修复 Daily 首次创建并发问题，降低孤儿 note 和 500 风险
+- 移除 DOCX/PDF“伪支持”，避免导入坏数据
+- 补齐账号管理基础闭环：`/api/auth/me`、`/api/auth/password`、`/api/auth/logout`
+- “我的/个人资料”升级为可查看账号、改昵称、改密码、退出登录
+- 首页改为 server-first 工作台结构：Today / Focus / Recent
+- 项目页推进到 server-first 入口，新增项目详情页 `/projects/[id]`
+- 搜索页升级为搜索 + 筛选，支持项目 / 收藏 / 归档组合筛选
+- 开始建立设计 token：颜色、圆角、阴影、动效时长、easing 收口到 CSS variables
+- 统一通过：`npm run lint`、`npm run typecheck`、`npm run build`
+
 ### v0.5.0 · 仓库整理与产品闭环增强（2026-04-24）
 - 仓库结构提升到根目录，不再多套一层项目文件夹
 - GitHub 默认分支整理为 `main`
@@ -40,7 +53,7 @@ Leonote 是一个：
 - 自动保存改为可开关、默认关闭、记住偏好
 - 手动保存后弹窗返回目录
 - 新增项目一级模块
-- 导入增强到 HTML / DOCX / PDF / 链接
+- 导入增强到 HTML / 链接（移除不可靠的 DOCX/PDF 假支持）
 - 动效与交互质感升级
 
 ### v0.4.0 · 上线前重构（2026-04-24）
@@ -112,8 +125,6 @@ Leonote 是一个：
 - Markdown
 - TXT
 - HTML
-- DOCX
-- PDF
 - 新闻链接 / 网页链接
 
 #### 导出

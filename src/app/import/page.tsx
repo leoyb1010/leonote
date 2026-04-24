@@ -3,19 +3,19 @@ import { ImportExportPanel } from "@/components/import-export-panel";
 
 const items = [
   {
-    title: "导入 Markdown / TXT / HTML / DOCX / PDF",
-    desc: "当前已支持常见文档文本导入；复杂排版会优先保留文本内容。",
+    title: "导入 Markdown / TXT / HTML",
+    desc: "当前已支持常见文本与网页源码导入。",
     status: "已支持",
   },
   {
     title: "新闻链接 / 网页链接采集",
-    desc: "粘贴链接后自动抓取标题、来源和正文摘要，沉淀为资料笔记。",
+    desc: "粘贴链接后自动抓取标题、来源和正文摘要，沉淀为资料笔记；已限制本地/内网地址。",
     status: "已支持",
   },
   {
-    title: "附件系统",
-    desc: "附件上传、预览和管理是下一阶段能力，等这轮导入链路稳定后再决定是否继续。",
-    status: "待评估",
+    title: "DOCX / PDF",
+    desc: "当前版本尚未接入可靠文本抽取，暂不宣称支持，避免导入坏数据。",
+    status: "暂不支持",
   },
 ];
 

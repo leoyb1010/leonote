@@ -1,9 +1,15 @@
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
+import { lookup } from "node:dns/promises";
+import net from "node:net";
 import { z } from "zod";
 import { readSessionValue, SESSION_COOKIE } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { ensureProject, syncNoteTags, toNoteDTO } from "@/lib/server-notes";
+
+const MAX_HTML_BYTES = 512_000;
+const REQUEST_TIMEOUT_MS = 5000;
+const BLOCKED_HOSTS = new Set(["localhost", "127.0.0.1", "0.0.0.0", "::1", "metadata.google.internal"]);
 
 const jsonArraySchema = z.array(z.object({
   title: z.string().min(1),
@@ -13,9 +19,7 @@ const jsonArraySchema = z.array(z.object({
   projectName: z.string().optional(),
 }));
 
-const jsonExportSchema = z.object({
-  notes: jsonArraySchema,
-});
+const jsonExportSchema = z.object({ notes: jsonArraySchema });
 
 async function requireUserId() {
   const cookieStore = await cookies();
@@ -39,6 +43,43 @@ async function createImportedNote(userId: string, data: { title: string; content
   return note.id;
 }
 
+function isBlockedIp(ip: string) {
+  if (net.isIP(ip) === 4) {
+    return ip.startsWith("10.") || ip.startsWith("127.") || ip.startsWith("169.254.") || ip.startsWith("172.16.") || ip.startsWith("172.17.") || ip.startsWith("172.18.") || ip.startsWith("172.19.") || ip.startsWith("172.2") || ip.startsWith("172.30.") || ip.startsWith("172.31.") || ip.startsWith("192.168.");
+  }
+  if (net.isIP(ip) === 6) {
+    const lower = ip.toLowerCase();
+    return lower === "::1" || lower.startsWith("fc") || lower.startsWith("fd") || lower.startsWith("fe80");
+  }
+  return true;
+}
+
+async function assertSafeUrl(raw: string) {
+  const target = new URL(raw);
+  if (!["http:", "https:"].includes(target.protocol)) throw new Error("仅支持 http/https 链接");
+  if (BLOCKED_HOSTS.has(target.hostname.toLowerCase())) throw new Error("不允许访问本地或保留地址");
+  const resolved = await lookup(target.hostname, { all: true });
+  if (!resolved.length || resolved.some((item) => isBlockedIp(item.address))) throw new Error("不允许访问内网或保留地址");
+  return target;
+}
+
+async function fetchLinkSummary(raw: string) {
+  const target = await assertSafeUrl(raw);
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+  try {
+    const res = await fetch(target.toString(), { redirect: "follow", signal: controller.signal, headers: { "User-Agent": "LeonoteBot/1.0" } });
+    if (!res.ok) throw new Error("内容不可访问");
+    const html = (await res.text()).slice(0, MAX_HTML_BYTES);
+    const titleMatch = html.match(/<title[^>]*>([^<]+)<\/title>/i);
+    const title = titleMatch?.[1]?.trim() || target.hostname;
+    const summary = html.replace(/<script[\s\S]*?<\/script>/gi, " ").replace(/<style[\s\S]*?<\/style>/gi, " ").replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim().slice(0, 2000);
+    return { target, title, summary };
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 export async function POST(request: Request) {
   const userId = await requireUserId();
   if (!userId) return NextResponse.json({ ok: false, message: "未登录" }, { status: 401 });
@@ -49,12 +90,7 @@ export async function POST(request: Request) {
 
   if (typeof link === "string" && link.trim()) {
     try {
-      const target = new URL(link.trim());
-      const res = await fetch(target.toString(), { redirect: "follow" });
-      const html = await res.text();
-      const titleMatch = html.match(/<title[^>]*>([^<]+)<\/title>/i);
-      const title = titleMatch?.[1]?.trim() || target.hostname;
-      const summary = html.replace(/<script[\s\S]*?<\/script>/gi, " ").replace(/<style[\s\S]*?<\/style>/gi, " ").replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim().slice(0, 2000);
+      const { target, title, summary } = await fetchLinkSummary(link.trim());
       const note = await prisma.note.create({
         data: {
           title,
@@ -67,8 +103,8 @@ export async function POST(request: Request) {
       await syncNoteTags(note.id, userId, ["导入", "链接", target.hostname]);
       const refreshed = await prisma.note.findUniqueOrThrow({ where: { id: note.id }, include: { project: true, tags: { include: { tag: true } } } });
       return NextResponse.json({ ok: true, note: toNoteDTO(refreshed) });
-    } catch {
-      return NextResponse.json({ ok: false, message: "链接导入失败：链接无效或内容不可访问" }, { status: 400 });
+    } catch (error) {
+      return NextResponse.json({ ok: false, message: error instanceof Error ? `链接导入失败：${error.message}` : "链接导入失败" }, { status: 400 });
     }
   }
 
@@ -76,10 +112,9 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: false, message: "请选择导入文件或填写链接" }, { status: 400 });
   }
 
-  const text = await file.text();
   const lower = file.name.toLowerCase();
-
   if (lower.endsWith(".json")) {
+    const text = await file.text();
     let parsed: z.infer<typeof jsonArraySchema>;
     try {
       const raw = JSON.parse(text);
@@ -87,23 +122,18 @@ export async function POST(request: Request) {
     } catch {
       return NextResponse.json({ ok: false, message: "JSON 导入失败：文件结构不合法" }, { status: 400 });
     }
-
     const createdIds: string[] = [];
     for (const item of parsed) createdIds.push(await createImportedNote(userId, item));
     return NextResponse.json({ ok: true, count: createdIds.length, noteId: createdIds[0] ?? null });
   }
 
-  if (lower.endsWith(".md") || lower.endsWith(".txt") || lower.endsWith(".html") || lower.endsWith(".docx") || lower.endsWith(".pdf")) {
-    const title = file.name.replace(/\.(md|txt|html|docx|pdf)$/i, "") || "导入笔记";
-    const typeTag = lower.endsWith(".md") ? "Markdown" : lower.endsWith(".txt") ? "文本" : lower.endsWith(".html") ? "网页" : lower.endsWith(".docx") ? "Word" : "PDF";
+  if (lower.endsWith(".md") || lower.endsWith(".txt") || lower.endsWith(".html")) {
+    const text = await file.text();
+    const title = file.name.replace(/\.(md|txt|html)$/i, "") || "导入笔记";
+    const typeTag = lower.endsWith(".md") ? "Markdown" : lower.endsWith(".txt") ? "文本" : "网页";
     const content = lower.endsWith(".html") ? text.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim() : text;
     const note = await prisma.note.create({
-      data: {
-        title,
-        content,
-        excerpt: content.trim().slice(0, 120) || "暂无摘要",
-        userId,
-      },
+      data: { title, content, excerpt: content.trim().slice(0, 120) || "暂无摘要", userId },
       include: { project: true, tags: { include: { tag: true } } },
     });
     await syncNoteTags(note.id, userId, ["导入", typeTag]);
@@ -111,5 +141,5 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: true, note: toNoteDTO(refreshed) });
   }
 
-  return NextResponse.json({ ok: false, message: "导入失败：当前支持 JSON / Markdown / TXT / HTML / DOCX / PDF / 链接" }, { status: 400 });
+  return NextResponse.json({ ok: false, message: "导入失败：当前支持 JSON / Markdown / TXT / HTML / 链接" }, { status: 400 });
 }

@@ -1,17 +1,4 @@
-"use client";
-
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
-
-type ApiNote = {
-  id: string;
-  title: string;
-  excerpt: string;
-  tags: string[];
-  updatedAt: string;
-  favorite: boolean;
-  pinned: boolean;
-};
 
 const quickActions = [
   { label: "继续记录", href: "/notes/new" },
@@ -20,48 +7,49 @@ const quickActions = [
   { label: "每日", href: "/daily" },
 ];
 
-export function ServerHomeClient() {
-  const [items, setItems] = useState<ApiNote[]>([]);
-  const [message, setMessage] = useState("正在加载服务端数据…");
+type HomeViewData = {
+  recent: Array<{ id: string; title: string; excerpt: string; tags: string[]; updatedAt: string }>;
+  tags: string[];
+  counts: { favorite: number; pinned: number; total: number };
+  projects: Array<{ id: string; name: string; description: string; noteCount: number; updatedAt: string }>;
+};
 
-  useEffect(() => {
-    fetch("/api/notes?status=active", { cache: "no-store" })
-      .then((res) => res.json().then((data) => ({ ok: res.ok, data })))
-      .then(({ ok, data }) => {
-        if (!ok) {
-          setMessage(data.message || "请先登录");
-          return;
-        }
-        setItems(data.notes || []);
-        setMessage("");
-      })
-      .catch(() => setMessage("加载失败"));
-  }, []);
+export function ServerHomeClient({ data, signedIn }: { data: HomeViewData | null; signedIn: boolean }) {
+  if (!signedIn) {
+    return <section className="glass-panel animate-rise rounded-[28px] p-5 text-sm leading-6 text-[#666]">当前未登录。先去 <Link href="/login" className="font-medium text-[#111] underline underline-offset-4">登录</Link>，再进入你的工作台。</section>;
+  }
 
-  const recent = items.slice(0, 5);
-  const tags = Array.from(new Set(items.flatMap((note) => note.tags))).slice(0, 8);
-  const counts = useMemo(() => ({ favorite: items.filter((n) => n.favorite).length, pinned: items.filter((n) => n.pinned).length, total: items.length }), [items]);
+  if (!data) {
+    return <section className="glass-panel animate-rise rounded-[28px] p-5 text-sm leading-6 text-[#666]">正在准备工作台…</section>;
+  }
 
   return (
     <>
-      <section className="mb-6 rounded-[28px] bg-white p-5 shadow-[0_10px_30px_rgba(0,0,0,0.04)] transition-all duration-300 hover:shadow-[0_16px_40px_rgba(0,0,0,0.06)]">
-        <p className="mb-3 text-sm text-[#666]">继续写</p>
+      <section className="glass-panel animate-rise mb-6 rounded-[28px] p-5 transition-all duration-300 hover:shadow-[0_16px_40px_rgba(0,0,0,0.06)]">
+        <p className="mb-3 text-sm text-[#666]">Today</p>
         <Link href="/notes/new" className="block rounded-2xl bg-[#f7f7f5] p-4 text-sm text-[#666] transition-all duration-200 hover:bg-white hover:shadow-[0_0_0_1px_rgba(17,17,17,0.06)]">现在想记什么？直接开始。</Link>
         <div className="mt-4 grid grid-cols-4 gap-2">{quickActions.map((item) => <Link key={item.label} href={item.href} className="rounded-2xl bg-[#f3f2ef] px-3 py-3 text-center text-xs text-[#333] transition-all duration-200 hover:-translate-y-[1px] hover:bg-[#ebe8e1] active:scale-[0.98]">{item.label}</Link>)}</div>
       </section>
-      {message ? <section className="mb-6 rounded-[24px] bg-white p-4 text-sm text-[#666]">{message}</section> : null}
+
       <section className="mb-6 grid grid-cols-3 gap-3">
-        <div className="rounded-[24px] bg-white p-4 text-center"><div className="text-2xl font-semibold">{counts.total}</div><div className="mt-1 text-xs text-[#777]">最近活跃</div></div>
-        <div className="rounded-[24px] bg-white p-4 text-center"><div className="text-2xl font-semibold">{counts.favorite}</div><div className="mt-1 text-xs text-[#777]">收藏</div></div>
-        <div className="rounded-[24px] bg-white p-4 text-center"><div className="text-2xl font-semibold">{counts.pinned}</div><div className="mt-1 text-xs text-[#777]">置顶</div></div>
+        <div className="glass-panel rounded-[24px] p-4 text-center"><div className="text-2xl font-semibold">{data.counts.total}</div><div className="mt-1 text-xs text-[#777]">最近活跃</div></div>
+        <div className="glass-panel rounded-[24px] p-4 text-center"><div className="text-2xl font-semibold">{data.counts.favorite}</div><div className="mt-1 text-xs text-[#777]">收藏</div></div>
+        <div className="glass-panel rounded-[24px] p-4 text-center"><div className="text-2xl font-semibold">{data.counts.pinned}</div><div className="mt-1 text-xs text-[#777]">置顶</div></div>
       </section>
+
+      <section className="mb-6">
+        <div className="mb-3 flex items-center justify-between"><div className="text-sm font-medium">Focus / 项目推进</div><Link href="/projects" className="text-xs text-[#777]">查看全部</Link></div>
+        <div className="space-y-3">{data.projects.length ? data.projects.map((project) => <Link key={project.id} href={`/notes?projectId=${project.id}`} className="glass-panel block rounded-[24px] p-4 transition-all duration-300 hover:-translate-y-[1px] hover:shadow-[0_14px_32px_rgba(0,0,0,0.06)]"><div className="flex items-center justify-between gap-3"><h3 className="text-sm font-medium text-[#111]">{project.name}</h3><span className="rounded-full bg-[#f3f2ef] px-3 py-1 text-xs text-[#666]">{project.noteCount} 条</span></div><p className="mt-2 text-sm leading-6 text-[#666]">{project.description || "继续推进这个项目的记录与沉淀。"}</p></Link>) : <div className="glass-panel rounded-[24px] p-4 text-sm text-[#666]">还没有项目，去项目页创建第一个项目。</div>}</div>
+      </section>
+
       <section className="mb-6">
         <div className="mb-3 text-sm font-medium">常用标签</div>
-        <div className="flex gap-2 overflow-x-auto pb-1">{(tags.length ? tags : ["暂无标签"]).map((tag, index) => <Link key={tag} href={tag === "暂无标签" ? "/notes" : `/notes?tag=${encodeURIComponent(tag)}`} className={`shrink-0 rounded-full px-4 py-2 text-sm ${index === 0 ? "bg-[#111] text-white" : "border border-[#e7e4de] bg-white text-[#555]"}`}>{tag}</Link>)}</div>
+        <div className="flex gap-2 overflow-x-auto pb-1">{(data.tags.length ? data.tags : ["暂无标签"]).map((tag, index) => <Link key={tag} href={tag === "暂无标签" ? "/notes" : `/notes?tag=${encodeURIComponent(tag)}`} className={`shrink-0 rounded-full px-4 py-2 text-sm ${index === 0 ? "bg-[#111] text-white" : "border border-[#e7e4de] bg-white text-[#555]"}`}>{tag}</Link>)}</div>
       </section>
-      <section className="mb-4 flex items-center justify-between"><h2 className="text-lg font-medium">最近更新</h2><Link className="text-sm text-[#777]" href="/notes">查看全部</Link></section>
-      {recent.length === 0 ? <section className="rounded-[24px] bg-white p-5 text-sm leading-6 text-[#666]">还没有笔记，先创建第一条记录。</section> : null}
-      <section className="space-y-3">{recent.map((note) => <Link key={note.id} href={`/notes/${note.id}`} className="block rounded-[24px] border border-[#e7e4de] bg-white p-4 shadow-[0_8px_24px_rgba(0,0,0,0.03)] transition-all duration-300 hover:-translate-y-[1px] hover:shadow-[0_14px_32px_rgba(0,0,0,0.06)]"><div className="mb-3 flex items-center justify-between gap-3"><div className="inline-flex rounded-full bg-[#f1efe9] px-2 py-1 text-xs text-[#666]">{note.tags[0] || "未分类"}</div><span className="text-xs text-[#888]">{new Date(note.updatedAt).toLocaleString("zh-CN", { month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit" })}</span></div><h3 className="text-base font-medium text-[#111]">{note.title}</h3><p className="mt-2 text-sm leading-6 text-[#666]">{note.excerpt}</p></Link>)}</section>
+
+      <section className="mb-4 flex items-center justify-between"><h2 className="text-lg font-medium">Recent</h2><Link className="text-sm text-[#777]" href="/notes">查看全部</Link></section>
+      {data.recent.length === 0 ? <section className="glass-panel rounded-[24px] p-5 text-sm leading-6 text-[#666]">还没有笔记，先创建第一条记录。</section> : null}
+      <section className="space-y-3">{data.recent.map((note) => <Link key={note.id} href={`/notes/${note.id}`} className="glass-panel block rounded-[24px] p-4 transition-all duration-300 hover:-translate-y-[1px] hover:shadow-[0_14px_32px_rgba(0,0,0,0.06)]"><div className="mb-3 flex items-center justify-between gap-3"><div className="inline-flex rounded-full bg-[#f1efe9] px-2 py-1 text-xs text-[#666]">{note.tags[0] || "未分类"}</div><span className="text-xs text-[#888]">{new Date(note.updatedAt).toLocaleString("zh-CN", { month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit" })}</span></div><h3 className="text-base font-medium text-[#111]">{note.title}</h3><p className="mt-2 text-sm leading-6 text-[#666]">{note.excerpt}</p></Link>)}</section>
     </>
   );
 }

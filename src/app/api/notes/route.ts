@@ -21,6 +21,17 @@ async function requireUserId() {
   return session.userId;
 }
 
+async function resolveProjectId(userId: string, projectId?: string | null, projectName?: string) {
+  if (projectName?.trim()) {
+    const project = await ensureProject(userId, projectName);
+    return project?.id ?? null;
+  }
+  if (!projectId) return null;
+  const ownedProject = await prisma.project.findFirst({ where: { id: projectId, userId }, select: { id: true } });
+  if (!ownedProject) throw new Error("project-not-owned");
+  return ownedProject.id;
+}
+
 export async function GET(request: Request) {
   const userId = await requireUserId();
   if (!userId) return NextResponse.json({ ok: false, message: "未登录" }, { status: 401 });
@@ -41,14 +52,13 @@ export async function POST(request: Request) {
 
   const body = await request.json();
   const parsed = schema.safeParse(body);
-  if (!parsed.success) {
-    return NextResponse.json({ ok: false, message: "参数不合法" }, { status: 400 });
-  }
+  if (!parsed.success) return NextResponse.json({ ok: false, message: "参数不合法" }, { status: 400 });
 
-  let projectId = parsed.data.projectId || null;
-  if (!projectId && parsed.data.projectName?.trim()) {
-    const project = await ensureProject(userId, parsed.data.projectName);
-    projectId = project?.id ?? null;
+  let projectId: string | null;
+  try {
+    projectId = await resolveProjectId(userId, parsed.data.projectId || null, parsed.data.projectName);
+  } catch {
+    return NextResponse.json({ ok: false, message: "项目不存在或不属于当前账号" }, { status: 400 });
   }
 
   const note = await prisma.note.create({
@@ -59,17 +69,10 @@ export async function POST(request: Request) {
       userId,
       projectId,
     },
-    include: {
-      project: true,
-      tags: { include: { tag: true } },
-    },
-  });
-
-  await syncNoteTags(note.id, userId, parsed.data.tags);
-  const refreshed = await prisma.note.findUniqueOrThrow({
-    where: { id: note.id },
     include: { project: true, tags: { include: { tag: true } } },
   });
 
+  await syncNoteTags(note.id, userId, parsed.data.tags);
+  const refreshed = await prisma.note.findUniqueOrThrow({ where: { id: note.id }, include: { project: true, tags: { include: { tag: true } } } });
   return NextResponse.json({ ok: true, note: toNoteDTO(refreshed) });
 }

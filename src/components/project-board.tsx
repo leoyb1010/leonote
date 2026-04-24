@@ -1,20 +1,22 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 type Project = {
   id: string;
   name: string;
   description: string;
   noteCount: number;
+  updatedAt?: string;
+  status?: string;
 };
 
-export function ProjectBoard() {
-  const [items, setItems] = useState<Project[]>([]);
+export function ProjectBoard({ initialProjects, signedIn }: { initialProjects: Project[]; signedIn: boolean }) {
+  const [items, setItems] = useState<Project[]>(initialProjects);
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
-  const [message, setMessage] = useState("创建项目后，录入笔记时即可归属到该项目。");
+  const [message, setMessage] = useState(signedIn ? "创建项目后，录入笔记时即可归属到该项目。" : "请先登录后再管理项目。");
 
   const load = async () => {
     const res = await fetch("/api/projects", { cache: "no-store" });
@@ -26,29 +28,6 @@ export function ProjectBoard() {
     }
     setItems(data.projects || []);
   };
-
-  useEffect(() => {
-    let active = true;
-    fetch("/api/projects", { cache: "no-store" })
-      .then((res) => res.json().then((data) => ({ ok: res.ok, data })))
-      .then(({ ok, data }) => {
-        if (!active) return;
-        if (!ok) {
-          setMessage(data.message || "加载失败");
-          setItems([]);
-          return;
-        }
-        setItems(data.projects || []);
-      })
-      .catch(() => {
-        if (!active) return;
-        setMessage("加载失败");
-        setItems([]);
-      });
-    return () => {
-      active = false;
-    };
-  }, []);
 
   const createProject = async () => {
     if (!name.trim()) {
@@ -67,6 +46,10 @@ export function ProjectBoard() {
     await load();
   };
 
+  if (!signedIn) {
+    return <section className="glass-panel rounded-[28px] p-5 text-sm text-[#666]">当前未登录。先去 <Link href="/login" className="font-medium text-[#111] underline underline-offset-4">登录</Link>，再管理项目。</section>;
+  }
+
   return (
     <section className="space-y-5">
       <div className="glass-panel animate-rise rounded-[28px] p-5">
@@ -83,8 +66,9 @@ export function ProjectBoard() {
       <div className="space-y-3">
         {items.map((project) => (
           <Link key={project.id} href={`/notes?projectId=${project.id}`} className="glass-panel block animate-rise rounded-[28px] p-5 transition-all duration-300 hover:-translate-y-[2px]">
-            <div className="flex items-center justify-between gap-3"><h2 className="text-base font-medium text-[#111]">{project.name}</h2><span className="rounded-full bg-[#f3f2ef] px-3 py-1 text-xs text-[#666]">{project.noteCount} 条</span></div>
+            <div className="flex items-center justify-between gap-3"><div><h2 className="text-base font-medium text-[#111]">{project.name}</h2><div className="mt-1 text-xs text-[#888]">{project.status === "active" ? "进行中" : project.status || "活跃"}</div></div><span className="rounded-full bg-[#f3f2ef] px-3 py-1 text-xs text-[#666]">{project.noteCount} 条</span></div>
             <p className="mt-2 text-sm leading-6 text-[#666]">{project.description || "暂未填写项目简介。"}</p>
+            {project.updatedAt ? <div className="mt-3 text-xs text-[#888]">最近活跃：{new Date(project.updatedAt).toLocaleString("zh-CN")}</div> : null}
           </Link>
         ))}
       </div>

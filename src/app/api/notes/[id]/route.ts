@@ -24,6 +24,18 @@ async function requireUserId() {
   return session.userId;
 }
 
+async function resolveProjectId(userId: string, projectId: string | null | undefined, projectName?: string) {
+  if (projectName?.trim()) {
+    const project = await ensureProject(userId, projectName);
+    return project?.id ?? null;
+  }
+  if (projectId === undefined) return undefined;
+  if (projectId === null) return null;
+  const ownedProject = await prisma.project.findFirst({ where: { id: projectId, userId }, select: { id: true } });
+  if (!ownedProject) throw new Error("project-not-owned");
+  return ownedProject.id;
+}
+
 export async function GET(_request: Request, context: { params: Promise<{ id: string }> }) {
   const userId = await requireUserId();
   if (!userId) return NextResponse.json({ ok: false, message: "未登录" }, { status: 401 });
@@ -47,10 +59,11 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
   const existing = await requireOwnedNote(id, userId);
   if (!existing) return NextResponse.json({ ok: false, message: "笔记不存在" }, { status: 404 });
 
-  let projectId = parsed.data.projectId === undefined ? undefined : parsed.data.projectId;
-  if (parsed.data.projectName?.trim()) {
-    const project = await ensureProject(userId, parsed.data.projectName);
-    projectId = project?.id ?? null;
+  let projectId: string | null | undefined;
+  try {
+    projectId = await resolveProjectId(userId, parsed.data.projectId, parsed.data.projectName);
+  } catch {
+    return NextResponse.json({ ok: false, message: "项目不存在或不属于当前账号" }, { status: 400 });
   }
 
   await prisma.note.update({
@@ -68,11 +81,7 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
 
   if (parsed.data.tags) await syncNoteTags(id, userId, parsed.data.tags);
 
-  const note = await prisma.note.findUniqueOrThrow({
-    where: { id },
-    include: { project: true, tags: { include: { tag: true } } },
-  });
-
+  const note = await prisma.note.findUniqueOrThrow({ where: { id }, include: { project: true, tags: { include: { tag: true } } } });
   return NextResponse.json({ ok: true, note: toNoteDTO(note) });
 }
 
