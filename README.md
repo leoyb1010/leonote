@@ -42,6 +42,7 @@ Leonote 是一个：
 - “我的/个人资料”升级为可查看账号、改昵称、改密码、退出登录
 - 首页改为 server-first 工作台结构：Today / Focus / Recent
 - 项目页推进到 server-first 入口，新增项目详情页 `/projects/[id]`
+- 项目管理补齐编辑/删除闭环：支持修改名称、描述、状态，并支持删除项目；删除后原项目下笔记保留并转为未归属项目
 - 搜索页升级为搜索 + 筛选，支持项目 / 收藏 / 归档组合筛选
 - 开始建立设计 token：颜色、圆角、阴影、动效时长、easing 收口到 CSS variables
 - 统一通过：`npm run lint`、`npm run typecheck`、`npm run build`
