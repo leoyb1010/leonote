@@ -5,7 +5,7 @@ export default function HomePage() {
   return (
     <AppShell
       title="个人笔记与轻知识库"
-      subtitle="一个为个人长期使用设计的中文记录系统，强调简约、稳定与移动端体验。"
+      subtitle="一个为个人长期使用设计的中文记录系统，强调简约、稳定、项目制录入与移动端体验。"
       current="/"
     >
       <ServerHomeClient />

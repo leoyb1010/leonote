@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { readSessionValue, SESSION_COOKIE } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { requireOwnedNote, syncNoteTags, toNoteDTO } from "@/lib/server-notes";
+import { ensureProject, requireOwnedNote, syncNoteTags, toNoteDTO } from "@/lib/server-notes";
 
 const schema = z.object({
   title: z.string().optional(),
@@ -13,6 +13,8 @@ const schema = z.object({
   favorite: z.boolean().optional(),
   pinned: z.boolean().optional(),
   archived: z.boolean().optional(),
+  projectId: z.string().nullable().optional(),
+  projectName: z.string().optional(),
 });
 
 async function requireUserId() {
@@ -40,12 +42,16 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
   const { id } = await context.params;
   const body = await request.json();
   const parsed = schema.safeParse(body);
-  if (!parsed.success) {
-    return NextResponse.json({ ok: false, message: "参数不合法" }, { status: 400 });
-  }
+  if (!parsed.success) return NextResponse.json({ ok: false, message: "参数不合法" }, { status: 400 });
 
   const existing = await requireOwnedNote(id, userId);
   if (!existing) return NextResponse.json({ ok: false, message: "笔记不存在" }, { status: 404 });
+
+  let projectId = parsed.data.projectId === undefined ? undefined : parsed.data.projectId;
+  if (parsed.data.projectName?.trim()) {
+    const project = await ensureProject(userId, parsed.data.projectName);
+    projectId = project?.id ?? null;
+  }
 
   await prisma.note.update({
     where: { id },
@@ -56,16 +62,15 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
       isFavorite: parsed.data.favorite,
       isPinned: parsed.data.pinned,
       isArchived: parsed.data.archived,
+      projectId,
     },
   });
 
-  if (parsed.data.tags) {
-    await syncNoteTags(id, userId, parsed.data.tags);
-  }
+  if (parsed.data.tags) await syncNoteTags(id, userId, parsed.data.tags);
 
   const note = await prisma.note.findUniqueOrThrow({
     where: { id },
-    include: { tags: { include: { tag: true } } },
+    include: { project: true, tags: { include: { tag: true } } },
   });
 
   return NextResponse.json({ ok: true, note: toNoteDTO(note) });
@@ -78,9 +83,7 @@ export async function DELETE(_request: Request, context: { params: Promise<{ id:
   const { id } = await context.params;
   const existing = await requireOwnedNote(id, userId);
   if (!existing) return NextResponse.json({ ok: false, message: "笔记不存在" }, { status: 404 });
-  if (!existing.deletedAt) {
-    return NextResponse.json({ ok: false, message: "请先移入回收站" }, { status: 400 });
-  }
+  if (!existing.deletedAt) return NextResponse.json({ ok: false, message: "请先移入回收站" }, { status: 400 });
 
   await prisma.note.delete({ where: { id } });
   return NextResponse.json({ ok: true });

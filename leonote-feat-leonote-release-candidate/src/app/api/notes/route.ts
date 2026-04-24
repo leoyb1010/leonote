@@ -3,13 +3,15 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { readSessionValue, SESSION_COOKIE } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { listNotes, syncNoteTags, toNoteDTO } from "@/lib/server-notes";
+import { ensureProject, listNotes, syncNoteTags, toNoteDTO } from "@/lib/server-notes";
 
 const schema = z.object({
   title: z.string().min(1),
   content: z.string().default(""),
   excerpt: z.string().optional(),
   tags: z.array(z.string()).default([]),
+  projectName: z.string().optional(),
+  projectId: z.string().optional(),
 });
 
 async function requireUserId() {
@@ -27,8 +29,9 @@ export async function GET(request: Request) {
   const status = searchParams.get("status") ?? "active";
   const q = searchParams.get("q") ?? undefined;
   const tag = searchParams.get("tag") ?? undefined;
+  const projectId = searchParams.get("projectId") ?? undefined;
 
-  const notes = await listNotes(userId, { status, q, tag });
+  const notes = await listNotes(userId, { status, q, tag, projectId });
   return NextResponse.json({ ok: true, notes: notes.map(toNoteDTO) });
 }
 
@@ -42,14 +45,22 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: false, message: "参数不合法" }, { status: 400 });
   }
 
+  let projectId = parsed.data.projectId || null;
+  if (!projectId && parsed.data.projectName?.trim()) {
+    const project = await ensureProject(userId, parsed.data.projectName);
+    projectId = project?.id ?? null;
+  }
+
   const note = await prisma.note.create({
     data: {
       title: parsed.data.title,
       content: parsed.data.content,
       excerpt: parsed.data.excerpt || parsed.data.content.slice(0, 120),
       userId,
+      projectId,
     },
     include: {
+      project: true,
       tags: { include: { tag: true } },
     },
   });
@@ -57,7 +68,7 @@ export async function POST(request: Request) {
   await syncNoteTags(note.id, userId, parsed.data.tags);
   const refreshed = await prisma.note.findUniqueOrThrow({
     where: { id: note.id },
-    include: { tags: { include: { tag: true } } },
+    include: { project: true, tags: { include: { tag: true } } },
   });
 
   return NextResponse.json({ ok: true, note: toNoteDTO(refreshed) });
