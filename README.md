@@ -33,6 +33,15 @@ Leonote 是一个：
 
 ## 版本更新
 
+### v0.6.1 · 可靠性与数据基线修复（2026-04-25）
+- JSON 导入改为事务写入：任一条失败时整批回滚，避免半导入数据
+- 导入接口增加 2MB 文件大小限制，避免超大文件拖垮进程
+- 标签同步增加笔记归属防御，并支持在事务内执行
+- 笔记列表/搜索接口增加默认返回上限，搜索词不足 2 字符时不触发正文搜索
+- Prisma schema 补充常用查询索引，并新增 baseline migration
+- 编辑器自动保存增加 IME composition 保护，降低中文输入法误保存风险
+- README / CHANGELOG / ARCHITECTURE 同步更新到当前实际实现
+
 ### v0.6.0 · 安全修复与产品基线升级（2026-04-24）
 - 修复链接导入 SSRF 风险：限制 http/https、拦截 localhost/私网/metadata 地址、增加 DNS 检查、超时与响应体大小上限
 - 修复 note 绑定 project 的 ownership 校验，不再信任任意 projectId
@@ -127,6 +136,8 @@ Leonote 是一个：
 - TXT
 - HTML
 - 新闻链接 / 网页链接
+- JSON 导入使用事务保护
+- 单个上传文件限制为 2MB
 
 #### 导出
 - 当前账号真实数据 JSON 导出
@@ -230,8 +241,15 @@ leonote/
 ```bash
 npm install
 npx prisma generate
-npx prisma db push
+npx prisma migrate deploy
 npm run dev
+```
+
+如果是已有本地 `dev.db` 且没有迁移历史的开发环境，可先执行一次：
+
+```bash
+npx prisma db push
+npx prisma migrate resolve --applied 20260425000100_baseline
 ```
 
 默认地址：
@@ -276,6 +294,7 @@ Leonote 当前已经不是原型骨架，而是一个具备：
 - 每日记录能力
 - 项目制录入能力
 - 导入导出链路
+- 事务化导入与基础查询索引
 - 可持续迭代工程结构
 
 的主仓库基线。

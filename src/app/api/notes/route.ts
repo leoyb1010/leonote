@@ -38,9 +38,14 @@ export async function GET(request: Request) {
 
   const { searchParams } = new URL(request.url);
   const status = searchParams.get("status") ?? "active";
-  const q = searchParams.get("q") ?? undefined;
+  const rawQ = searchParams.get("q")?.trim();
+  const q = rawQ && rawQ.length >= 2 ? rawQ : undefined;
   const tag = searchParams.get("tag") ?? undefined;
   const projectId = searchParams.get("projectId") ?? undefined;
+
+  if (rawQ && rawQ.length < 2 && !tag && !projectId && status === "active") {
+    return NextResponse.json({ ok: true, notes: [] });
+  }
 
   const notes = await listNotes(userId, { status, q, tag, projectId });
   return NextResponse.json({ ok: true, notes: notes.map(toNoteDTO) });

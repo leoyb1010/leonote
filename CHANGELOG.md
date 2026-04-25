@@ -1,5 +1,24 @@
 # CHANGELOG
 
+## 2026-04-25
+
+### 数据可靠性
+- JSON 导入改为单事务写入，任一条记录失败时整批回滚，避免半写入。
+- 导入文件增加 2MB 大小限制，超限返回 413。
+- 标签同步增加 note ownership 防御，并支持复用 Prisma transaction client。
+
+### 查询与数据库
+- `listNotes` 增加默认返回上限，避免列表和搜索无界查询。
+- 搜索词不足 2 字符时不触发正文搜索。
+- Prisma schema 补充 `Note` / `DailyNote` / `Project` 常用查询索引。
+- 新增 `20260425000100_baseline` migration，仓库开始保留可追踪数据库迁移。
+
+### 编辑器体验
+- 自动保存增加 IME composition 保护，中文输入法组词期间不触发自动保存。
+
+### 文档
+- README、CHANGELOG、ARCHITECTURE 同步到当前真实实现。
+
 ## 2026-04-24
 
 ### 仓库与文档
@@ -56,8 +75,6 @@
   - Markdown
   - TXT
   - HTML
-  - DOCX
-  - PDF
   - 网页链接 / 新闻链接
 
 ### UI / 动效

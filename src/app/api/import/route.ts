@@ -2,12 +2,15 @@ import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import { lookup } from "node:dns/promises";
 import net from "node:net";
+import type { Prisma } from "@prisma/client";
 import { z } from "zod";
 import { readSessionValue, SESSION_COOKIE } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { ensureProject, syncNoteTags, toNoteDTO } from "@/lib/server-notes";
 
 const MAX_HTML_BYTES = 512_000;
+const MAX_IMPORT_FILE_BYTES = 2 * 1024 * 1024;
+const MAX_MULTIPART_BYTES = MAX_IMPORT_FILE_BYTES + 128 * 1024;
 const REQUEST_TIMEOUT_MS = 5000;
 const BLOCKED_HOSTS = new Set(["localhost", "127.0.0.1", "0.0.0.0", "::1", "metadata.google.internal"]);
 
@@ -28,9 +31,9 @@ async function requireUserId() {
   return session.userId;
 }
 
-async function createImportedNote(userId: string, data: { title: string; content: string; excerpt?: string; tags?: string[]; projectName?: string }) {
-  const project = await ensureProject(userId, data.projectName);
-  const note = await prisma.note.create({
+async function createImportedNote(tx: Prisma.TransactionClient, userId: string, data: { title: string; content: string; excerpt?: string; tags?: string[]; projectName?: string }) {
+  const project = await ensureProject(userId, data.projectName, tx);
+  const note = await tx.note.create({
     data: {
       title: data.title,
       content: data.content,
@@ -39,7 +42,7 @@ async function createImportedNote(userId: string, data: { title: string; content
       projectId: project?.id ?? null,
     },
   });
-  await syncNoteTags(note.id, userId, data.tags ?? []);
+  await syncNoteTags(note.id, userId, data.tags ?? [], tx);
   return note.id;
 }
 
@@ -84,6 +87,11 @@ export async function POST(request: Request) {
   const userId = await requireUserId();
   if (!userId) return NextResponse.json({ ok: false, message: "未登录" }, { status: 401 });
 
+  const contentLength = Number(request.headers.get("content-length") ?? "0");
+  if (Number.isFinite(contentLength) && contentLength > MAX_MULTIPART_BYTES) {
+    return NextResponse.json({ ok: false, message: "导入失败：文件不能超过 2MB" }, { status: 413 });
+  }
+
   const form = await request.formData();
   const file = form.get("file");
   const link = form.get("link");
@@ -91,17 +99,21 @@ export async function POST(request: Request) {
   if (typeof link === "string" && link.trim()) {
     try {
       const { target, title, summary } = await fetchLinkSummary(link.trim());
-      const note = await prisma.note.create({
-        data: {
-          title,
-          content: `${title}\n\n来源：${target.toString()}\n\n${summary}`,
-          excerpt: summary.slice(0, 120) || target.toString(),
-          userId,
-        },
-        include: { project: true, tags: { include: { tag: true } } },
+      const refreshed = await prisma.$transaction(async (tx) => {
+        const note = await tx.note.create({
+          data: {
+            title,
+            content: `${title}\n\n来源：${target.toString()}\n\n${summary}`,
+            excerpt: summary.slice(0, 120) || target.toString(),
+            userId,
+          },
+        });
+        await syncNoteTags(note.id, userId, ["导入", "链接", target.hostname], tx);
+        return tx.note.findUniqueOrThrow({
+          where: { id: note.id },
+          include: { project: true, tags: { include: { tag: true } } },
+        });
       });
-      await syncNoteTags(note.id, userId, ["导入", "链接", target.hostname]);
-      const refreshed = await prisma.note.findUniqueOrThrow({ where: { id: note.id }, include: { project: true, tags: { include: { tag: true } } } });
       return NextResponse.json({ ok: true, note: toNoteDTO(refreshed) });
     } catch (error) {
       return NextResponse.json({ ok: false, message: error instanceof Error ? `链接导入失败：${error.message}` : "链接导入失败" }, { status: 400 });
@@ -110,6 +122,9 @@ export async function POST(request: Request) {
 
   if (!(file instanceof File)) {
     return NextResponse.json({ ok: false, message: "请选择导入文件或填写链接" }, { status: 400 });
+  }
+  if (file.size > MAX_IMPORT_FILE_BYTES) {
+    return NextResponse.json({ ok: false, message: "导入失败：文件不能超过 2MB" }, { status: 413 });
   }
 
   const lower = file.name.toLowerCase();
@@ -122,8 +137,11 @@ export async function POST(request: Request) {
     } catch {
       return NextResponse.json({ ok: false, message: "JSON 导入失败：文件结构不合法" }, { status: 400 });
     }
-    const createdIds: string[] = [];
-    for (const item of parsed) createdIds.push(await createImportedNote(userId, item));
+    const createdIds = await prisma.$transaction(async (tx) => {
+      const ids: string[] = [];
+      for (const item of parsed) ids.push(await createImportedNote(tx, userId, item));
+      return ids;
+    });
     return NextResponse.json({ ok: true, count: createdIds.length, noteId: createdIds[0] ?? null });
   }
 
@@ -132,12 +150,16 @@ export async function POST(request: Request) {
     const title = file.name.replace(/\.(md|txt|html)$/i, "") || "导入笔记";
     const typeTag = lower.endsWith(".md") ? "Markdown" : lower.endsWith(".txt") ? "文本" : "网页";
     const content = lower.endsWith(".html") ? text.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim() : text;
-    const note = await prisma.note.create({
-      data: { title, content, excerpt: content.trim().slice(0, 120) || "暂无摘要", userId },
-      include: { project: true, tags: { include: { tag: true } } },
+    const refreshed = await prisma.$transaction(async (tx) => {
+      const note = await tx.note.create({
+        data: { title, content, excerpt: content.trim().slice(0, 120) || "暂无摘要", userId },
+      });
+      await syncNoteTags(note.id, userId, ["导入", typeTag], tx);
+      return tx.note.findUniqueOrThrow({
+        where: { id: note.id },
+        include: { project: true, tags: { include: { tag: true } } },
+      });
     });
-    await syncNoteTags(note.id, userId, ["导入", typeTag]);
-    const refreshed = await prisma.note.findUniqueOrThrow({ where: { id: note.id }, include: { project: true, tags: { include: { tag: true } } } });
     return NextResponse.json({ ok: true, note: toNoteDTO(refreshed) });
   }
 

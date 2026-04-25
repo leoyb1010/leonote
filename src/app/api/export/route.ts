@@ -15,7 +15,7 @@ export async function GET() {
   const userId = await requireUserId();
   if (!userId) return NextResponse.json({ ok: false, message: "未登录" }, { status: 401 });
 
-  const notes = await listNotes(userId, { status: "all" });
+  const notes = await listNotes(userId, { status: "all", take: null });
   const tags = await prisma.tag.findMany({ where: { userId }, orderBy: { name: "asc" } });
   const exportedAt = new Date();
   const filename = `leonote-export-${exportedAt.toISOString().slice(0, 10)}.json`;

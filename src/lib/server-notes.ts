@@ -1,4 +1,7 @@
+import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
+
+type DbClient = typeof prisma | Prisma.TransactionClient;
 
 export function normalizeTagNames(input: string[] = []) {
   return [...new Set(input.map((item) => item.trim()).filter(Boolean))];
@@ -12,36 +15,39 @@ export function slugifyProjectName(name: string) {
     .replace(/^-+|-+$/g, "") || "project";
 }
 
-export async function syncNoteTags(noteId: string, userId: string, inputTags: string[] = []) {
+export async function syncNoteTags(noteId: string, userId: string, inputTags: string[] = [], db: DbClient = prisma) {
+  const note = await db.note.findFirst({ where: { id: noteId, userId }, select: { id: true } });
+  if (!note) throw new Error("note-not-owned");
+
   const names = normalizeTagNames(inputTags);
-  await prisma.noteTag.deleteMany({ where: { noteId } });
+  await db.noteTag.deleteMany({ where: { noteId } });
 
   for (const name of names) {
-    const tag = await prisma.tag.upsert({
+    const tag = await db.tag.upsert({
       where: { name_userId: { name, userId } },
       update: {},
       create: { name, userId },
     });
 
-    await prisma.noteTag.create({ data: { noteId, tagId: tag.id } });
+    await db.noteTag.create({ data: { noteId, tagId: tag.id } });
   }
 }
 
-export async function ensureProject(userId: string, name?: string) {
+export async function ensureProject(userId: string, name?: string, db: DbClient = prisma) {
   if (!name?.trim()) return null;
   const cleanName = name.trim();
   const baseSlug = slugifyProjectName(cleanName);
   let slug = baseSlug;
   let count = 1;
 
-  while (await prisma.project.findUnique({ where: { slug_userId: { slug, userId } } })) {
-    const existing = await prisma.project.findFirst({ where: { userId, name: cleanName } });
+  while (await db.project.findUnique({ where: { slug_userId: { slug, userId } } })) {
+    const existing = await db.project.findFirst({ where: { userId, name: cleanName } });
     if (existing) return existing;
     count += 1;
     slug = `${baseSlug}-${count}`;
   }
 
-  return prisma.project.create({
+  return db.project.create({
     data: { name: cleanName, slug, userId },
   });
 }
@@ -78,11 +84,13 @@ export function toNoteDTO(note: {
   };
 }
 
-export async function listNotes(userId: string, options?: { status?: string; q?: string; tag?: string; projectId?: string }) {
+export async function listNotes(userId: string, options?: { status?: string; q?: string; tag?: string; projectId?: string; take?: number | null }) {
   const status = options?.status ?? "active";
-  const q = options?.q?.trim();
+  const rawQ = options?.q?.trim();
+  const q = rawQ && rawQ.length >= 2 ? rawQ : undefined;
   const tag = options?.tag?.trim();
   const projectId = options?.projectId?.trim();
+  const take = options?.take === null ? undefined : options?.take === undefined ? 100 : Math.min(Math.max(options.take, 1), 500);
 
   return prisma.note.findMany({
     where: {
@@ -106,6 +114,7 @@ export async function listNotes(userId: string, options?: { status?: string; q?:
       tags: { include: { tag: true } },
     },
     orderBy: [{ isPinned: "desc" }, { updatedAt: "desc" }],
+    take,
   });
 }
 

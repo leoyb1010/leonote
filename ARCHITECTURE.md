@@ -1,127 +1,148 @@
-# Leonote 技术架构（精简版）
+# Leonote 技术架构
 
 ## 1. 总体架构
-采用轻量 Web First 架构：
-- 前端应用负责 UI、交互、编辑体验
-- 后端负责认证、数据读写、搜索接口
-- PostgreSQL 负责主数据存储
-- 文件存储负责图片附件
 
-## 2. 技术选择
+Leonote 当前采用轻量 Server-first Web 架构：
+- Next.js App Router 承载页面与 Route Handlers
+- React 客户端组件负责编辑、搜索筛选、项目管理等交互
+- Prisma ORM 负责数据访问
+- SQLite 作为当前主存储，适合单人知识库和本地/轻量部署
+- 签名 session cookie 负责登录态
+
+当前定位是个人长期使用的笔记与轻知识库，不做多人协作和重平台能力。
+
+## 2. 技术栈
+
 ### 前端
-- Next.js
-- React
+- Next.js 16
+- React 19
 - TypeScript
 - Tailwind CSS
-- Radix UI / shadcn/ui
-- Tiptap
-- React Query
-- Zustand
 
 ### 后端
-- Next.js Route Handlers 或独立 API
-- Prisma ORM
-- PostgreSQL
+- Next.js Route Handlers
+- Prisma
+- SQLite
+- Zod
+- bcryptjs
+- Node crypto HMAC session signing
 
-### 附件
-- 本地存储（开发期）
-- S3 兼容对象存储（上线期）
+## 3. 数据模型
 
-## 3. 数据模型（第一版）
-### User
-- id
-- username
-- email
-- passwordHash
-- createdAt
+核心模型：
+- `User`
+- `Note`
+- `Tag`
+- `NoteTag`
+- `DailyNote`
+- `Project`
 
-### Note
-- id
-- title
-- content
-- excerpt
-- isFavorite
-- isPinned
-- isArchived
-- deletedAt
-- createdAt
-- updatedAt
-- userId
+关键约束：
+- `User.email` 唯一
+- `Tag.name + userId` 唯一
+- `Project.slug + userId` 唯一
+- `DailyNote.date + userId` 唯一，避免同一天重复每日笔记
+- `Note.projectId` 删除项目时置空，保留笔记
 
-### Tag
-- id
-- name
-- userId
+关键索引：
+- `Note.userId + updatedAt`
+- `Note.userId + deletedAt`
+- `Note.userId + isArchived`
+- `Note.userId + projectId`
+- `DailyNote.userId + date`
+- `Project.userId + updatedAt`
 
-### NoteTag
-- noteId
-- tagId
+## 4. API 边界
 
-### Attachment
-- id
-- noteId
-- url
-- type
-- createdAt
+认证：
+- `/api/auth/register`
+- `/api/auth/login`
+- `/api/auth/logout`
+- `/api/auth/me`
+- `/api/auth/password`
 
-### DailyNote
-- id
-- date
-- noteId
-- userId
+笔记：
+- `/api/notes`
+- `/api/notes/[id]`
+- `/api/notes/[id]/trash`
+- `/api/notes/[id]/restore`
 
-### NoteLink
-- id
-- sourceNoteId
-- targetNoteId
+组织：
+- `/api/daily`
+- `/api/projects`
+- `/api/projects/[id]`
 
-## 4. 页面模块划分
-- 首页：最近笔记、置顶、快速新建
-- 笔记页：阅读 / 编辑一体
-- 搜索页：关键词搜索 + 标签过滤
-- 标签页：按标签聚合
-- 每日页：日记入口与日期归档
-- 设置页：账号与基础偏好
+数据迁移：
+- `/api/import`
+- `/api/export`
 
-## 5. 最小目录建议
-```text
-src/
-  app/
-  components/
-  features/
-    notes/
-    tags/
-    search/
-    daily/
-    settings/
-  lib/
-  hooks/
-  server/
-  styles/
+所有受保护接口都需要 session。涉及具体资源的读写必须按 `userId` 过滤，找不到统一返回不存在，避免泄露资源归属。
+
+## 5. 导入导出策略
+
+导入支持：
+- JSON
+- Markdown
+- TXT
+- HTML
+- 网页链接
+
+可靠性约束：
+- JSON 批量导入使用事务，避免半写入
+- 上传文件限制为 2MB
+- 外部导入数据只接受白名单字段，不信任外部 `id` / `userId`
+- 链接导入限制协议、内网地址、响应大小和请求时长
+
+导出策略：
+- 只导出当前登录用户的数据
+- 导出结构保持 JSON，可作为未来导入协议基础
+
+## 6. 编辑器策略
+
+当前编辑器是 Markdown/纯文本录入体验：
+- 手动保存为主
+- 自动保存可开关，默认关闭
+- 自动保存只对已有笔记生效
+- `Cmd/Ctrl + S` 手动保存
+- 离开页面前对 dirty/saving 状态做提醒
+- 中文输入法 composition 期间不触发自动保存
+
+当前没有 Markdown Preview，也没有 `dangerouslySetInnerHTML` 渲染面。后续如果加入 Markdown Preview，需要使用 `react-markdown + rehype-sanitize` 或等价方案。
+
+## 7. 迁移与验证
+
+数据库迁移保存在 `prisma/migrations/`。
+
+新环境推荐：
+
+```bash
+npm install
+npx prisma generate
+npx prisma migrate deploy
+npm run dev
 ```
 
-## 6. 安全原则
-- 服务端校验输入
-- 密码只存 hash
-- 富文本输出做安全处理
-- 上传文件限制类型和大小
-- 所有数据按用户隔离
+已有本地 SQLite 且没有迁移历史时，可先同步并标记 baseline：
 
-## 7. 开发顺序
-1. 项目初始化
-2. 登录与基础布局
-3. 笔记 CRUD
-4. 标签与搜索
-5. 收藏 / 归档 / 删除
-6. 每日笔记
-7. 关联笔记
-8. 图片上传
-9. 上线部署
+```bash
+npx prisma db push
+npx prisma migrate resolve --applied 20260425000100_baseline
+```
 
-## 8. 当前结论
-Leonote 不采用重平台架构，不做过度工程化。第一版追求：
-- 轻
-- 稳
-- 好看
-- 中文完整
-- 可上线
+交付前至少运行：
+
+```bash
+npm run lint
+npm run typecheck
+npm run build
+```
+
+## 8. 当前不做的事
+
+- 多人协作
+- 通用附件系统
+- 富文本块编辑器
+- Apple Notes 双向同步
+- AI 摘要或知识图谱
+
+这些能力不是当前稳定性迭代的目标。

@@ -40,7 +40,13 @@ export function ServerSearchView() {
         return;
       }
       const params = new URLSearchParams();
-      if (query.trim()) params.set("q", query.trim());
+      const trimmedQuery = query.trim();
+      if (trimmedQuery && trimmedQuery.length < 2 && !projectId && !favoriteOnly && !archivedOnly) {
+        setItems([]);
+        setMessage("请输入至少 2 个字符再搜索。");
+        return;
+      }
+      if (trimmedQuery.length >= 2) params.set("q", trimmedQuery);
       if (projectId) params.set("projectId", projectId);
       if (archivedOnly) params.set("status", "archived");
       const res = await fetch(`/api/notes?${params.toString()}`, { cache: "no-store", signal: controller.signal });

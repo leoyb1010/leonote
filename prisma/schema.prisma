@@ -37,6 +37,11 @@ model Note {
   project    Project?    @relation(fields: [projectId], references: [id], onDelete: SetNull)
   tags       NoteTag[]
   dailyNotes DailyNote[]
+
+  @@index([userId, updatedAt])
+  @@index([userId, deletedAt])
+  @@index([userId, isArchived])
+  @@index([userId, projectId])
 }
 
 model Tag {
@@ -69,6 +74,7 @@ model DailyNote {
   createdAt DateTime @default(now())
 
   @@unique([date, userId])
+  @@index([userId, date])
 }
 
 model Project {
@@ -85,4 +91,5 @@ model Project {
   notes       Note[]
 
   @@unique([slug, userId])
+  @@index([userId, updatedAt])
 }

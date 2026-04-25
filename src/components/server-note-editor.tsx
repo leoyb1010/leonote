@@ -40,6 +40,7 @@ export function ServerNoteEditor({ initialNote }: { initialNote?: NoteShape }) {
   });
   const initialized = useRef(false);
   const autoSaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const isComposingRef = useRef(false);
 
   const isNewNote = !noteId;
   const stats = useMemo(() => {
@@ -107,8 +108,9 @@ export function ServerNoteEditor({ initialNote }: { initialNote?: NoteShape }) {
 
   useEffect(() => {
     cancelAutoSaveTimer();
-    if (!autoSaveEnabled || !hasEdited || isNewNote || saveState !== "dirty") return;
+    if (!autoSaveEnabled || !hasEdited || isNewNote || saveState !== "dirty" || isComposingRef.current) return;
     autoSaveTimerRef.current = setTimeout(() => {
+      if (isComposingRef.current) return;
       void saveDraft(false);
     }, 2600);
     return () => cancelAutoSaveTimer();
@@ -146,14 +148,29 @@ export function ServerNoteEditor({ initialNote }: { initialNote?: NoteShape }) {
     setMessage(next ? "已开启自动保存，仅对已有笔记生效。" : "已关闭自动保存，当前仅手动保存。");
   };
 
+  const handleCompositionStart = () => {
+    isComposingRef.current = true;
+    cancelAutoSaveTimer();
+  };
+
+  const handleCompositionEnd = () => {
+    isComposingRef.current = false;
+    if (autoSaveEnabled && hasEdited && !isNewNote && saveState === "dirty") {
+      cancelAutoSaveTimer();
+      autoSaveTimerRef.current = setTimeout(() => {
+        void saveDraft(false);
+      }, 2600);
+    }
+  };
+
   return (
     <>
       <section className="glass-panel animate-rise space-y-4 rounded-[28px] p-5">
         <div className="flex items-center justify-between gap-3 text-xs text-[#777]"><span>{statusText[saveState]}</span><span>{stats.words} 词 · {stats.chars} 字符</span></div>
-        <input aria-label="笔记标题" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="输入标题" className="w-full rounded-2xl bg-[#f7f7f5] px-4 py-4 text-lg font-medium text-[#111] outline-none transition-all duration-300 focus:-translate-y-[1px] focus:bg-white focus:shadow-[0_16px_40px_rgba(0,0,0,0.06)]" />
-        <input aria-label="所属项目" value={projectName} onChange={(e) => setProjectName(e.target.value)} placeholder="可选：所属项目，例如 Leonote" className="w-full rounded-2xl bg-[#f7f7f5] px-4 py-4 text-sm text-[#333] outline-none transition-all duration-300 focus:-translate-y-[1px] focus:bg-white focus:shadow-[0_16px_40px_rgba(0,0,0,0.06)]" />
-        <input aria-label="笔记标签" value={tagsInput} onChange={(e) => setTagsInput(e.target.value)} placeholder="输入标签，使用空格分隔" className="w-full rounded-2xl bg-[#f7f7f5] px-4 py-4 text-sm text-[#333] outline-none transition-all duration-300 focus:-translate-y-[1px] focus:bg-white focus:shadow-[0_16px_40px_rgba(0,0,0,0.06)]" />
-        <textarea aria-label="笔记内容" value={content} onChange={(e) => setContent(e.target.value)} placeholder="开始记录内容……" className="min-h-[320px] w-full rounded-2xl bg-[#f7f7f5] px-4 py-4 text-sm leading-7 text-[#333] outline-none transition-all duration-300 focus:-translate-y-[1px] focus:bg-white focus:shadow-[0_16px_40px_rgba(0,0,0,0.06)]" />
+        <input aria-label="笔记标题" value={title} onCompositionStart={handleCompositionStart} onCompositionEnd={handleCompositionEnd} onChange={(e) => setTitle(e.target.value)} placeholder="输入标题" className="w-full rounded-2xl bg-[#f7f7f5] px-4 py-4 text-lg font-medium text-[#111] outline-none transition-all duration-300 focus:-translate-y-[1px] focus:bg-white focus:shadow-[0_16px_40px_rgba(0,0,0,0.06)]" />
+        <input aria-label="所属项目" value={projectName} onCompositionStart={handleCompositionStart} onCompositionEnd={handleCompositionEnd} onChange={(e) => setProjectName(e.target.value)} placeholder="可选：所属项目，例如 Leonote" className="w-full rounded-2xl bg-[#f7f7f5] px-4 py-4 text-sm text-[#333] outline-none transition-all duration-300 focus:-translate-y-[1px] focus:bg-white focus:shadow-[0_16px_40px_rgba(0,0,0,0.06)]" />
+        <input aria-label="笔记标签" value={tagsInput} onCompositionStart={handleCompositionStart} onCompositionEnd={handleCompositionEnd} onChange={(e) => setTagsInput(e.target.value)} placeholder="输入标签，使用空格分隔" className="w-full rounded-2xl bg-[#f7f7f5] px-4 py-4 text-sm text-[#333] outline-none transition-all duration-300 focus:-translate-y-[1px] focus:bg-white focus:shadow-[0_16px_40px_rgba(0,0,0,0.06)]" />
+        <textarea aria-label="笔记内容" value={content} onCompositionStart={handleCompositionStart} onCompositionEnd={handleCompositionEnd} onChange={(e) => setContent(e.target.value)} placeholder="开始记录内容……" className="min-h-[320px] w-full rounded-2xl bg-[#f7f7f5] px-4 py-4 text-sm leading-7 text-[#333] outline-none transition-all duration-300 focus:-translate-y-[1px] focus:bg-white focus:shadow-[0_16px_40px_rgba(0,0,0,0.06)]" />
         <div className="flex flex-wrap items-center justify-between gap-3 text-xs text-[#777]">
           <div className="flex items-center gap-3">
             <button type="button" onClick={toggleAutoSave} className={`rounded-full px-3 py-2 text-xs transition-all duration-300 active:scale-[0.98] ${autoSaveEnabled ? "bg-[#111] text-white shadow-[0_10px_24px_rgba(17,17,17,0.18)]" : "bg-[#f3f2ef] text-[#555] hover:bg-[#ebe8e1]"}`}>
