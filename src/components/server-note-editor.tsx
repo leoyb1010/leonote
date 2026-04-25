@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import { ImportExportPanel } from "@/components/import-export-panel";
 
 type NoteShape = {
   id?: string;
@@ -163,6 +164,18 @@ export function ServerNoteEditor({ initialNote }: { initialNote?: NoteShape }) {
     }
   };
 
+  const handleImported = ({ content: importedContent, noteId: importedNoteId, mode }: { content?: string; noteId?: string; mode: string }) => {
+    if (importedNoteId && !noteId) {
+      window.location.href = `/notes/${importedNoteId}`;
+      return;
+    }
+    if (typeof importedContent === "string" && importedNoteId === noteId) {
+      setContent(importedContent);
+      setSaveState("saved");
+      setMessage(mode === "replace" ? "已用导入内容替换当前笔记。" : "已把导入内容追加到当前笔记。");
+    }
+  };
+
   return (
     <>
       <section className="glass-panel animate-rise space-y-4 rounded-[28px] p-5">
@@ -182,6 +195,8 @@ export function ServerNoteEditor({ initialNote }: { initialNote?: NoteShape }) {
         </div>
         {message ? <div className="rounded-2xl bg-[#f7f7f5] px-4 py-3 text-sm text-[#666] transition-all duration-300">{message}</div> : null}
       </section>
+
+      <ImportExportPanel noteId={noteId || undefined} embedded onImported={handleImported} />
 
       {showAfterSave ? (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-[rgba(17,17,17,0.28)] px-5 backdrop-blur-sm">

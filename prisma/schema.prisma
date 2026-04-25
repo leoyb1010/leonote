@@ -77,6 +77,34 @@ model DailyNote {
   @@index([userId, date])
 }
 
+model AISetting {
+  id                String   @id @default(cuid())
+  userId            String   @unique
+  baseUrl           String   @default("https://api.deepseek.com")
+  apiKey            String   @default("")
+  model             String   @default("deepseek-v4-flash")
+  fallbackModel     String   @default("deepseek-v4-pro")
+  enableAutoOrganize Boolean @default(true)
+  updatedAt         DateTime @updatedAt
+  createdAt         DateTime @default(now())
+}
+
+model MemoryFact {
+  id          String    @id @default(cuid())
+  userId      String
+  type        String    @default("preference")
+  content     String
+  confidence  Float     @default(0.7)
+  isActive    Boolean   @default(true)
+  sourceType  String?
+  sourceId    String?
+  updatedAt   DateTime  @updatedAt
+  createdAt   DateTime  @default(now())
+
+  @@index([userId, isActive])
+  @@index([userId, type])
+}
+
 model Project {
   id          String   @id @default(cuid())
   name        String
