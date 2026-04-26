@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Leonote">
+  <defs>
+    <linearGradient id="bg" x1="96" y1="64" x2="424" y2="456" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#111827"/>
+      <stop offset="0.55" stop-color="#312e81"/>
+      <stop offset="1" stop-color="#0e7490"/>
+    </linearGradient>
+    <linearGradient id="paper" x1="155" y1="112" x2="362" y2="404" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#ffffff"/>
+      <stop offset="1" stop-color="#dbeafe"/>
+    </linearGradient>
+    <filter id="shadow" x="96" y="80" width="320" height="360" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="18" stdDeviation="18" flood-color="#020617" flood-opacity="0.32"/>
+    </filter>
+  </defs>
+  <rect width="512" height="512" rx="112" fill="url(#bg)"/>
+  <circle cx="380" cy="124" r="56" fill="#22d3ee" opacity="0.32"/>
+  <circle cx="122" cy="386" r="72" fill="#6366f1" opacity="0.28"/>
+  <g filter="url(#shadow)">
+    <path d="M158 105h158l54 56v246H158z" fill="url(#paper)"/>
+    <path d="M316 105v58h54z" fill="#bfdbfe"/>
+    <path d="M194 210h124" stroke="#111827" stroke-width="18" stroke-linecap="round"/>
+    <path d="M194 260h112" stroke="#334155" stroke-width="14" stroke-linecap="round" opacity="0.72"/>
+    <path d="M194 304h88" stroke="#334155" stroke-width="14" stroke-linecap="round" opacity="0.56"/>
+    <path d="M194 352h130" stroke="#6366f1" stroke-width="16" stroke-linecap="round"/>
+  </g>
+</svg>

@@ -1,0 +1,20 @@
+services:
+  leonote:
+    build: .
+    container_name: leonote
+    restart: unless-stopped
+    env_file:
+      - .env.production
+    environment:
+      NODE_ENV: production
+      HOSTNAME: 0.0.0.0
+      PORT: 4317
+      DATABASE_URL: file:/app/data/leonote.db
+      RUST_LOG: info
+    ports:
+      - "4317:4317"
+    volumes:
+      - leonote-data:/app/data
+
+volumes:
+  leonote-data:
