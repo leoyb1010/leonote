@@ -1,9 +1,11 @@
 "use client";
 
 import Link from "next/link";
+import { ShieldCheck, UserRound } from "lucide-react";
 import { useEffect, useState } from "react";
 import { AppShell } from "@/components/app-shell";
 import { DataBackupCard } from "@/components/data-backup-card";
+import { GlassPanel } from "@/components/ui/GlassPanel";
 
 type User = {
   id: string;
@@ -91,43 +93,44 @@ export default function ProfilePage() {
   return (
     <AppShell title="个人资料与安全" subtitle="查看账号信息、修改昵称，并更新登录密码。" current="/settings">
       {needLogin ? (
-        <section className="glass-panel rounded-[24px] p-5 text-sm text-[#666]">
+        <GlassPanel blur="lg" glow="soft" className="rounded-[24px] p-5 text-sm text-white/62">
           <div>{message}</div>
-          <Link href="/login" className="mt-4 inline-flex rounded-full bg-[#111] px-4 py-2 text-sm text-white transition-all duration-300 hover:-translate-y-[1px] hover:shadow-[0_10px_24px_rgba(17,17,17,0.24)]">去登录</Link>
-        </section>
+          <Link href="/login" className="mt-4 inline-flex rounded-full bg-white px-4 py-2 text-sm font-medium text-slate-900 transition hover:brightness-110">去登录</Link>
+        </GlassPanel>
       ) : (
         <>
-          <section className="glass-panel mb-4 rounded-[24px] p-5 text-sm leading-7 text-[#555]">
+          <GlassPanel blur="lg" glow="soft" className="mb-4 rounded-[24px] p-5 text-sm leading-7 text-white/62">
             {user ? (
               <>
-                <div><strong>邮箱：</strong>{user.email}</div>
-                <div><strong>创建时间：</strong>{new Date(user.createdAt).toLocaleString("zh-CN")}</div>
-                <div><strong>最近更新：</strong>{new Date(user.updatedAt).toLocaleString("zh-CN")}</div>
-                <div><strong>说明：</strong>当前聚焦单人使用、中文界面与稳定记录。</div>
+                <div className="mb-3 inline-flex items-center gap-2 text-white"><UserRound className="h-4 w-4 text-cyan-300" />账号信息</div>
+                <div><strong className="text-white">邮箱：</strong>{user.email}</div>
+                <div><strong className="text-white">创建时间：</strong>{new Date(user.createdAt).toLocaleString("zh-CN")}</div>
+                <div><strong className="text-white">最近更新：</strong>{new Date(user.updatedAt).toLocaleString("zh-CN")}</div>
+                <div><strong className="text-white">说明：</strong>当前聚焦单人使用、中文界面与稳定记录。</div>
               </>
             ) : (
               <div>{message}</div>
             )}
-          </section>
+          </GlassPanel>
 
-          <section className="glass-panel mb-4 rounded-[24px] p-5">
-            <h2 className="text-base font-medium text-[#111]">修改资料</h2>
+          <GlassPanel blur="lg" glow="soft" className="mb-4 rounded-[24px] p-5">
+            <h2 className="text-base font-medium text-white">修改资料</h2>
             <div className="mt-4 space-y-3">
-              <input value={name} onChange={(e) => setName(e.target.value)} placeholder="昵称" className="w-full rounded-2xl bg-[#f7f7f5] px-4 py-4 text-sm outline-none transition-all duration-300 focus:-translate-y-[1px] focus:bg-white focus:shadow-[0_16px_40px_rgba(0,0,0,0.06)]" />
-              <button type="button" onClick={() => void saveProfile()} disabled={saving} className="rounded-full bg-[#111] px-4 py-2 text-sm text-white transition-all duration-300 hover:-translate-y-[1px] hover:shadow-[0_10px_24px_rgba(17,17,17,0.24)] active:scale-[0.98]">{saving ? "保存中" : "保存资料"}</button>
+              <input value={name} onChange={(e) => setName(e.target.value)} placeholder="昵称" className="w-full rounded-[20px] border border-white/8 bg-[rgba(8,11,18,0.56)] px-4 py-4 text-sm text-white outline-none placeholder:text-white/26" />
+              <button type="button" onClick={() => void saveProfile()} disabled={saving} className="rounded-full bg-white px-4 py-2.5 text-sm font-medium text-slate-900 transition hover:brightness-110 disabled:opacity-60">{saving ? "保存中" : "保存资料"}</button>
             </div>
-          </section>
+          </GlassPanel>
 
-          <section className="glass-panel mb-4 rounded-[24px] p-5">
-            <h2 className="text-base font-medium text-[#111]">修改密码</h2>
+          <GlassPanel blur="lg" glow="soft" className="mb-4 rounded-[24px] p-5">
+            <h2 className="inline-flex items-center gap-2 text-base font-medium text-white"><ShieldCheck className="h-4 w-4 text-cyan-300" />修改密码</h2>
             <div className="mt-4 space-y-3">
-              <input type="password" value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)} placeholder="当前密码" className="w-full rounded-2xl bg-[#f7f7f5] px-4 py-4 text-sm outline-none transition-all duration-300 focus:-translate-y-[1px] focus:bg-white focus:shadow-[0_16px_40px_rgba(0,0,0,0.06)]" />
-              <input type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} placeholder="新密码（至少 8 位）" className="w-full rounded-2xl bg-[#f7f7f5] px-4 py-4 text-sm outline-none transition-all duration-300 focus:-translate-y-[1px] focus:bg-white focus:shadow-[0_16px_40px_rgba(0,0,0,0.06)]" />
-              <button type="button" onClick={() => void updatePassword()} disabled={changingPassword} className="rounded-full bg-[#111] px-4 py-2 text-sm text-white transition-all duration-300 hover:-translate-y-[1px] hover:shadow-[0_10px_24px_rgba(17,17,17,0.24)] active:scale-[0.98]">{changingPassword ? "更新中" : "更新密码"}</button>
+              <input type="password" value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)} placeholder="当前密码" className="w-full rounded-[20px] border border-white/8 bg-[rgba(8,11,18,0.56)] px-4 py-4 text-sm text-white outline-none placeholder:text-white/26" />
+              <input type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} placeholder="新密码（至少 8 位）" className="w-full rounded-[20px] border border-white/8 bg-[rgba(8,11,18,0.56)] px-4 py-4 text-sm text-white outline-none placeholder:text-white/26" />
+              <button type="button" onClick={() => void updatePassword()} disabled={changingPassword} className="rounded-full bg-white px-4 py-2.5 text-sm font-medium text-slate-900 transition hover:brightness-110 disabled:opacity-60">{changingPassword ? "更新中" : "更新密码"}</button>
             </div>
-          </section>
+          </GlassPanel>
 
-          {message ? <div className="mb-4 rounded-2xl bg-white px-4 py-3 text-sm text-[#666] shadow-[0_10px_30px_rgba(0,0,0,0.04)]">{message}</div> : null}
+          {message ? <div className="mb-4 rounded-[20px] border border-white/8 bg-white/5 px-4 py-3 text-sm text-white/60">{message}</div> : null}
           <DataBackupCard />
         </>
       )}

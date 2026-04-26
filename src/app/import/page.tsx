@@ -1,5 +1,6 @@
-import { AppShell } from "@/components/app-shell";
 import { ImportExportPanel } from "@/components/import-export-panel";
+import { AppShell } from "@/components/app-shell";
+import { GlassPanel } from "@/components/ui/GlassPanel";
 
 const items = [
   {
@@ -22,16 +23,18 @@ const items = [
 export default function ImportPage() {
   return (
     <AppShell title="导入与迁移" subtitle="导入将直接写入数据库，导出来自当前账号的真实数据。" current="/settings">
-      <ImportExportPanel />
-      <section className="space-y-3">
-        {items.map((item, index) => (
-          <div key={item.title} className="glass-panel animate-rise rounded-[24px] p-4" style={{ animationDelay: `${index * 60}ms` }}>
-            <div className="text-xs text-[#888]">{item.status}</div>
-            <h2 className="mt-2 text-base font-medium">{item.title}</h2>
-            <p className="mt-2 text-sm leading-6 text-[#666]">{item.desc}</p>
-          </div>
-        ))}
-      </section>
+      <div className="space-y-4">
+        <ImportExportPanel />
+        <section className="grid gap-3 xl:grid-cols-3">
+          {items.map((item) => (
+            <GlassPanel key={item.title} blur="lg" glow="soft" className="rounded-[24px] p-4">
+              <div className="text-xs text-cyan-200/72">{item.status}</div>
+              <h2 className="mt-2 text-base font-medium text-white">{item.title}</h2>
+              <p className="mt-2 text-sm leading-7 text-white/58">{item.desc}</p>
+            </GlassPanel>
+          ))}
+        </section>
+      </div>
     </AppShell>
   );
 }

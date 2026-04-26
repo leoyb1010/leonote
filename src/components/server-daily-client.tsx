@@ -1,12 +1,15 @@
 "use client";
 
 import Link from "next/link";
+import { CalendarDays } from "lucide-react";
 import { useEffect, useState } from "react";
+import { GlassPanel } from "@/components/ui/GlassPanel";
+import { NoteCard } from "@/components/notes/NoteCard";
 
 type DailyItem = {
   id: string;
   date: string;
-  note: { id: string; title: string; excerpt: string };
+  note: { id: string; title: string; excerpt: string; tags?: string[] };
 };
 
 export function ServerDailyClient() {
@@ -31,11 +34,32 @@ export function ServerDailyClient() {
 
   return (
     <section className="space-y-5">
-      {message ? <div className="rounded-[24px] bg-white p-4 text-sm text-[#666]">{message}</div> : null}
-      {today ? <Link href={`/notes/${today.note.id}`} className="block rounded-[24px] bg-white p-5 shadow-[0_8px_24px_rgba(0,0,0,0.03)] transition-all duration-300 hover:-translate-y-[1px] hover:shadow-[0_14px_32px_rgba(0,0,0,0.06)]"><div className="text-xs text-[#888]">今日入口</div><h2 className="mt-2 text-base font-medium">{today.note.title}</h2><p className="mt-2 text-sm leading-6 text-[#666]">{today.note.excerpt || "今天的每日笔记已经创建，点击继续写。"}</p></Link> : null}
+      {message ? <GlassPanel blur="lg" glow="soft" className="rounded-[24px] p-4 text-sm text-white/60">{message}</GlassPanel> : null}
+      {today ? (
+        <GlassPanel blur="xl" glow="brand" className="rounded-[24px] p-5">
+          <Link href={`/notes/${today.note.id}`} className="block">
+            <div className="inline-flex items-center gap-2 text-xs text-cyan-200/72"><CalendarDays className="h-4 w-4" />今日入口</div>
+            <h2 className="mt-3 text-lg font-medium text-white">{today.note.title}</h2>
+            <p className="mt-2 text-sm leading-7 text-white/60">{today.note.excerpt || "今天的每日笔记已经创建，点击继续写。"}</p>
+          </Link>
+        </GlassPanel>
+      ) : null}
       <div className="space-y-3">
-        <div className="text-sm font-medium text-[#555]">最近几天</div>
-        {recent.map((item) => <Link key={item.id} href={`/notes/${item.note.id}`} className="block rounded-[24px] border border-[#e7e4de] bg-white p-4 transition-all duration-300 hover:-translate-y-[1px] hover:shadow-[0_14px_32px_rgba(0,0,0,0.06)]"><div className="text-xs text-[#888]">{new Date(item.date).toLocaleDateString("zh-CN")}</div><h2 className="mt-2 text-base font-medium">{item.note.title}</h2><p className="mt-2 text-sm leading-6 text-[#666]">{item.note.excerpt || "点击继续查看这一天的记录。"}</p></Link>)}
+        <div className="text-sm font-medium text-white/72">最近几天</div>
+        <div className="grid gap-4 xl:grid-cols-2">
+          {recent.map((item) => (
+            <NoteCard
+              key={item.id}
+              note={{
+                id: item.note.id,
+                title: item.note.title,
+                excerpt: item.note.excerpt || "点击继续查看这一天的记录。",
+                tags: item.note.tags || [new Date(item.date).toLocaleDateString("zh-CN")],
+                updatedAt: item.date,
+              }}
+            />
+          ))}
+        </div>
       </div>
     </section>
   );
