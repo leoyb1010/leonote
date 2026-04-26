@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { ArrowUpRight, BrainCircuit, FolderKanban, Sparkles } from "lucide-react";
+import { useEffect, useState } from "react";
 import { NoteCard } from "@/components/notes/NoteCard";
 import { GlassPanel } from "@/components/ui/GlassPanel";
 import { staggerContainer, staggerItem } from "@/lib/animations";
@@ -21,7 +22,25 @@ type HomeViewData = {
   projects: Array<{ id: string; name: string; description: string; noteCount: number; updatedAt: string }>;
 };
 
+const defaultDailyLine = "把重要的事推进一寸。";
+
 export function ServerHomeClient({ data, signedIn }: { data: HomeViewData | null; signedIn: boolean }) {
+  const [dailyLine, setDailyLine] = useState(defaultDailyLine);
+
+  useEffect(() => {
+    if (!signedIn) return;
+    let active = true;
+    fetch("/api/daily/motivation", { cache: "no-store" })
+      .then((res) => res.json())
+      .then((payload: { line?: string }) => {
+        if (active && payload.line) setDailyLine(payload.line);
+      })
+      .catch(() => undefined);
+    return () => {
+      active = false;
+    };
+  }, [signedIn]);
+
   if (!signedIn) {
     return <GlassPanel blur="lg" glow="soft" className="rounded-[28px] p-5 text-sm leading-7 text-white/62">当前未登录。先去 <Link href="/login" className="font-medium text-white underline underline-offset-4">登录</Link>，再进入你的工作台。</GlassPanel>;
   }
@@ -35,8 +54,7 @@ export function ServerHomeClient({ data, signedIn }: { data: HomeViewData | null
       <div className="grid gap-4 xl:grid-cols-[minmax(0,1.2fr)_minmax(320px,0.8fr)]">
         <GlassPanel blur="xl" glow="brand" hoverGlow className="rounded-[28px] p-5 md:p-6">
           <div className="text-[11px] uppercase tracking-[0.24em] text-white/45">Today</div>
-          <h2 className="mt-3 max-w-2xl text-2xl font-semibold tracking-[-0.04em] text-white md:text-[32px]">让 AI 真正记住你，但永远不喧宾夺主。</h2>
-          <p className="mt-3 max-w-2xl text-sm leading-7 text-white/58">Leonote 现在把笔记、项目和长期记忆沉淀在一个更安静的深色工作流里。写作、检索、整理，都更有呼吸感。</p>
+          <h2 className="mt-3 max-w-2xl text-2xl font-semibold tracking-[-0.03em] text-white md:text-[32px]">{dailyLine}</h2>
           <div className="mt-5 grid grid-cols-2 gap-3 md:grid-cols-4">
             {quickActions.map((item) => (
               <Link key={item.label} href={item.href} className="rounded-[20px] border border-white/10 bg-white/6 px-3 py-4 text-center text-sm text-white/78 transition hover:-translate-y-[1px] hover:bg-white/10 hover:text-white">
