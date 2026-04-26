@@ -29,6 +29,9 @@ const items: SidebarItem[] = [
   { label: "设置", href: "/settings", icon: Settings },
 ];
 
+const appVersion = process.env.NEXT_PUBLIC_APP_VERSION || "0.0.0";
+const gitCommit = process.env.NEXT_PUBLIC_GIT_COMMIT || "local";
+
 export function AnimatedSidebar({ current = "/" }: AnimatedSidebarProps) {
   const [collapsed, setCollapsed] = useState(false);
   const memoryIndex = useMemo(() => items.findIndex((item) => item.pulse), []);
@@ -43,8 +46,18 @@ export function AnimatedSidebar({ current = "/" }: AnimatedSidebarProps) {
               <div className="text-[11px] uppercase tracking-[0.26em] text-white/45">Leonote</div>
               <AnimatePresence initial={false}>
                 {!collapsed ? (
-                  <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 6 }} className="mt-2 text-sm text-white/68">
-                    Leo notebook
+                  <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 6 }} className="mt-2 space-y-2">
+                    <div className="text-sm font-medium text-white/76">Leo Notebook</div>
+                    <div className="grid gap-1.5 text-[11px] leading-none text-white/42">
+                      <div className="inline-flex items-center justify-between gap-2 rounded-full border border-white/8 bg-white/[0.04] px-2.5 py-1.5">
+                        <span>当前版本</span>
+                        <span className="font-medium text-white/62">v{appVersion}</span>
+                      </div>
+                      <div className="inline-flex items-center justify-between gap-2 rounded-full border border-white/8 bg-white/[0.04] px-2.5 py-1.5">
+                        <span>GitHub 同步</span>
+                        <span className="font-medium text-white/62">{gitCommit}</span>
+                      </div>
+                    </div>
                   </motion.div>
                 ) : null}
               </AnimatePresence>
