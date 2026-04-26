@@ -1,7 +1,11 @@
 "use client";
 
-import Link from "next/link";
+import { motion } from "framer-motion";
+import { Filter, Search } from "lucide-react";
 import { useEffect, useState } from "react";
+import { NoteCard } from "@/components/notes/NoteCard";
+import { GlassPanel } from "@/components/ui/GlassPanel";
+import { staggerContainer, staggerItem } from "@/lib/animations";
 
 type ApiNote = {
   id: string;
@@ -10,7 +14,9 @@ type ApiNote = {
   tags: string[];
   archived?: boolean;
   favorite?: boolean;
+  pinned?: boolean;
   project?: { id: string; name: string } | null;
+  updatedAt?: string;
 };
 
 type Project = { id: string; name: string };
@@ -59,7 +65,7 @@ export function ServerSearchView() {
       const list = favoriteOnly ? (data.notes || []).filter((note: { favorite: boolean }) => note.favorite) : (data.notes || []);
       setItems(list);
       setMessage(list.length ? "" : "没有找到匹配结果。");
-    }, 300);
+    }, 260);
     return () => {
       controller.abort();
       clearTimeout(timer);
@@ -68,27 +74,31 @@ export function ServerSearchView() {
 
   return (
     <section className="space-y-4">
-      <div className="glass-panel animate-rise rounded-[24px] p-4 transition-all duration-300 hover:shadow-[0_14px_32px_rgba(0,0,0,0.06)]">
-        <input aria-label="搜索笔记" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="搜索标题、正文、摘要、标签或项目" className="w-full rounded-2xl bg-[#f7f7f5] px-4 py-4 text-sm text-[#333] outline-none transition-all duration-200 focus:scale-[1.01] focus:bg-white focus:shadow-[0_0_0_1px_rgba(17,17,17,0.08)]" />
-        <div className="mt-3 grid gap-3 md:grid-cols-3">
-          <select value={projectId} onChange={(e) => setProjectId(e.target.value)} className="rounded-2xl bg-[#f7f7f5] px-4 py-3 text-sm text-[#333] outline-none">
-            <option value="">全部项目</option>
-            {projects.map((project) => <option key={project.id} value={project.id}>{project.name}</option>)}
-          </select>
-          <button type="button" onClick={() => setFavoriteOnly((v) => !v)} className={`rounded-2xl px-4 py-3 text-sm transition-all duration-200 ${favoriteOnly ? "bg-[#111] text-white" : "bg-[#f7f7f5] text-[#333]"}`}>仅看收藏</button>
-          <button type="button" onClick={() => setArchivedOnly((v) => !v)} className={`rounded-2xl px-4 py-3 text-sm transition-all duration-200 ${archivedOnly ? "bg-[#111] text-white" : "bg-[#f7f7f5] text-[#333]"}`}>仅看归档</button>
+      <GlassPanel blur="xl" glow="soft" className="rounded-[24px] p-4">
+        <div className="flex items-center gap-3 rounded-[20px] border border-white/8 bg-[rgba(8,11,18,0.56)] px-4 py-3">
+          <Search className="h-4 w-4 text-white/36" />
+          <input aria-label="搜索笔记" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="搜索标题、正文、摘要、标签或项目" className="w-full bg-transparent text-sm text-white outline-none placeholder:text-white/26" />
         </div>
-      </div>
-      {message ? <div className="glass-panel rounded-[24px] p-4 text-sm text-[#666]">{message}</div> : null}
-      <div className="space-y-3">
+        <div className="mt-3 grid gap-3 md:grid-cols-3">
+          <label className="flex items-center gap-2 rounded-[18px] border border-white/8 bg-white/6 px-3 py-3 text-sm text-white/72">
+            <Filter className="h-4 w-4 text-white/42" />
+            <select value={projectId} onChange={(event) => setProjectId(event.target.value)} className="w-full bg-transparent outline-none">
+              <option value="">全部项目</option>
+              {projects.map((project) => <option key={project.id} value={project.id}>{project.name}</option>)}
+            </select>
+          </label>
+          <button type="button" onClick={() => setFavoriteOnly((value) => !value)} className={`rounded-[18px] px-4 py-3 text-sm transition ${favoriteOnly ? "bg-white text-slate-900" : "border border-white/8 bg-white/6 text-white/72"}`}>仅看收藏</button>
+          <button type="button" onClick={() => setArchivedOnly((value) => !value)} className={`rounded-[18px] px-4 py-3 text-sm transition ${archivedOnly ? "bg-white text-slate-900" : "border border-white/8 bg-white/6 text-white/72"}`}>仅看归档</button>
+        </div>
+      </GlassPanel>
+      {message ? <GlassPanel blur="lg" glow="soft" className="rounded-[24px] p-4 text-sm text-white/62">{message}</GlassPanel> : null}
+      <motion.div variants={staggerContainer} initial="initial" animate="animate" className="grid gap-4 xl:grid-cols-2">
         {items.map((note) => (
-          <Link key={note.id} href={`/notes/${note.id}`} className="glass-panel block rounded-[24px] p-4 transition-all duration-300 hover:-translate-y-[1px] hover:shadow-[0_14px_32px_rgba(0,0,0,0.06)]">
-            <div className="flex items-center justify-between gap-3 text-xs text-[#888]"><span>{note.project?.name ? `项目 · ${note.project.name}` : note.tags.join(" · ") || "未分类"}</span><span>{note.favorite ? "已收藏" : note.archived ? "已归档" : ""}</span></div>
-            <h2 className="mt-2 text-base font-medium">{note.title}</h2>
-            <p className="mt-2 text-sm leading-6 text-[#666]">{note.excerpt}</p>
-          </Link>
+          <motion.div key={note.id} variants={staggerItem}>
+            <NoteCard note={note} />
+          </motion.div>
         ))}
-      </div>
+      </motion.div>
     </section>
   );
 }

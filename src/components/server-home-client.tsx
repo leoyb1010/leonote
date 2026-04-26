@@ -1,14 +1,19 @@
 import Link from "next/link";
+import { motion } from "framer-motion";
+import { ArrowUpRight, BrainCircuit, FolderKanban, Sparkles } from "lucide-react";
+import { NoteCard } from "@/components/notes/NoteCard";
+import { GlassPanel } from "@/components/ui/GlassPanel";
+import { staggerContainer, staggerItem } from "@/lib/animations";
 
 const quickActions = [
   { label: "继续记录", href: "/notes/new" },
   { label: "搜索", href: "/search" },
-  { label: "收藏", href: "/favorites" },
+  { label: "记忆", href: "/favorites" },
   { label: "每日", href: "/daily" },
 ];
 
 type HomeViewData = {
-  recent: Array<{ id: string; title: string; excerpt: string; tags: string[]; updatedAt: string }>;
+  recent: Array<{ id: string; title: string; excerpt: string; tags: string[]; updatedAt: string; favorite?: boolean; pinned?: boolean }>;
   tags: string[];
   counts: { favorite: number; pinned: number; total: number };
   projects: Array<{ id: string; name: string; description: string; noteCount: number; updatedAt: string }>;
@@ -16,40 +21,77 @@ type HomeViewData = {
 
 export function ServerHomeClient({ data, signedIn }: { data: HomeViewData | null; signedIn: boolean }) {
   if (!signedIn) {
-    return <section className="glass-panel animate-rise rounded-[28px] p-5 text-sm leading-6 text-[#666]">当前未登录。先去 <Link href="/login" className="font-medium text-[#111] underline underline-offset-4">登录</Link>，再进入你的工作台。</section>;
+    return <GlassPanel blur="lg" glow="soft" className="rounded-[28px] p-5 text-sm leading-7 text-white/62">当前未登录。先去 <Link href="/login" className="font-medium text-white underline underline-offset-4">登录</Link>，再进入你的工作台。</GlassPanel>;
   }
 
   if (!data) {
-    return <section className="glass-panel animate-rise rounded-[28px] p-5 text-sm leading-6 text-[#666]">正在准备工作台…</section>;
+    return <GlassPanel blur="lg" glow="soft" className="rounded-[28px] p-5 text-sm leading-7 text-white/62">正在准备工作台…</GlassPanel>;
   }
 
   return (
-    <>
-      <section className="glass-panel animate-rise mb-6 rounded-[28px] p-5 transition-all duration-300 hover:shadow-[0_16px_40px_rgba(0,0,0,0.06)]">
-        <p className="mb-3 text-sm text-[#666]">Today</p>
-        <Link href="/notes/new" className="block rounded-2xl bg-[#f7f7f5] p-4 text-sm text-[#666] transition-all duration-200 hover:bg-white hover:shadow-[0_0_0_1px_rgba(17,17,17,0.06)]">现在想记什么？直接开始。</Link>
-        <div className="mt-4 grid grid-cols-4 gap-2">{quickActions.map((item) => <Link key={item.label} href={item.href} className="rounded-2xl bg-[#f3f2ef] px-3 py-3 text-center text-xs text-[#333] transition-all duration-200 hover:-translate-y-[1px] hover:bg-[#ebe8e1] active:scale-[0.98]">{item.label}</Link>)}</div>
+    <div className="space-y-6">
+      <div className="grid gap-4 xl:grid-cols-[minmax(0,1.2fr)_minmax(320px,0.8fr)]">
+        <GlassPanel blur="xl" glow="brand" hoverGlow className="rounded-[28px] p-5 md:p-6">
+          <div className="text-[11px] uppercase tracking-[0.24em] text-white/45">Today</div>
+          <h2 className="mt-3 max-w-2xl text-2xl font-semibold tracking-[-0.04em] text-white md:text-[32px]">让 AI 真正记住你，但永远不喧宾夺主。</h2>
+          <p className="mt-3 max-w-2xl text-sm leading-7 text-white/58">Leonote 现在把笔记、项目和长期记忆沉淀在一个更安静的深色工作流里。写作、检索、整理，都更有呼吸感。</p>
+          <div className="mt-5 grid grid-cols-2 gap-3 md:grid-cols-4">
+            {quickActions.map((item) => (
+              <Link key={item.label} href={item.href} className="rounded-[20px] border border-white/10 bg-white/6 px-3 py-4 text-center text-sm text-white/78 transition hover:-translate-y-[1px] hover:bg-white/10 hover:text-white">
+                {item.label}
+              </Link>
+            ))}
+          </div>
+        </GlassPanel>
+
+        <div className="grid grid-cols-3 gap-3 xl:grid-cols-1">
+          <GlassPanel blur="lg" glow="soft" className="rounded-[24px] p-4 text-center"><div className="text-3xl font-semibold text-white">{data.counts.total}</div><div className="mt-1 text-xs text-white/42">最近活跃</div></GlassPanel>
+          <GlassPanel blur="lg" glow="soft" className="rounded-[24px] p-4 text-center"><div className="text-3xl font-semibold text-white">{data.counts.favorite}</div><div className="mt-1 text-xs text-white/42">收藏</div></GlassPanel>
+          <GlassPanel blur="lg" glow="soft" className="rounded-[24px] p-4 text-center"><div className="text-3xl font-semibold text-white">{data.counts.pinned}</div><div className="mt-1 text-xs text-white/42">置顶</div></GlassPanel>
+        </div>
+      </div>
+
+      <section>
+        <div className="mb-3 flex items-center justify-between gap-3">
+          <div className="inline-flex items-center gap-2 text-sm font-medium text-white"><FolderKanban className="h-4 w-4 text-cyan-300" /> Focus / 项目推进</div>
+          <Link href="/projects" className="inline-flex items-center gap-1 text-xs text-white/46">查看全部 <ArrowUpRight className="h-3.5 w-3.5" /></Link>
+        </div>
+        <div className="grid gap-4 xl:grid-cols-3">
+          {data.projects.length ? data.projects.map((project) => (
+            <GlassPanel key={project.id} blur="lg" glow="soft" className="rounded-[24px] p-4">
+              <Link href={`/projects/${project.id}`}>
+                <div className="flex items-center justify-between gap-3"><h3 className="text-sm font-semibold text-white">{project.name}</h3><span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs text-white/56">{project.noteCount} 条</span></div>
+                <p className="mt-3 text-sm leading-7 text-white/60">{project.description || "继续推进这个项目的记录与沉淀。"}</p>
+                <div className="mt-4 text-xs text-white/42">最近活跃：{new Date(project.updatedAt).toLocaleString("zh-CN")}</div>
+              </Link>
+            </GlassPanel>
+          )) : <GlassPanel blur="lg" glow="soft" className="rounded-[24px] p-4 text-sm text-white/58">还没有项目，去项目页创建第一个项目。</GlassPanel>}
+        </div>
       </section>
 
-      <section className="mb-6 grid grid-cols-3 gap-3">
-        <div className="glass-panel rounded-[24px] p-4 text-center"><div className="text-2xl font-semibold">{data.counts.total}</div><div className="mt-1 text-xs text-[#777]">最近活跃</div></div>
-        <div className="glass-panel rounded-[24px] p-4 text-center"><div className="text-2xl font-semibold">{data.counts.favorite}</div><div className="mt-1 text-xs text-[#777]">收藏</div></div>
-        <div className="glass-panel rounded-[24px] p-4 text-center"><div className="text-2xl font-semibold">{data.counts.pinned}</div><div className="mt-1 text-xs text-[#777]">置顶</div></div>
+      <section className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_320px]">
+        <div>
+          <div className="mb-3 flex items-center justify-between"><h2 className="inline-flex items-center gap-2 text-lg font-medium text-white"><Sparkles className="h-4 w-4 text-cyan-300" /> Recent</h2><Link className="text-sm text-white/46" href="/notes">查看全部</Link></div>
+          {data.recent.length === 0 ? <GlassPanel blur="lg" glow="soft" className="rounded-[24px] p-5 text-sm leading-7 text-white/58">还没有笔记，先创建第一条记录。</GlassPanel> : null}
+          <motion.div variants={staggerContainer} initial="initial" animate="animate" className="grid gap-4 xl:grid-cols-2">
+            {data.recent.map((note) => (
+              <motion.div key={note.id} variants={staggerItem}>
+                <NoteCard note={note} />
+              </motion.div>
+            ))}
+          </motion.div>
+        </div>
+        <GlassPanel blur="lg" glow="brand" className="rounded-[24px] p-5">
+          <div className="inline-flex items-center gap-2 text-sm text-white"><BrainCircuit className="h-4 w-4 text-cyan-300" /> 常用标签 / Memory cues</div>
+          <div className="mt-4 flex flex-wrap gap-2">
+            {(data.tags.length ? data.tags : ["暂无标签"]).map((tag, index) => (
+              <Link key={tag} href={tag === "暂无标签" ? "/notes" : `/notes?tag=${encodeURIComponent(tag)}`} className={`rounded-full px-4 py-2 text-sm ${index === 0 ? "bg-white text-slate-900" : "border border-white/10 bg-white/6 text-white/70"}`}>
+                {tag}
+              </Link>
+            ))}
+          </div>
+        </GlassPanel>
       </section>
-
-      <section className="mb-6">
-        <div className="mb-3 flex items-center justify-between"><div className="text-sm font-medium">Focus / 项目推进</div><Link href="/projects" className="text-xs text-[#777]">查看全部</Link></div>
-        <div className="space-y-3">{data.projects.length ? data.projects.map((project) => <Link key={project.id} href={`/notes?projectId=${project.id}`} className="glass-panel block rounded-[24px] p-4 transition-all duration-300 hover:-translate-y-[1px] hover:shadow-[0_14px_32px_rgba(0,0,0,0.06)]"><div className="flex items-center justify-between gap-3"><h3 className="text-sm font-medium text-[#111]">{project.name}</h3><span className="rounded-full bg-[#f3f2ef] px-3 py-1 text-xs text-[#666]">{project.noteCount} 条</span></div><p className="mt-2 text-sm leading-6 text-[#666]">{project.description || "继续推进这个项目的记录与沉淀。"}</p></Link>) : <div className="glass-panel rounded-[24px] p-4 text-sm text-[#666]">还没有项目，去项目页创建第一个项目。</div>}</div>
-      </section>
-
-      <section className="mb-6">
-        <div className="mb-3 text-sm font-medium">常用标签</div>
-        <div className="flex gap-2 overflow-x-auto pb-1">{(data.tags.length ? data.tags : ["暂无标签"]).map((tag, index) => <Link key={tag} href={tag === "暂无标签" ? "/notes" : `/notes?tag=${encodeURIComponent(tag)}`} className={`shrink-0 rounded-full px-4 py-2 text-sm ${index === 0 ? "bg-[#111] text-white" : "border border-[#e7e4de] bg-white text-[#555]"}`}>{tag}</Link>)}</div>
-      </section>
-
-      <section className="mb-4 flex items-center justify-between"><h2 className="text-lg font-medium">Recent</h2><Link className="text-sm text-[#777]" href="/notes">查看全部</Link></section>
-      {data.recent.length === 0 ? <section className="glass-panel rounded-[24px] p-5 text-sm leading-6 text-[#666]">还没有笔记，先创建第一条记录。</section> : null}
-      <section className="space-y-3">{data.recent.map((note) => <Link key={note.id} href={`/notes/${note.id}`} className="glass-panel block rounded-[24px] p-4 transition-all duration-300 hover:-translate-y-[1px] hover:shadow-[0_14px_32px_rgba(0,0,0,0.06)]"><div className="mb-3 flex items-center justify-between gap-3"><div className="inline-flex rounded-full bg-[#f1efe9] px-2 py-1 text-xs text-[#666]">{note.tags[0] || "未分类"}</div><span className="text-xs text-[#888]">{new Date(note.updatedAt).toLocaleString("zh-CN", { month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit" })}</span></div><h3 className="text-base font-medium text-[#111]">{note.title}</h3><p className="mt-2 text-sm leading-6 text-[#666]">{note.excerpt}</p></Link>)}</section>
-    </>
+    </div>
   );
 }

@@ -38,7 +38,15 @@ export async function getHomeViewData(userId: string) {
 export async function getProjectCards(userId: string) {
   const projects = await prisma.project.findMany({
     where: { userId },
-    include: { _count: { select: { notes: true } }, notes: { orderBy: { updatedAt: "desc" }, take: 1, select: { updatedAt: true } } },
+    include: {
+      _count: { select: { notes: true } },
+      notes: {
+        where: { deletedAt: null },
+        orderBy: [{ isPinned: "desc" }, { updatedAt: "desc" }],
+        take: 4,
+        include: { project: true, tags: { include: { tag: true } } },
+      },
+    },
     orderBy: [{ updatedAt: "desc" }, { createdAt: "desc" }],
   });
 
@@ -49,5 +57,15 @@ export async function getProjectCards(userId: string) {
     noteCount: item._count.notes,
     updatedAt: (item.notes[0]?.updatedAt ?? item.updatedAt).toISOString(),
     status: item.status,
+    previewNotes: item.notes.map((note) => ({
+      id: note.id,
+      title: note.title,
+      excerpt: note.excerpt,
+      tags: note.tags.map((tag) => tag.tag.name),
+      favorite: note.isFavorite,
+      pinned: note.isPinned,
+      archived: note.isArchived,
+      updatedAt: note.updatedAt.toISOString(),
+    })),
   }));
 }

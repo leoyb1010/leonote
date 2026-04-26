@@ -1,4 +1,9 @@
 import Link from "next/link";
+import type { ReactNode } from "react";
+import { Bell, Plus, Search } from "lucide-react";
+import { AnimatedSidebar } from "@/components/layout/AnimatedSidebar";
+import { AISpark } from "@/components/ui/AISpark";
+import { GlassPanel } from "@/components/ui/GlassPanel";
 import { BottomNav } from "@/components/bottom-nav";
 
 export function AppShell({
@@ -10,28 +15,41 @@ export function AppShell({
   title: string;
   subtitle?: string;
   current?: string;
-  children: React.ReactNode;
+  children: ReactNode;
 }) {
   return (
-    <main className="min-h-screen bg-[#f5f5f3] text-[#111111]">
-      <div className="mx-auto flex min-h-screen w-full max-w-md flex-col px-5 py-6 md:max-w-5xl md:px-8">
-        <header className="mb-6 flex items-start justify-between gap-4">
-          <div>
-            <p className="text-xs uppercase tracking-[0.2em] text-[#666]">Leonote</p>
-            <h1 className="mt-2 text-3xl font-semibold tracking-tight">{title}</h1>
-            {subtitle ? <p className="mt-2 text-sm leading-6 text-[#666]">{subtitle}</p> : null}
-          </div>
-          <div className="flex gap-2">
-            <Link className="rounded-full border border-[#d8d6d1] bg-white px-4 py-2 text-sm text-[#111] shadow-sm transition-all duration-200 hover:-translate-y-[1px] hover:shadow-md active:scale-[0.98]" href="/search">
-              搜索
-            </Link>
-            <Link className="rounded-full border border-[#d8d6d1] bg-white px-4 py-2 text-sm text-[#111] shadow-sm transition-all duration-200 hover:-translate-y-[1px] hover:shadow-md active:scale-[0.98]" href="/notes/new">
-              新建
-            </Link>
-          </div>
-        </header>
-        {children}
-        <BottomNav current={current} />
+    <main className="min-h-screen bg-transparent text-white">
+      <div className="mx-auto flex min-h-screen w-full max-w-[1600px] gap-6 px-4 py-4 md:px-6 lg:px-8">
+        <AnimatedSidebar current={current} />
+
+        <div className="relative flex min-h-screen min-w-0 flex-1 flex-col">
+          <AISpark density={10} subdued className="opacity-30" />
+          <GlassPanel blur="xl" glow="soft" className="noise-mask relative flex min-h-[calc(100vh-2rem)] flex-col overflow-hidden rounded-[32px] px-4 py-4 sm:px-5 md:px-6 lg:px-8">
+            <div className="pointer-events-none absolute inset-x-0 top-0 h-24 bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.08),transparent_62%)]" />
+            <header className="relative z-10 mb-6 flex flex-col gap-4 border-b border-white/8 pb-5 md:flex-row md:items-start md:justify-between">
+              <div className="min-w-0">
+                <p className="text-[11px] uppercase tracking-[0.28em] text-white/38">Leonote</p>
+                <h1 className="mt-3 text-3xl font-semibold tracking-[-0.04em] text-white md:text-4xl">{title}</h1>
+                {subtitle ? <p className="mt-3 max-w-3xl text-sm leading-7 text-white/58 md:text-[15px]">{subtitle}</p> : null}
+              </div>
+              <div className="flex flex-wrap gap-2">
+                <Link className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/6 px-4 py-2.5 text-sm text-white/76 transition-all duration-200 hover:-translate-y-[1px] hover:bg-white/10 hover:text-white active:scale-[0.98]" href="/search">
+                  <Search className="h-4 w-4" /> 搜索
+                </Link>
+                <Link className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/6 px-4 py-2.5 text-sm text-white/76 transition-all duration-200 hover:-translate-y-[1px] hover:bg-white/10 hover:text-white active:scale-[0.98]" href="/settings">
+                  <Bell className="h-4 w-4" /> 设置
+                </Link>
+                <Link className="inline-flex items-center gap-2 rounded-full bg-white px-4 py-2.5 text-sm font-medium text-slate-900 shadow-[0_10px_24px_rgba(255,255,255,0.14)] transition-all duration-200 hover:-translate-y-[1px] hover:brightness-110 active:scale-[0.98]" href="/notes/new">
+                  <Plus className="h-4 w-4" /> 新建
+                </Link>
+              </div>
+            </header>
+
+            <div className="relative z-10 flex-1 pb-24 lg:pb-0">{children}</div>
+
+            <BottomNav current={current} />
+          </GlassPanel>
+        </div>
       </div>
     </main>
   );

@@ -1,7 +1,10 @@
 "use client";
 
-import Link from "next/link";
+import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
+import { NoteCard } from "@/components/notes/NoteCard";
+import { GlassPanel } from "@/components/ui/GlassPanel";
+import { staggerContainer, staggerItem } from "@/lib/animations";
 
 type ApiNote = {
   id: string;
@@ -10,6 +13,8 @@ type ApiNote = {
   tags: string[];
   updatedAt: string;
   favorite?: boolean;
+  archived?: boolean;
+  pinned?: boolean;
 };
 
 export function ServerFilterView({ type }: { type: "favorite" | "archived" | "deleted" }) {
@@ -27,7 +32,7 @@ export function ServerFilterView({ type }: { type: "favorite" | "archived" | "de
     }
     const list = type === "favorite" ? (data.notes || []).filter((note: { favorite: boolean }) => note.favorite) : (data.notes || []);
     setItems(list);
-    setMessage("");
+    setMessage(list.length ? "" : "当前还没有相关内容。");
   };
 
   useEffect(() => {
@@ -43,7 +48,7 @@ export function ServerFilterView({ type }: { type: "favorite" | "archived" | "de
         }
         const list = type === "favorite" ? (data.notes || []).filter((note: { favorite: boolean }) => note.favorite) : (data.notes || []);
         setItems(list);
-        setMessage("");
+        setMessage(list.length ? "" : "当前还没有相关内容。");
       })
       .catch(() => {
         if (!active) return;
@@ -62,25 +67,22 @@ export function ServerFilterView({ type }: { type: "favorite" | "archived" | "de
   const restore = async (id: string) => { const res = await fetch(`/api/notes/${id}/restore`, { method: "POST" }); if (res.ok) await refreshList(); };
   const remove = async (id: string) => { if (!window.confirm("确认彻底删除？")) return; const res = await fetch(`/api/notes/${id}`, { method: "DELETE" }); if (res.ok) await refreshList(); };
 
-  if (message && !items.length) return <div className="rounded-[24px] bg-white p-4 text-sm text-[#666]">{message}</div>;
-  if (!items.length) return <div className="rounded-[24px] bg-white p-4 text-sm text-[#666]">当前还没有相关内容。</div>;
+  if (message && !items.length) return <GlassPanel blur="lg" glow="soft" className="rounded-[24px] p-4 text-sm text-white/62">{message}</GlassPanel>;
 
   return (
-    <section className="space-y-3">
-      {items.map((note) => (
-        <div key={note.id} className="rounded-[24px] border border-[#e7e4de] bg-white p-4 transition-all duration-300 hover:-translate-y-[1px] hover:shadow-[0_14px_32px_rgba(0,0,0,0.06)]">
-          <Link href={`/notes/${note.id}`} className="block">
-            <div className="text-xs text-[#888]">{new Date(note.updatedAt).toLocaleString("zh-CN")}</div>
-            <h2 className="mt-2 text-base font-medium">{note.title}</h2>
-            <p className="mt-2 text-sm leading-6 text-[#666]">{note.excerpt}</p>
-          </Link>
-          <div className="mt-3 flex flex-wrap gap-2">
-            {type === "favorite" ? <button onClick={() => void patch(note.id, { favorite: false })} type="button" className="rounded-full bg-[#f3f2ef] px-3 py-2 text-xs text-[#555] transition-all duration-200 hover:bg-[#ebe8e1] active:scale-[0.98]">取消收藏</button> : null}
-            {type === "archived" ? <button onClick={() => void patch(note.id, { archived: false })} type="button" className="rounded-full bg-[#f3f2ef] px-3 py-2 text-xs text-[#555] transition-all duration-200 hover:bg-[#ebe8e1] active:scale-[0.98]">取消归档</button> : null}
-            {type === "deleted" ? <><button onClick={() => void restore(note.id)} type="button" className="rounded-full bg-[#f3f2ef] px-3 py-2 text-xs text-[#555] transition-all duration-200 hover:bg-[#ebe8e1] active:scale-[0.98]">恢复</button><button onClick={() => void remove(note.id)} type="button" className="rounded-full bg-[#111] px-3 py-2 text-xs text-white transition-all duration-200 hover:opacity-95 active:scale-[0.98]">彻底删除</button></> : null}
-          </div>
-        </div>
-      ))}
+    <section className="space-y-4">
+      <motion.div variants={staggerContainer} initial="initial" animate="animate" className="grid gap-4 xl:grid-cols-2">
+        {items.map((note) => (
+          <motion.div key={note.id} variants={staggerItem} className="space-y-3">
+            <NoteCard note={note} />
+            <div className="flex flex-wrap gap-2 px-1">
+              {type === "favorite" ? <button onClick={() => void patch(note.id, { favorite: false })} type="button" className="rounded-full border border-white/10 bg-white/6 px-3 py-2 text-xs text-white/72 transition hover:bg-white/10">取消收藏</button> : null}
+              {type === "archived" ? <button onClick={() => void patch(note.id, { archived: false })} type="button" className="rounded-full border border-white/10 bg-white/6 px-3 py-2 text-xs text-white/72 transition hover:bg-white/10">取消归档</button> : null}
+              {type === "deleted" ? <><button onClick={() => void restore(note.id)} type="button" className="rounded-full border border-white/10 bg-white/6 px-3 py-2 text-xs text-white/72 transition hover:bg-white/10">恢复</button><button onClick={() => void remove(note.id)} type="button" className="rounded-full bg-[rgba(251,113,133,0.14)] px-3 py-2 text-xs text-rose-200 transition hover:bg-[rgba(251,113,133,0.20)]">彻底删除</button></> : null}
+            </div>
+          </motion.div>
+        ))}
+      </motion.div>
     </section>
   );
 }

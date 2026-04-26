@@ -6,7 +6,7 @@ export default async function NoteDetailPage({ params }: { params: Promise<{ id:
   const { id } = await params;
 
   return (
-    <AppShell title="笔记详情" subtitle="查看与编辑当前笔记。" current="/">
+    <AppShell title="笔记详情" subtitle="查看与编辑当前笔记。" current="/notes">
       <div className="space-y-4">
         <ServerNoteDetailClient id={id} />
         <AINotePanel noteId={id} />

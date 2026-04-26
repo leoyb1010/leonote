@@ -1,6 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { AnimatePresence, motion } from "framer-motion";
+import { useEffect, useMemo, useState } from "react";
+import { AISpark } from "@/components/ui/AISpark";
+import { GlassPanel } from "@/components/ui/GlassPanel";
+import { MemoryFactCard } from "@/components/ui/MemoryFactCard";
+import { staggerContainer, staggerItem } from "@/lib/animations";
+import { cn } from "@/lib/utils";
 
 type MemoryItem = {
   id: string;
@@ -13,6 +19,7 @@ type MemoryItem = {
 export function MemoryFactsPanel() {
   const [items, setItems] = useState<MemoryItem[]>([]);
   const [message, setMessage] = useState("正在读取长期记忆…");
+  const [activeType, setActiveType] = useState<string>("全部");
 
   const load = () => {
     fetch("/api/ai/memories", { cache: "no-store" })
@@ -31,27 +38,52 @@ export function MemoryFactsPanel() {
     load();
   }, []);
 
+  const types = useMemo(() => ["全部", ...Array.from(new Set(items.map((item) => item.type)))], [items]);
+  const filteredItems = useMemo(() => (activeType === "全部" ? items : items.filter((item) => item.type === activeType)), [activeType, items]);
+
   return (
-    <section className="glass-panel animate-rise space-y-4 rounded-[28px] p-5">
-      <div>
-        <h2 className="text-base font-medium text-[#111]">长期记忆</h2>
-        <p className="mt-2 text-sm leading-6 text-[#666]">这里放的是稳定信息，不是普通笔记。后续问我时可以优先利用这些记忆。</p>
-      </div>
-      {items.length ? (
-        <div className="space-y-3">
-          {items.map((item) => (
-            <div key={item.id} className="rounded-2xl bg-[#f7f7f5] px-4 py-3 text-sm text-[#444]">
-              <div className="flex items-center justify-between gap-3 text-xs text-[#888]">
-                <span>{item.type}</span>
-                <span>置信度 {Math.round(item.confidence * 100)}%</span>
-              </div>
-              <div className="mt-2">{item.content}</div>
-            </div>
-          ))}
+    <GlassPanel blur="xl" glow="brand" className="relative overflow-hidden rounded-[28px] p-5">
+      <AISpark density={14} subdued className="opacity-60" />
+      <div className="relative z-10 space-y-5">
+        <div>
+          <div className="text-[11px] uppercase tracking-[0.24em] text-white/45">Memory Facts</div>
+          <h2 className="mt-2 text-xl font-semibold text-white">长期记忆</h2>
+          <p className="mt-2 text-sm leading-7 text-white/58">这里放的是稳定信息，不是普通笔记。切换类别时使用 stagger 淡出重排，帮助你快速理解记忆分布。</p>
         </div>
-      ) : (
-        <div className="rounded-2xl bg-[#f7f7f5] px-4 py-3 text-sm text-[#666]">{message}</div>
-      )}
-    </section>
+
+        <div className="flex flex-wrap gap-2">
+          {types.map((type) => {
+            const active = activeType === type;
+            return (
+              <button
+                key={type}
+                type="button"
+                onClick={() => setActiveType(type)}
+                className={cn(
+                  "rounded-full border px-3 py-2 text-xs transition",
+                  active ? "border-cyan-300/24 bg-cyan-300/12 text-cyan-100" : "border-white/10 bg-white/6 text-white/56 hover:bg-white/10 hover:text-white",
+                )}
+              >
+                {type}
+              </button>
+            );
+          })}
+        </div>
+
+        {filteredItems.length ? (
+          <motion.div layout variants={staggerContainer} initial="initial" animate="animate" className="columns-1 gap-4 md:columns-2 xl:columns-3">
+            <AnimatePresence mode="popLayout">
+              {filteredItems.map((item) => (
+                <motion.div key={item.id} layout variants={staggerItem} initial="initial" animate="animate" exit="exit">
+                  <MemoryFactCard id={item.id} type={item.type} content={item.content} confidence={item.confidence} updatedAt={item.updatedAt} />
+                </motion.div>
+              ))}
+            </AnimatePresence>
+          </motion.div>
+        ) : (
+          <div className="rounded-[22px] border border-white/8 bg-white/5 px-4 py-4 text-sm text-white/58">{message}</div>
+        )}
+      </div>
+    </GlassPanel>
   );
 }

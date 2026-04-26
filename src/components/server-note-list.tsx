@@ -1,7 +1,11 @@
 "use client";
 
-import Link from "next/link";
+import { motion } from "framer-motion";
+import { Search } from "lucide-react";
 import { useEffect, useState } from "react";
+import { NoteCard } from "@/components/notes/NoteCard";
+import { GlassPanel } from "@/components/ui/GlassPanel";
+import { staggerContainer, staggerItem } from "@/lib/animations";
 
 type ApiNote = {
   id: string;
@@ -9,6 +13,10 @@ type ApiNote = {
   excerpt: string;
   tags: string[];
   project?: { name: string } | null;
+  updatedAt?: string;
+  favorite?: boolean;
+  archived?: boolean;
+  pinned?: boolean;
 };
 
 export function ServerNoteList() {
@@ -30,7 +38,7 @@ export function ServerNoteList() {
       }
       setItems(data.notes || []);
       setMessage(data.notes?.length ? "" : "当前还没有笔记");
-    }, 300);
+    }, 280);
     return () => {
       controller.abort();
       clearTimeout(timer);
@@ -38,20 +46,23 @@ export function ServerNoteList() {
   }, [query]);
 
   return (
-    <section className="space-y-4">
-      <div className="glass-panel animate-rise rounded-[24px] p-4 transition-all duration-300 hover:shadow-[0_14px_32px_rgba(0,0,0,0.06)]">
-        <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="搜索标题、内容、标签或项目" className="w-full rounded-2xl bg-[#f7f7f5] px-4 py-4 text-sm outline-none transition-all duration-300 focus:-translate-y-[1px] focus:bg-white focus:shadow-[0_16px_40px_rgba(0,0,0,0.06)]" />
-      </div>
-      {message ? <div className="glass-panel rounded-[24px] p-4 text-sm text-[#666]">{message}</div> : null}
-      <div className="space-y-3">
-        {items.map((note, index) => (
-          <Link key={note.id} href={`/notes/${note.id}`} className="glass-panel animate-rise block rounded-[24px] p-4 transition-all duration-300 hover:-translate-y-[2px] hover:shadow-[0_18px_40px_rgba(0,0,0,0.08)]" style={{ animationDelay: `${index * 40}ms` }}>
-            <div className="flex items-center justify-between gap-3 text-xs text-[#888]"><span>{note.project?.name ? `项目 · ${note.project.name}` : note.tags.join(" · ") || "未分类"}</span><span>{note.project?.name && note.tags.length ? note.tags.join(" · ") : ""}</span></div>
-            <h2 className="mt-2 text-base font-medium">{note.title}</h2>
-            <p className="mt-2 text-sm leading-6 text-[#666]">{note.excerpt}</p>
-          </Link>
+    <section className="space-y-5">
+      <GlassPanel blur="xl" glow="soft" className="rounded-[24px] p-4">
+        <div className="flex items-center gap-3 rounded-[20px] border border-white/8 bg-[rgba(8,11,18,0.56)] px-4 py-3">
+          <Search className="h-4 w-4 text-white/36" />
+          <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="搜索标题、内容、标签或项目" className="w-full bg-transparent text-sm text-white outline-none placeholder:text-white/26" />
+        </div>
+      </GlassPanel>
+
+      {message ? <GlassPanel blur="lg" glow="soft" className="rounded-[24px] p-4 text-sm text-white/62">{message}</GlassPanel> : null}
+
+      <motion.div variants={staggerContainer} initial="initial" animate="animate" className="grid gap-4 xl:grid-cols-2">
+        {items.map((note) => (
+          <motion.div key={note.id} variants={staggerItem}>
+            <NoteCard note={note} />
+          </motion.div>
         ))}
-      </div>
+      </motion.div>
     </section>
   );
 }
