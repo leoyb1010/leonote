@@ -1,0 +1,161 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: dark;
+  --bg-root: #06070a;
+  --bg-app: #0a0c11;
+  --bg-panel: rgba(16, 19, 26, 0.72);
+  --bg-panel-strong: rgba(17, 22, 31, 0.86);
+  --text-strong: #f4f7fb;
+  --text-soft: rgba(244, 247, 251, 0.72);
+  --text-faint: rgba(244, 247, 251, 0.46);
+  --border-soft: rgba(255, 255, 255, 0.09);
+  --shadow-panel: 0 24px 72px rgba(2, 6, 23, 0.28);
+  --shadow-hover: 0 30px 90px rgba(2, 6, 23, 0.42);
+  --radius-panel: 28px;
+  --radius-card: 24px;
+  --radius-pill: 999px;
+  --motion-fast: 160ms;
+  --motion-base: 240ms;
+  --motion-medium: 360ms;
+  --motion-slow: 520ms;
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --brand-gradient: linear-gradient(135deg, #6366f1 0%, #7c3aed 52%, #22d3ee 100%);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  padding: 0;
+  margin: 0;
+  min-height: 100%;
+}
+
+html {
+  background:
+    radial-gradient(circle at top, rgba(99, 102, 241, 0.16), transparent 30%),
+    radial-gradient(circle at 84% 14%, rgba(34, 211, 238, 0.10), transparent 22%),
+    linear-gradient(180deg, #0b0d13 0%, #06070a 100%);
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  min-height: 100dvh;
+  overscroll-behavior-y: none;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+  background: transparent;
+  color: var(--text-strong);
+  min-height: 100dvh;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button,
+input,
+textarea,
+select {
+  font: inherit;
+}
+
+input,
+textarea,
+select {
+  border: 0;
+}
+
+::selection {
+  background: rgba(99, 102, 241, 0.28);
+  color: white;
+}
+
+.glass-panel {
+  background: var(--bg-panel);
+  border: 1px solid var(--border-soft);
+  box-shadow: var(--shadow-panel);
+  backdrop-filter: blur(18px);
+}
+
+.animate-rise {
+  animation: rise-in 460ms var(--ease-out);
+}
+
+.app-safe-shell {
+  padding-top: max(1rem, env(safe-area-inset-top));
+  padding-bottom: max(1rem, env(safe-area-inset-bottom));
+}
+
+.app-safe-content {
+  padding-bottom: max(1rem, env(safe-area-inset-bottom));
+}
+
+.safe-top-nav {
+  top: max(0.75rem, env(safe-area-inset-top));
+}
+
+@supports (height: 100dvh) {
+  .min-h-app {
+    min-height: 100dvh;
+  }
+}
+
+.noise-mask::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.06;
+  background-image:
+    radial-gradient(circle at 20% 20%, rgba(255,255,255,0.7) 0.5px, transparent 0.7px),
+    radial-gradient(circle at 80% 50%, rgba(255,255,255,0.6) 0.45px, transparent 0.65px),
+    radial-gradient(circle at 40% 80%, rgba(255,255,255,0.6) 0.35px, transparent 0.55px);
+  background-size: 120px 120px, 180px 180px, 160px 160px;
+}
+
+@keyframes rise-in {
+  from {
+    opacity: 0;
+    transform: translateY(16px) scale(0.985);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@view-transition {
+  navigation: auto;
+}
+
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 280ms;
+  animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  ::view-transition-old(root),
+  ::view-transition-new(root) {
+    animation: none !important;
+  }
+}

@@ -1,0 +1,66 @@
+{
+  "name": "leonote",
+  "version": "0.1.0",
+  "private": true,
+  "main": "electron/main.cjs",
+  "scripts": {
+    "dev": "next dev -p 4317",
+    "dev:lan": "next dev -H 0.0.0.0 -p 4317",
+    "db:generate": "prisma generate",
+    "db:migrate": "RUST_LOG=info prisma migrate deploy",
+    "db:push": "prisma db push",
+    "backup": "sh scripts/backup-sqlite.sh",
+    "build": "next build",
+    "standalone:prepare": "node scripts/prepare-standalone.cjs",
+    "desktop": "electron .",
+    "package:mac": "CSC_IDENTITY_AUTO_DISCOVERY=false electron-builder --mac dir",
+    "start": "node .next/standalone/server.js",
+    "start:lan": "npm run standalone:prepare && sh scripts/start-lan.sh",
+    "lint": "eslint . --ext .js,.jsx,.ts,.tsx",
+    "typecheck": "tsc --noEmit"
+  },
+  "build": {
+    "appId": "com.leo.leonote",
+    "productName": "Leonote",
+    "asar": true,
+    "mac": {
+      "category": "public.app-category.productivity",
+      "icon": "build/icon.icns",
+      "target": [
+        "dir"
+      ],
+      "identity": null
+    },
+    "files": [
+      "electron/**/*",
+      "package.json"
+    ],
+    "directories": {
+      "output": "dist"
+    }
+  },
+  "dependencies": {
+    "@prisma/client": "^6.7.0",
+    "bcryptjs": "^3.0.2",
+    "framer-motion": "^12.38.0",
+    "lucide-react": "^1.11.0",
+    "next": "16.2.4",
+    "react": "19.0.0",
+    "react-dom": "19.0.0",
+    "zod": "^3.24.4"
+  },
+  "devDependencies": {
+    "@types/node": "^22.15.3",
+    "@types/react": "^19.0.10",
+    "@types/react-dom": "^19.0.4",
+    "autoprefixer": "^10.4.20",
+    "electron": "^41.3.0",
+    "electron-builder": "^26.8.1",
+    "eslint": "^9.25.0",
+    "eslint-config-next": "16.2.4",
+    "postcss": "^8.4.49",
+    "prisma": "^6.7.0",
+    "tailwindcss": "^3.4.17",
+    "typescript": "^5.8.3"
+  }
+}
