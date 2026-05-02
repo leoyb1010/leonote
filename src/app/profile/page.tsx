@@ -83,7 +83,7 @@ export default function ProfilePage() {
   };
 
   return (
-    <div className="max-w-2xl mx-auto space-y-6">
+    <div className="max-w-[var(--content-max)] mx-auto space-y-6">
       <h1 className="text-2xl font-bold text-[var(--text-primary)]">个人资料与安全</h1>
 
       {needLogin ? (

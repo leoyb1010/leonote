@@ -69,7 +69,7 @@ export function ServerSearchView() {
   }, [query, projectId, favoriteOnly, archivedOnly]);
 
   return (
-    <div className="space-y-4">
+    <div className="max-w-[var(--content-max)] mx-auto space-y-4">
       <h1 className="text-2xl font-bold text-[var(--text-primary)] mb-2">搜索</h1>
       <Card padding="sm">
         <div className="flex items-center gap-3 rounded-[var(--radius-md)] border border-[var(--border-default)] bg-[var(--surface-base)] px-4 py-3">

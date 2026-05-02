@@ -9,14 +9,14 @@ const items = [
 
 export default function ImportPage() {
   return (
-    <div className="space-y-6">
+    <div className="max-w-[var(--content-max)] mx-auto space-y-6">
       <h1 className="text-2xl font-bold text-[var(--text-primary)]">导入与迁移</h1>
       <ImportExportPanel />
       <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
         {items.map((item) => (
           <Card key={item.title} padding="sm">
             <div className="text-xs text-[var(--primary)] font-medium mb-2">{item.status}</div>
-            <h2 className="text-sm font-medium text-[var(--text-primary)] mb-1">{item.title}</h2>
+            <h2 className="text-sm font-medium break-words text-[var(--text-primary)] mb-1">{item.title}</h2>
             <p className="text-xs text-[var(--text-muted)] leading-relaxed">{item.desc}</p>
           </Card>
         ))}

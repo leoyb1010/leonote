@@ -13,7 +13,7 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
   const userId = await getSessionUserId();
   if (!userId) {
     return (
-      <div className="max-w-4xl mx-auto">
+      <div className="max-w-[var(--content-max)] mx-auto">
         <p className="text-sm text-[var(--text-secondary)]">请先<Link href="/login" className="text-[var(--primary)] underline">登录</Link>后查看项目详情。</p>
       </div>
     );
@@ -37,7 +37,7 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
   const pinCount = notes.filter((note) => note.pinned).length;
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6">
+    <div className="max-w-[var(--content-max)] mx-auto space-y-6">
       <div>
         <h1 className="text-2xl font-bold text-[var(--text-primary)] flex items-center gap-2">
           <FolderKanban size={22} className="text-[var(--primary)]" />

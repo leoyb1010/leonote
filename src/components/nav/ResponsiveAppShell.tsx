@@ -14,7 +14,6 @@ export function ResponsiveAppShell({ children, header }: ResponsiveAppShellProps
   const pathname = usePathname();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
-  // Login page doesn't get shell
   if (pathname === "/login") {
     return <>{children}</>;
   }
@@ -29,14 +28,14 @@ export function ResponsiveAppShell({ children, header }: ResponsiveAppShellProps
       />
 
       {/* Main Content Area */}
-      <div className="flex-1 flex flex-col min-w-0">
-        {/* Optional header */}
+      <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
         {header}
 
-        {/* Content */}
-        <main className="flex-1 pb-20 lg:pb-0">
-          <div className="mx-auto max-w-[var(--page-max)] px-4 md:px-6 lg:px-8 py-4 lg:py-6">
-            {children}
+        <main className="flex-1 pb-20 lg:pb-0 overflow-x-hidden">
+          <div className="w-full max-w-[var(--page-max)] mx-auto px-4 sm:px-6 lg:px-8 py-4 lg:py-6">
+            <div className="break-words">
+              {children}
+            </div>
           </div>
         </main>
       </div>
