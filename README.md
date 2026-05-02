@@ -33,6 +33,48 @@ Leonote 是一个：
 
 ## 版本更新
 
+### v1.0.0 · 全面焕新 — Design System + UI 重构 + 响应式架构（2026-05-02）
+
+**Design System 建立**
+- 建立统一 Design Token 体系（`src/styles/theme.css`）：色板（13 色）、间距、圆角、阴影、动效、排版
+- 重构 Tailwind Config，新增 `brand` / `surface` / `text` / `semantic` 语义彩色 token
+- Visual direction: 从"炫技感"转为"Quiet Intelligence"沉静主题
+- 深墨蓝主背景 `#080A0F`，低饱和靛蓝主色 `#7C8CFF`，AI 强调色 `#A78BFA`
+
+**组件体系重构**
+- 新增基础组件库：`Button` / `Card` / `GlassSurface` / `EmptyState` / `SaveStatusIndicator` / `Skeleton`
+- `NoteCard` 简化（移除 3D tilt），`GlassPanel` 克制化
+- `EnhancedEditor` 新增保存状态指示器，统一输入框 token
+
+**导航系统重做**
+- 收敛为 5 个一级入口：Today / Notes / Projects / AI / Settings
+- 桌面端：左侧可折叠 Sidebar（240px ↔ 64px）
+- 移动端：底部 Tab Bar（中间突出新建按钮）
+- 新增 `CommandPalette`（`Cmd+K` 全局命令面板）
+- 新增 `ResponsiveAppShell` 响应式外壳
+
+**响应式架构**
+- 移动端 `<640px`：底部 Tab Bar + 全宽内容
+- 平板 `640-1280px`：底部 Tab Bar + 全宽内容
+- 桌面 `1280px+`：侧栏导航 + 内容区
+- 可折叠侧栏适配窄屏编辑场景
+
+**新增页面**
+- `TodayPage` 首页重做：统计面板 + 快捷入口 + 最近笔记 + 项目预览 + 标签云
+- `/ai` 全局 AI 问答页面 + `/api/ai/ask` 全局问答端点
+- 所有页面统一使用 `ResponsiveAppShell`，移除旧的 `AppShell` 包裹
+
+**全局 UI 同步**
+- 30+ 组件统一 Design Token，移除硬编码色值
+- 移除所有线性/径向渐变背景，替换为 token
+- 修复 sed 批量替换导致的破碎 Tailwind class
+- WCAG AA 可访问性基线 + `prefers-reduced-motion`
+
+**Review**: ChatGPT 5.5 + Claude Sonnet 4.6 | **Executed**: 奥创
+**验证**: `npm run typecheck` ✅ · `npm run build` ✅
+
+---
+
 ### v0.7.0 · AI 知识库助手与笔记内导入导出（2026-04-26）
 - 接入 DeepSeek OpenAI 兼容接口，支持 `deepseek-v4-flash` / `deepseek-v4-pro` 模型切换
 - 新增 AI 配置层与设置页入口：可配置 Base URL、API Key、主模型、备用模型、导入自动整理开关
@@ -128,18 +170,30 @@ Leonote 是一个：
 - 彻底删除
 
 ### 内容入口
-- 首页
-- 搜索
-- 每日
-- 项目
-- 我的
+- Today（首页）
+- 全部笔记
+- 搜索 + 筛选
+- 每日记录
+- 项目看板
+- AI 全局问答
 
 ### 项目能力
-- 项目一级导航
-- 创建项目
-- 项目简介
+- 项目列表 + 详情
+- 创建 / 编辑 / 删除项目
 - 笔记归属项目
-- 按项目查看相关笔记
+- 项目笔记统计
+- 看板视图
+
+### Design System（v1.0.0）
+- 统一 CSS Variables token 体系
+- 深色主题 `color-scheme: dark`
+- 响应式断点：mobile / tablet / desktop / wide
+- 可访问性：`prefers-reduced-motion`、键盘导航、focus-visible
+
+### 导航（v1.0.0）
+- 桌面侧栏：Today / Notes / Projects / AI / Settings
+- 移动端底部 Tab Bar：Today / Notes / + / Projects / AI
+- Command Palette（`Cmd+K`）
 
 ### 导入导出
 #### 导入
@@ -169,20 +223,22 @@ Leonote 是一个：
 
 ## 当前页面结构
 
-- `/` 首页
+- `/` Today 首页（统计 + 快捷入口 + 最近笔记）
 - `/login` 登录 / 首个账号注册
 - `/notes` 全部笔记
 - `/notes/new` 新建笔记
 - `/notes/[id]` 笔记详情 / 编辑
-- `/search` 搜索
+- `/search` 搜索 + 筛选（项目 / 收藏 / 归档）
 - `/daily` 每日记录
-- `/projects` 项目
-- `/favorites` 收藏
+- `/projects` 项目看板
+- `/projects/[id]` 项目详情
+- `/ai` AI 全局问答（v1.0.0）
+- `/favorites` 收藏 + 记忆
 - `/archive` 归档
 - `/trash` 回收站
 - `/import` 导入与迁移
 - `/profile` 个人资料
-- `/settings` 我的 / 设置
+- `/settings` 我的 / AI 配置 / 记忆管理
 
 ---
 
@@ -203,6 +259,7 @@ Leonote 是一个：
 - `/api/ai/notes/[id]/summarize`
 - `/api/ai/notes/[id]/ask`
 - `/api/ai/notes/[id]/memory`
+- `/api/ai/ask` 全局 AI 问答（v1.0.0）
 
 ---
 
@@ -249,11 +306,16 @@ leonote/
 ├─ PRD.md
 ├─ ARCHITECTURE.md
 ├─ package.json
+├─ tailwind.config.ts
+├─ .env.example
 ├─ prisma/
 │  └─ schema.prisma
 └─ src/
+   ├─ styles/
+   │  └─ theme.css          # Design Tokens (v1.0.0)
    ├─ app/
    │  ├─ api/
+   │  ├─ ai/                # 全局 AI 问答 (v1.0.0)
    │  ├─ notes/
    │  ├─ daily/
    │  ├─ projects/
@@ -261,6 +323,13 @@ leonote/
    │  ├─ import/
    │  └─ settings/
    ├─ components/
+   │  ├─ base/              # 基础组件库 (v1.0.0)
+   │  ├─ nav/               # 导航系统 (v1.0.0)
+   │  ├─ pages/             # 页面组件 (v1.0.0)
+   │  ├─ notes/
+   │  ├─ editor/
+   │  ├─ ai/
+   │  └─ ui/
    └─ lib/
 ```
 
@@ -318,17 +387,18 @@ npm run build
 
 ## 当前阶段总结
 
-Leonote 当前已经不是原型骨架，而是一个具备：
-- 安全基础
-- 服务端数据闭环
-- 每日记录能力
-- 项目制录入能力
-- 导入导出链路
-- 事务化导入与基础查询索引
-- AI 知识库助手与长期记忆能力
+Leonote v1.0.0 已完成一次完整的 UI/UX 焕新，具备：
+- 安全基础（签名 session cookie、去除公开 bootstrap）
+- 服务端数据闭环（Prisma + SQLite）
+- 统一 Design Token 体系（CSS Variables + Tailwind）
+- 响应式导航（移动端底部 Tab Bar / 桌面端可折叠侧栏）
+- 全局 Command Palette（`Cmd+K`）
+- 基础组件库（Button / Card / GlassSurface / EmptyState / SaveStatusIndicator）
+- 项目制录入能力（看板 + 详情 + 归属管理）
+- 导入导出链路（JSON / MD / TXT / HTML / 链接 + AI 整理）
+- AI 知识库助手（DeepSeek 多模型 + 总结 + 问答 + 长期记忆）
+- 可访问性基线（WCAG AA + prefers-reduced-motion）
 - 可持续迭代工程结构
-
-的主仓库基线。
 
 ---
 
