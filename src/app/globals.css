@@ -1,31 +1,13 @@
+@import "../styles/theme.css";
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  color-scheme: dark;
-  --bg-root: #06070a;
-  --bg-app: #0a0c11;
-  --bg-panel: rgba(16, 19, 26, 0.72);
-  --bg-panel-strong: rgba(17, 22, 31, 0.86);
-  --text-strong: #f4f7fb;
-  --text-soft: rgba(244, 247, 251, 0.72);
-  --text-faint: rgba(244, 247, 251, 0.46);
-  --border-soft: rgba(255, 255, 255, 0.09);
-  --shadow-panel: 0 24px 72px rgba(2, 6, 23, 0.28);
-  --shadow-hover: 0 30px 90px rgba(2, 6, 23, 0.42);
-  --radius-panel: 28px;
-  --radius-card: 24px;
-  --radius-pill: 999px;
-  --motion-fast: 160ms;
-  --motion-base: 240ms;
-  --motion-medium: 360ms;
-  --motion-slow: 520ms;
-  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
-  --brand-gradient: linear-gradient(135deg, #6366f1 0%, #7c3aed 52%, #22d3ee 100%);
-}
-
-* {
+/* ===== Base Reset ===== */
+*,
+*::before,
+*::after {
   box-sizing: border-box;
 }
 
@@ -34,22 +16,21 @@ body {
   padding: 0;
   margin: 0;
   min-height: 100%;
+  min-height: 100dvh;
 }
 
 html {
-  background:
-    radial-gradient(circle at top, rgba(99, 102, 241, 0.16), transparent 30%),
-    radial-gradient(circle at 84% 14%, rgba(34, 211, 238, 0.10), transparent 22%),
-    linear-gradient(180deg, #0b0d13 0%, #06070a 100%);
+  background: var(--bg-app);
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
 body {
-  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+  font-family: var(--font-ui);
   background: transparent;
-  color: var(--text-strong);
+  color: var(--text-primary);
+  line-height: var(--leading-normal);
 }
 
 a {
@@ -62,70 +43,78 @@ input,
 textarea,
 select {
   font: inherit;
+  color: inherit;
 }
 
 input,
 textarea,
 select {
   border: 0;
+  outline: none;
 }
 
 ::selection {
-  background: rgba(99, 102, 241, 0.28);
-  color: white;
+  background: var(--primary-soft);
+  color: var(--text-primary);
 }
 
-.glass-panel {
-  background: var(--bg-panel);
-  border: 1px solid var(--border-soft);
-  box-shadow: var(--shadow-panel);
-  backdrop-filter: blur(18px);
+/* ===== Focus Visible ===== */
+:focus-visible {
+  outline: 2px solid var(--border-focus);
+  outline-offset: 2px;
+  border-radius: var(--radius-xs);
 }
 
-.animate-rise {
-  animation: rise-in 460ms var(--ease-out);
+/* ===== Scrollbar ===== */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border-strong);
+  border-radius: var(--radius-pill);
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-muted);
 }
 
-.noise-mask::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  opacity: 0.06;
-  background-image:
-    radial-gradient(circle at 20% 20%, rgba(255,255,255,0.7) 0.5px, transparent 0.7px),
-    radial-gradient(circle at 80% 50%, rgba(255,255,255,0.6) 0.45px, transparent 0.65px),
-    radial-gradient(circle at 40% 80%, rgba(255,255,255,0.6) 0.35px, transparent 0.55px);
-  background-size: 120px 120px, 180px 180px, 160px 160px;
+/* ===== Utility: Glass Surface (restrained) ===== */
+.glass-surface {
+  background: var(--surface-glass);
+  border: 1px solid var(--border-default);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
 }
 
-@keyframes rise-in {
-  from {
-    opacity: 0;
-    transform: translateY(16px) scale(0.985);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
+/* ===== Utility: Glass Surface (subtle) ===== */
+.glass-subtle {
+  background: rgba(18, 22, 32, 0.48);
+  border: 1px solid var(--border-subtle);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
 }
 
+/* ===== View Transitions ===== */
 @view-transition {
   navigation: auto;
 }
 
 ::view-transition-old(root),
 ::view-transition-new(root) {
-  animation-duration: 280ms;
-  animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+  animation-duration: var(--motion-medium);
+  animation-timing-function: var(--ease-out);
 }
 
+/* ===== Reduced Motion ===== */
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
   *::after {
-    animation: none !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
   }

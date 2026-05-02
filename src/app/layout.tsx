@@ -1,15 +1,18 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import { ShellProvider } from "@/components/nav/ShellProvider";
 
 export const metadata: Metadata = {
   title: "Leonote",
-  description: "一个为个人长期使用而设计的中文笔记与轻知识库产品",
+  description: "安静、可信、理性的个人知识工作台",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="zh-CN">
-      <body>{children}</body>
+      <body>
+        <ShellProvider>{children}</ShellProvider>
+      </body>
     </html>
   );
 }

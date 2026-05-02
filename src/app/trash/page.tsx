@@ -1,10 +1,10 @@
-import { AppShell } from "@/components/app-shell";
 import { ServerFilterView } from "@/components/server-filter-view";
 
 export default function TrashPage() {
   return (
-    <AppShell title="回收站" subtitle="查看已删除内容，并可按需恢复。" current="/settings">
+    <div>
+      <h1 className="text-2xl font-bold text-[var(--text-primary)] mb-6">回收站</h1>
       <ServerFilterView type="deleted" />
-    </AppShell>
+    </div>
   );
 }

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { Archive, Heart, Pin } from "lucide-react";
-import { AnimatedCard } from "@/components/ui/AnimatedCard";
+import { Card } from "@/components/base/Card";
 import { cn } from "@/lib/utils";
 
 type NoteCardProps = {
@@ -31,41 +31,57 @@ export function NoteCard({ note, href, compact = false, className }: NoteCardPro
   ].filter(Boolean) as Array<{ key: string; label: string; icon: typeof Heart }>;
 
   return (
-    <Link href={destination} className="block [perspective:1200px]">
-      <AnimatedCard className={cn("rounded-[24px]", className)} contentClassName="p-5">
+    <Link href={destination} className="block group">
+      <Card className={cn("transition-colors", className)} padding="sm">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
-            <div className="text-[11px] uppercase tracking-[0.22em] text-white/44">
+            <div className="text-xs font-medium text-[var(--text-muted)] uppercase tracking-wide">
               {note.project?.name ? `项目 · ${note.project.name}` : note.tags?.[0] ?? "未分类"}
             </div>
-            <h3 className="mt-2 line-clamp-2 text-base font-semibold tracking-[-0.02em] text-white">{note.title}</h3>
+            <h3 className="mt-1.5 line-clamp-2 text-sm font-semibold text-[var(--text-primary)] group-hover:text-[var(--primary)] transition-colors">
+              {note.title || "无标题"}
+            </h3>
+            {!compact && note.excerpt && (
+              <p className="mt-1 line-clamp-2 text-xs text-[var(--text-muted)] leading-relaxed">
+                {note.excerpt}
+              </p>
+            )}
           </div>
-          {badges.length ? (
-            <div className="flex shrink-0 flex-wrap justify-end gap-2">
+          {badges.length > 0 && (
+            <div className="flex shrink-0 flex-wrap justify-end gap-1.5">
               {badges.map((badge) => {
                 const Icon = badge.icon;
                 return (
-                  <span key={badge.key} className="inline-flex h-8 items-center gap-1 rounded-full border border-white/10 bg-white/6 px-2.5 text-[11px] text-white/72">
-                    <Icon className="h-3.5 w-3.5" />
-                    {!compact ? badge.label : null}
+                  <span
+                    key={badge.key}
+                    className="inline-flex items-center gap-1 rounded-full border border-[var(--border-default)] bg-[var(--surface-base)] px-2 py-1 text-xs text-[var(--text-muted)]"
+                  >
+                    <Icon size={12} />
+                    {!compact && badge.label}
                   </span>
                 );
               })}
             </div>
-          ) : null}
+          )}
         </div>
-
-        <p className="mt-3 line-clamp-3 text-sm leading-7 text-white/66">{note.excerpt}</p>
-
-        <div className="mt-4 flex items-center justify-between gap-3 text-xs text-white/42">
-          <div className="flex flex-wrap gap-2">
-            {(note.tags ?? []).slice(0, compact ? 2 : 3).map((tag) => (
-              <span key={tag} className="rounded-full border border-white/10 bg-white/5 px-2.5 py-1">#{tag}</span>
+        {note.tags && note.tags.length > 0 && !compact && (
+          <div className="flex flex-wrap gap-1 mt-3">
+            {note.tags.slice(0, 4).map((tag) => (
+              <span
+                key={tag}
+                className="text-xs px-2 py-0.5 rounded-full bg-[var(--primary-soft)] text-[var(--primary)]"
+              >
+                {tag}
+              </span>
             ))}
           </div>
-          {note.updatedAt ? <span>{new Date(note.updatedAt).toLocaleString("zh-CN", { month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit" })}</span> : null}
-        </div>
-      </AnimatedCard>
+        )}
+        {note.updatedAt && (
+          <div className="mt-3 text-xs text-[var(--text-muted)]">
+            {new Date(note.updatedAt).toLocaleDateString("zh-CN")}
+          </div>
+        )}
+      </Card>
     </Link>
   );
 }

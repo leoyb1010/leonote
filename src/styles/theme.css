@@ -1,0 +1,133 @@
+/* ===== Leonote v1.0 Design Tokens ===== */
+/* Quiet Intelligence · Calm Workspace · Private Knowledge OS */
+
+:root {
+  color-scheme: dark;
+
+  /* ---------- Background ---------- */
+  --bg-app: #080a0f;
+  --bg-subtle: #0b0e14;
+
+  /* ---------- Surface ---------- */
+  --surface-base: #10131b;
+  --surface-raised: #151925;
+  --surface-overlay: rgba(18, 22, 32, 0.82);
+  --surface-glass: rgba(18, 22, 32, 0.68);
+
+  /* ---------- Border ---------- */
+  --border-subtle: rgba(255, 255, 255, 0.06);
+  --border-default: rgba(255, 255, 255, 0.08);
+  --border-strong: rgba(255, 255, 255, 0.14);
+  --border-focus: rgba(124, 140, 255, 0.32);
+
+  /* ---------- Text ---------- */
+  --text-primary: #f4f7fb;
+  --text-secondary: #a4adbb;
+  --text-muted: #687386;
+  --text-placeholder: rgba(244, 247, 251, 0.28);
+
+  /* ---------- Brand / Primary ---------- */
+  --primary: #7c8cff;
+  --primary-hover: #97a3ff;
+  --primary-soft: rgba(124, 140, 255, 0.14);
+  --primary-pressed: rgba(124, 140, 255, 0.22);
+
+  /* ---------- AI Accent ---------- */
+  --ai-accent: #a78bfa;
+  --ai-soft: rgba(167, 139, 250, 0.13);
+
+  /* ---------- Semantic ---------- */
+  --success: #65d6ad;
+  --success-soft: rgba(101, 214, 173, 0.13);
+  --warning: #f4c76b;
+  --warning-soft: rgba(244, 199, 107, 0.12);
+  --danger: #f87171;
+  --danger-soft: rgba(248, 113, 113, 0.12);
+  --info: #5eb6ee;
+  --info-soft: rgba(94, 182, 238, 0.12);
+
+  /* ---------- Shadow ---------- */
+  --shadow-sm: 0 1px 3px rgba(2, 6, 23, 0.24);
+  --shadow-md: 0 4px 16px rgba(2, 6, 23, 0.28);
+  --shadow-lg: 0 12px 40px rgba(2, 6, 23, 0.36);
+  --shadow-glow: 0 0 40px rgba(124, 140, 255, 0.12);
+
+  /* ---------- Radius ---------- */
+  --radius-xs: 6px;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
+  --radius-2xl: 24px;
+  --radius-pill: 9999px;
+
+  /* ---------- Motion ---------- */
+  --motion-fast: 120ms;
+  --motion-base: 160ms;
+  --motion-medium: 220ms;
+  --motion-slow: 320ms;
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in-out: cubic-bezier(0.42, 0, 0.58, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+
+  /* ---------- Spacing Scale ---------- */
+  --space-4xs: 2px;
+  --space-3xs: 4px;
+  --space-2xs: 8px;
+  --space-xs: 12px;
+  --space-sm: 16px;
+  --space-md: 20px;
+  --space-lg: 24px;
+  --space-xl: 32px;
+  --space-2xl: 40px;
+  --space-3xl: 48px;
+  --space-4xl: 64px;
+
+  /* ---------- Typography Scale ---------- */
+  --text-xs: 0.75rem;
+  --text-sm: 0.8125rem;
+  --text-base: 0.9375rem;
+  --text-md: 1.0625rem;
+  --text-lg: 1.25rem;
+  --text-xl: 1.5rem;
+  --text-2xl: 1.875rem;
+  --text-3xl: 2.25rem;
+  --text-4xl: 2.75rem;
+
+  /* ---------- Font Weight ---------- */
+  --font-normal: 400;
+  --font-medium: 500;
+  --font-semibold: 600;
+  --font-bold: 700;
+
+  /* ---------- Leading ---------- */
+  --leading-tight: 1.25;
+  --leading-normal: 1.5;
+  --leading-relaxed: 1.65;
+  --leading-loose: 1.8;
+
+  /* ---------- Layout ---------- */
+  --sidebar-width: 240px;
+  --sidebar-collapsed: 64px;
+  --list-width: 340px;
+  --ai-panel-width: 360px;
+  --content-max: 780px;
+  --page-max: 1600px;
+}
+
+/* ---------- System Font Stack ---------- */
+:root {
+  --font-ui: "Inter", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", sans-serif;
+  --font-mono: "SF Mono", "Fira Code", "Cascadia Code", "JetBrains Mono", ui-monospace, monospace;
+  --font-reading: "PingFang SC", "Noto Sans SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+}
+
+/* ---------- Reduced Motion ---------- */
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --motion-fast: 0ms;
+    --motion-base: 0ms;
+    --motion-medium: 0ms;
+    --motion-slow: 0ms;
+  }
+}

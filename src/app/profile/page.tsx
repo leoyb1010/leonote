@@ -3,9 +3,9 @@
 import Link from "next/link";
 import { ShieldCheck, UserRound } from "lucide-react";
 import { useEffect, useState } from "react";
-import { AppShell } from "@/components/app-shell";
 import { DataBackupCard } from "@/components/data-backup-card";
-import { GlassPanel } from "@/components/ui/GlassPanel";
+import { Card } from "@/components/base/Card";
+import { Button } from "@/components/base/Button";
 
 type User = {
   id: string;
@@ -49,9 +49,7 @@ export default function ProfilePage() {
         if (!active) return;
         setMessage("读取失败");
       });
-    return () => {
-      active = false;
-    };
+    return () => { active = false; };
   }, []);
 
   const saveProfile = async () => {
@@ -63,10 +61,7 @@ export default function ProfilePage() {
     });
     const data = await res.json();
     setSaving(false);
-    if (!res.ok) {
-      setMessage(data.message || "资料更新失败");
-      return;
-    }
+    if (!res.ok) { setMessage(data.message || "资料更新失败"); return; }
     setUser(data.user);
     setName(data.user.name);
     setMessage("资料已更新");
@@ -81,59 +76,81 @@ export default function ProfilePage() {
     });
     const data = await res.json();
     setChangingPassword(false);
-    if (!res.ok) {
-      setMessage(data.message || "修改密码失败");
-      return;
-    }
+    if (!res.ok) { setMessage(data.message || "修改密码失败"); return; }
     setCurrentPassword("");
     setNewPassword("");
     setMessage("密码已更新");
   };
 
   return (
-    <AppShell title="个人资料与安全" subtitle="查看账号信息、修改昵称，并更新登录密码。" current="/settings">
+    <div className="max-w-2xl mx-auto space-y-6">
+      <h1 className="text-2xl font-bold text-[var(--text-primary)]">个人资料与安全</h1>
+
       {needLogin ? (
-        <GlassPanel blur="lg" glow="soft" className="rounded-[24px] p-5 text-sm text-white/62">
-          <div>{message}</div>
-          <Link href="/login" className="mt-4 inline-flex rounded-full bg-white px-4 py-2 text-sm font-medium text-slate-900 transition hover:brightness-110">去登录</Link>
-        </GlassPanel>
+        <Card>
+          <p className="text-sm text-[var(--text-secondary)] mb-4">{message}</p>
+          <Link href="/login">
+            <Button>去登录</Button>
+          </Link>
+        </Card>
       ) : (
         <>
-          <GlassPanel blur="lg" glow="soft" className="mb-4 rounded-[24px] p-5 text-sm leading-7 text-white/62">
-            {user ? (
-              <>
-                <div className="mb-3 inline-flex items-center gap-2 text-white"><UserRound className="h-4 w-4 text-cyan-300" />账号信息</div>
-                <div><strong className="text-white">邮箱：</strong>{user.email}</div>
-                <div><strong className="text-white">创建时间：</strong>{new Date(user.createdAt).toLocaleString("zh-CN")}</div>
-                <div><strong className="text-white">最近更新：</strong>{new Date(user.updatedAt).toLocaleString("zh-CN")}</div>
-                <div><strong className="text-white">说明：</strong>当前聚焦单人使用、中文界面与稳定记录。</div>
-              </>
-            ) : (
-              <div>{message}</div>
-            )}
-          </GlassPanel>
+          {user && (
+            <Card>
+              <div className="flex items-center gap-2 mb-3 text-sm font-medium text-[var(--text-primary)]">
+                <UserRound size={16} className="text-[var(--primary)]" />账号信息
+              </div>
+              <div className="space-y-1.5 text-sm">
+                <p><span className="text-[var(--text-muted)]">邮箱：</span><span className="text-[var(--text-primary)]">{user.email}</span></p>
+                <p><span className="text-[var(--text-muted)]">创建时间：</span>{new Date(user.createdAt).toLocaleString("zh-CN")}</p>
+                <p><span className="text-[var(--text-muted)]">最近更新：</span>{new Date(user.updatedAt).toLocaleString("zh-CN")}</p>
+              </div>
+            </Card>
+          )}
 
-          <GlassPanel blur="lg" glow="soft" className="mb-4 rounded-[24px] p-5">
-            <h2 className="text-base font-medium text-white">修改资料</h2>
-            <div className="mt-4 space-y-3">
-              <input value={name} onChange={(e) => setName(e.target.value)} placeholder="昵称" className="w-full rounded-[20px] border border-white/8 bg-[rgba(8,11,18,0.56)] px-4 py-4 text-sm text-white outline-none placeholder:text-white/26" />
-              <button type="button" onClick={() => void saveProfile()} disabled={saving} className="rounded-full bg-white px-4 py-2.5 text-sm font-medium text-slate-900 transition hover:brightness-110 disabled:opacity-60">{saving ? "保存中" : "保存资料"}</button>
+          <Card>
+            <h2 className="text-base font-medium text-[var(--text-primary)] mb-4">修改资料</h2>
+            <div className="space-y-3">
+              <input
+                value={name} onChange={(e) => setName(e.target.value)}
+                placeholder="昵称"
+                className="w-full rounded-[var(--radius-md)] border border-[var(--border-default)] bg-[var(--surface-base)] px-4 py-3 text-sm text-[var(--text-primary)] outline-none placeholder:text-[var(--text-placeholder)] focus:border-[var(--border-focus)] transition-colors"
+              />
+              <Button onClick={() => void saveProfile()} loading={saving} variant="primary" size="sm">
+                保存资料
+              </Button>
             </div>
-          </GlassPanel>
+          </Card>
 
-          <GlassPanel blur="lg" glow="soft" className="mb-4 rounded-[24px] p-5">
-            <h2 className="inline-flex items-center gap-2 text-base font-medium text-white"><ShieldCheck className="h-4 w-4 text-cyan-300" />修改密码</h2>
-            <div className="mt-4 space-y-3">
-              <input type="password" value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)} placeholder="当前密码" className="w-full rounded-[20px] border border-white/8 bg-[rgba(8,11,18,0.56)] px-4 py-4 text-sm text-white outline-none placeholder:text-white/26" />
-              <input type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} placeholder="新密码（至少 8 位）" className="w-full rounded-[20px] border border-white/8 bg-[rgba(8,11,18,0.56)] px-4 py-4 text-sm text-white outline-none placeholder:text-white/26" />
-              <button type="button" onClick={() => void updatePassword()} disabled={changingPassword} className="rounded-full bg-white px-4 py-2.5 text-sm font-medium text-slate-900 transition hover:brightness-110 disabled:opacity-60">{changingPassword ? "更新中" : "更新密码"}</button>
+          <Card>
+            <h2 className="flex items-center gap-2 text-base font-medium text-[var(--text-primary)] mb-4">
+              <ShieldCheck size={16} className="text-[var(--primary)]" />修改密码
+            </h2>
+            <div className="space-y-3">
+              <input
+                type="password" value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)}
+                placeholder="当前密码"
+                className="w-full rounded-[var(--radius-md)] border border-[var(--border-default)] bg-[var(--surface-base)] px-4 py-3 text-sm text-[var(--text-primary)] outline-none placeholder:text-[var(--text-placeholder)] focus:border-[var(--border-focus)] transition-colors"
+              />
+              <input
+                type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)}
+                placeholder="新密码（至少 8 位）"
+                className="w-full rounded-[var(--radius-md)] border border-[var(--border-default)] bg-[var(--surface-base)] px-4 py-3 text-sm text-[var(--text-primary)] outline-none placeholder:text-[var(--text-placeholder)] focus:border-[var(--border-focus)] transition-colors"
+              />
+              <Button onClick={() => void updatePassword()} loading={changingPassword} variant="secondary" size="sm">
+                更新密码
+              </Button>
             </div>
-          </GlassPanel>
+          </Card>
 
-          {message ? <div className="mb-4 rounded-[20px] border border-white/8 bg-white/5 px-4 py-3 text-sm text-white/60">{message}</div> : null}
+          {message && (
+            <div className="rounded-[var(--radius-md)] border border-[var(--border-default)] bg-[var(--primary-soft)] px-4 py-3 text-sm text-[var(--text-secondary)]">
+              {message}
+            </div>
+          )}
           <DataBackupCard />
         </>
       )}
-    </AppShell>
+    </div>
   );
 }

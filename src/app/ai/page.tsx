@@ -1,0 +1,122 @@
+"use client";
+
+import React, { useState } from "react";
+import { Card } from "@/components/base/Card";
+import { Button } from "@/components/base/Button";
+import { EmptyState } from "@/components/base/EmptyState";
+import { Sparkles, Send, RefreshCw } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+
+interface Message {
+  role: "user" | "assistant";
+  content: string;
+}
+
+export default function AIPage() {
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [input, setInput] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  const ask = async () => {
+    if (!input.trim() || loading) return;
+    const userMsg: Message = { role: "user", content: input.trim() };
+    setMessages((prev) => [...prev, userMsg]);
+    setInput("");
+    setLoading(true);
+    setError("");
+
+    try {
+      const res = await fetch("/api/ai/ask", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ question: userMsg.content }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || "AI 请求失败");
+      setMessages((prev) => [...prev, { role: "assistant", content: data.answer || "AI 暂未返回内容" }]);
+    } catch (e: unknown) {
+      const err = e as { message?: string };
+      setError(err.message || "请求失败");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="max-w-2xl mx-auto space-y-6">
+      <h1 className="text-2xl font-bold text-[var(--text-primary)] flex items-center gap-2">
+        <Sparkles size={22} className="text-[var(--ai-accent)]" /> AI 助手
+      </h1>
+
+      {/* Chat */}
+      <div className="space-y-4 min-h-[400px]">
+        {messages.length === 0 && (
+          <EmptyState
+            icon={<Sparkles size={40} className="text-[var(--ai-accent)]" />}
+            title="向 AI 提问"
+            description="可以问关于你的笔记库的任何问题，AI 会结合你的知识库回答。"
+          />
+        )}
+
+        <AnimatePresence>
+          {messages.map((msg, i) => (
+            <motion.div
+              key={i}
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.05 }}
+            >
+              <Card padding="sm">
+                <div className="flex items-start gap-2 mb-1">
+                  <span className="text-xs font-semibold text-[var(--text-muted)] uppercase">
+                    {msg.role === "user" ? "你" : "AI"}
+                  </span>
+                  {msg.role === "assistant" && (
+                    <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-[var(--ai-soft)] text-[var(--ai-accent)]">
+                      AI 生成
+                    </span>
+                  )}
+                </div>
+                <p className="text-sm text-[var(--text-secondary)] whitespace-pre-wrap leading-relaxed">
+                  {msg.content}
+                </p>
+              </Card>
+            </motion.div>
+          ))}
+        </AnimatePresence>
+
+        {loading && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+            <Card padding="sm">
+              <div className="flex items-center gap-2 text-sm text-[var(--text-muted)]">
+                <RefreshCw size={14} className="animate-spin" />
+                AI 思考中...
+              </div>
+            </Card>
+          </motion.div>
+        )}
+
+        {error && (
+          <div className="text-sm text-[var(--danger)] p-3 rounded-md bg-[var(--danger-soft)]">
+            {error}
+          </div>
+        )}
+      </div>
+
+      {/* Input */}
+      <div className="flex gap-3">
+        <input
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
+          onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); ask(); } }}
+          placeholder="向 AI 提问，比如「总结我最近一周的笔记要点」"
+          className="flex-1 rounded-[var(--radius-md)] border border-[var(--border-default)] bg-[var(--surface-base)] px-4 py-3 text-sm text-[var(--text-primary)] outline-none placeholder:text-[var(--text-placeholder)] focus:border-[var(--border-focus)] transition-colors"
+        />
+        <Button onClick={ask} loading={loading} icon={!loading ? <Send size={16} /> : undefined}>
+          发送
+        </Button>
+      </div>
+    </div>
+  );
+}

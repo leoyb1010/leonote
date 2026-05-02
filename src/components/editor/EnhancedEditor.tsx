@@ -8,6 +8,8 @@ import { summarizeExpand } from "@/lib/animations";
 import { cn } from "@/lib/utils";
 import { ImportExportPanel } from "@/components/import-export-panel";
 import { GlassPanel } from "@/components/ui/GlassPanel";
+import { SaveStatusIndicator } from "@/components/base/SaveStatusIndicator";
+import { Button } from "@/components/base/Button";
 
 type NoteShape = {
   id?: string;
@@ -22,14 +24,6 @@ type SaveState = "idle" | "dirty" | "saving" | "saved" | "error";
 type SummaryState = {
   status: "idle" | "loading" | "ready" | "inserting" | "error";
   text: string;
-};
-
-const statusText: Record<SaveState, string> = {
-  idle: "未修改",
-  dirty: "待保存",
-  saving: "保存中...",
-  saved: "已保存",
-  error: "保存失败",
 };
 
 const AUTOSAVE_KEY = "leonote.autosave.enabled";
@@ -314,31 +308,34 @@ export function EnhancedEditor({ initialNote }: { initialNote?: NoteShape }) {
       <GlassPanel blur="xl" glow="brand" hoverGlow className={cn("rounded-[28px] p-5 transition duration-300", focusRing && "shadow-[0_0_0_1px_rgba(99,102,241,0.26),0_24px_80px_rgba(50,66,170,0.30)]")}>
         <div className="mb-5 flex flex-wrap items-center justify-between gap-3 text-xs text-white/55">
           <div className="inline-flex items-center gap-3">
-            <span>{statusText[saveState]}</span>
-            <span>{stats.words} 词 · {stats.chars} 字符</span>
+            <SaveStatusIndicator status={saveState === "saved" ? "saved" : saveState === "saving" ? "saving" : saveState === "error" ? "offline" : "idle"} />
+            <span className="text-xs text-[var(--text-muted)]">{stats.words} 词 · {stats.chars} 字符</span>
           </div>
           <div className="inline-flex items-center gap-2">
             <button
               type="button"
               onClick={toggleAutoSave}
               className={cn(
-                "rounded-full px-3 py-2 transition",
-                autoSaveEnabled ? "bg-white text-slate-900 shadow-[0_10px_24px_rgba(255,255,255,0.16)]" : "bg-white/6 text-white/60 hover:bg-white/10",
+                "rounded-[var(--radius-md)] px-3 py-1.5 text-xs transition-colors",
+                autoSaveEnabled
+                  ? "bg-[var(--primary)] text-white"
+                  : "bg-[var(--primary-soft)] text-[var(--text-muted)] hover:text-[var(--text-primary)]",
               )}
             >
               自动保存：{autoSaveEnabled ? "开" : "关"}
             </button>
-            <button
-              type="button"
+            <Button
+              variant="primary"
+              size="sm"
+              loading={summary.status === "loading"}
+              icon={summary.status !== "loading" ? <Wand2 size={14} /> : undefined}
               onClick={() => void requestSummary()}
-              className="inline-flex items-center gap-2 rounded-full bg-[linear-gradient(135deg,rgba(99,102,241,0.95),rgba(124,58,237,0.95),rgba(34,211,238,0.92))] px-4 py-2 text-white shadow-[0_14px_32px_rgba(79,70,229,0.28)] transition hover:brightness-110"
             >
-              <Wand2 className="h-4 w-4" />
-              {summary.status === "loading" ? "总结中" : "总结"}
-            </button>
-            <button onClick={() => void saveDraft(true)} className="rounded-full border border-white/10 bg-white/6 px-4 py-2 text-white transition hover:bg-white/10" type="button">
+              总结
+            </Button>
+            <Button variant="secondary" size="sm" onClick={() => void saveDraft(true)}>
               手动保存
-            </button>
+            </Button>
           </div>
         </div>
 
@@ -353,7 +350,7 @@ export function EnhancedEditor({ initialNote }: { initialNote?: NoteShape }) {
               onBlur={() => setFocusRing(false)}
               onChange={(event) => setTitle(event.target.value)}
               placeholder="输入标题"
-              className="w-full rounded-[22px] border border-white/6 bg-[rgba(9,12,18,0.56)] px-5 py-4 text-xl font-semibold tracking-[-0.03em] text-white outline-none transition [background-image:radial-gradient(circle_at_top,rgba(255,255,255,0.07),transparent_40%)] focus:[box-shadow:0_0_0_1px_rgba(255,255,255,0.08),0_0_0_4px_rgba(99,102,241,0.12),0_18px_60px_rgba(13,18,30,0.42)]"
+              className="w-full rounded-[var(--radius-md)] border border-[var(--border-default)] bg-[var(--surface-base)] px-4 py-3 text-lg font-semibold text-[var(--text-primary)] outline-none transition-colors focus:border-[var(--border-focus)] placeholder:text-[var(--text-placeholder)]"
             />
             <div className="grid gap-4 md:grid-cols-2">
               <input
@@ -365,7 +362,7 @@ export function EnhancedEditor({ initialNote }: { initialNote?: NoteShape }) {
                 onBlur={() => setFocusRing(false)}
                 onChange={(event) => setProjectName(event.target.value)}
                 placeholder="所属项目，例如 Leonote"
-                className="w-full rounded-[20px] border border-white/6 bg-[rgba(9,12,18,0.56)] px-4 py-4 text-sm text-white/82 outline-none transition focus:[box-shadow:0_0_0_1px_rgba(255,255,255,0.08),0_0_0_4px_rgba(99,102,241,0.12)]"
+                className="w-full rounded-[var(--radius-md)] border border-[var(--border-default)] bg-[var(--surface-base)] px-4 py-3 text-sm text-[var(--text-secondary)] outline-none transition-colors focus:border-[var(--border-focus)] placeholder:text-[var(--text-placeholder)]"
               />
               <input
                 aria-label="笔记标签"
@@ -376,26 +373,22 @@ export function EnhancedEditor({ initialNote }: { initialNote?: NoteShape }) {
                 onBlur={() => setFocusRing(false)}
                 onChange={(event) => setTagsInput(event.target.value)}
                 placeholder="标签，空格分隔"
-                className="w-full rounded-[20px] border border-white/6 bg-[rgba(9,12,18,0.56)] px-4 py-4 text-sm text-white/82 outline-none transition focus:[box-shadow:0_0_0_1px_rgba(255,255,255,0.08),0_0_0_4px_rgba(99,102,241,0.12)]"
+                className="w-full rounded-[var(--radius-md)] border border-[var(--border-default)] bg-[var(--surface-base)] px-4 py-3 text-sm text-[var(--text-secondary)] outline-none transition-colors focus:border-[var(--border-focus)] placeholder:text-[var(--text-placeholder)]"
               />
             </div>
-            <div className="relative overflow-hidden rounded-[24px] border border-white/8 bg-[rgba(9,12,18,0.62)] p-[1px]">
-              <div className="pointer-events-none absolute inset-0 rounded-[24px] opacity-0 transition duration-300 focus-within:opacity-100 [background:conic-gradient(from_180deg_at_50%_50%,rgba(44,55,75,1),rgba(99,102,241,0.95),rgba(124,58,237,0.95),rgba(34,211,238,0.85),rgba(44,55,75,1))]" />
-              <div className="relative rounded-[23px] bg-[rgba(9,12,18,0.88)]">
-                <div className="pointer-events-none absolute inset-x-4 bottom-0 h-20 bg-[linear-gradient(180deg,transparent,rgba(99,102,241,0.08),rgba(34,211,238,0.10))] opacity-0 transition-opacity duration-500 focus-within:opacity-100" />
-                <textarea
-                  ref={contentRef}
-                  aria-label="笔记内容"
-                  value={content}
-                  onCompositionStart={handleCompositionStart}
-                  onCompositionEnd={handleCompositionEnd}
-                  onFocus={() => setFocusRing(true)}
-                  onBlur={() => setFocusRing(false)}
-                  onChange={(event) => setContent(event.target.value)}
-                  placeholder="开始记录内容……"
-                  className="min-h-[420px] w-full resize-none rounded-[23px] bg-transparent px-5 py-5 text-sm leading-8 text-white/84 outline-none"
-                />
-              </div>
+            <div className="relative overflow-hidden rounded-[var(--radius-lg)] border border-[var(--border-default)] bg-[var(--surface-base)]">
+              <textarea
+                ref={contentRef}
+                aria-label="笔记内容"
+                value={content}
+                onCompositionStart={handleCompositionStart}
+                onCompositionEnd={handleCompositionEnd}
+                onFocus={() => setFocusRing(true)}
+                onBlur={() => setFocusRing(false)}
+                onChange={(event) => setContent(event.target.value)}
+                placeholder="开始记录内容……"
+                className="min-h-[420px] w-full resize-none rounded-[var(--radius-lg)] bg-transparent px-4 py-4 text-sm leading-relaxed text-[var(--text-primary)] outline-none placeholder:text-[var(--text-placeholder)]"
+              />
             </div>
           </div>
 
@@ -409,18 +402,20 @@ export function EnhancedEditor({ initialNote }: { initialNote?: NoteShape }) {
           />
 
           <div className="space-y-4">
-            <GlassPanel blur="lg" glow="soft" className="rounded-[24px] p-4">
-              <div className="text-[11px] uppercase tracking-[0.22em] text-white/45">Preview</div>
-              <div className="mt-3 whitespace-pre-wrap text-sm leading-7 text-white/76">{content || "这里会实时预览当前笔记内容。"}</div>
+            <GlassPanel blur="lg" glow="soft" className="rounded-[var(--radius-lg)] p-4">
+              <div className="text-xs font-semibold text-[var(--text-secondary)] mb-3">Preview</div>
+              <div className="whitespace-pre-wrap text-sm leading-relaxed text-[var(--text-secondary)]">{content || "这里会实时预览当前笔记内容。"}</div>
             </GlassPanel>
-            <GlassPanel blur="lg" glow="soft" className="rounded-[24px] p-4">
-              <div className="flex items-center justify-between gap-2 text-[11px] uppercase tracking-[0.22em] text-white/45">
+            <GlassPanel blur="lg" glow="soft" className="rounded-[var(--radius-lg)] p-4">
+              <div className="flex items-center justify-between gap-2 text-xs font-semibold text-[var(--text-secondary)]">
                 <span>Status</span>
                 <span>{isNewNote ? "Draft" : "Saved Note"}</span>
               </div>
-              <div className="mt-3 space-y-3 text-sm text-white/72">
+              <div className="mt-3 space-y-3 text-sm text-[var(--text-muted)] leading-relaxed">
                 <p>{isNewNote ? "新建页默认不自动保存，先落第一版内容再建立笔记实体。" : autoSaveEnabled ? "已有笔记停止输入约 2.6 秒后自动保存。" : "当前为纯手动保存模式。"}</p>
-                {message ? <div className="rounded-[18px] border border-white/8 bg-white/5 px-3 py-3 text-white/72">{message}</div> : null}
+                {message && (
+                  <div className="rounded-[var(--radius-md)] border border-[var(--border-default)] bg-[var(--primary-soft)] px-3 py-3 text-[var(--text-secondary)]">{message}</div>
+                )}
               </div>
             </GlassPanel>
           </div>
@@ -432,13 +427,13 @@ export function EnhancedEditor({ initialNote }: { initialNote?: NoteShape }) {
       <AnimatePresence>
         {showAfterSave ? (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-50 flex items-center justify-center bg-[rgba(4,7,17,0.58)] px-5 backdrop-blur-md">
-            <motion.div initial={{ opacity: 0, y: 16, scale: 0.96 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: 10, scale: 0.98 }} className="w-full max-w-sm rounded-[28px] border border-white/10 bg-[rgba(14,18,27,0.88)] p-5 shadow-[0_30px_90px_rgba(2,6,23,0.48)]">
-              <div className="text-sm text-white/56">保存成功</div>
-              <h3 className="mt-2 text-lg font-semibold text-white">要关闭当前页面并回到目录吗？</h3>
-              <p className="mt-2 text-sm leading-6 text-white/56">自动保存偏好已记住。你也可以继续在这个沉浸式编辑空间里写下去。</p>
+            <motion.div initial={{ opacity: 0, y: 16, scale: 0.96 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: 10, scale: 0.98 }} className="w-full max-w-sm rounded-[var(--radius-xl)] border border-[var(--border-strong)] bg-[var(--surface-raised)] p-6 shadow-[var(--shadow-lg)]">
+              <div className="text-xs text-[var(--text-muted)]">保存成功</div>
+              <h3 className="mt-2 text-base font-semibold text-[var(--text-primary)]">要关闭当前页面并回到目录吗？</h3>
+              <p className="mt-2 text-sm text-[var(--text-muted)] leading-relaxed">自动保存偏好已记住。你也可以继续在这个沉浸式编辑空间里写下去。</p>
               <div className="mt-5 flex gap-3">
-                <button type="button" onClick={() => setShowAfterSave(false)} className="flex-1 rounded-full border border-white/10 bg-white/6 px-4 py-3 text-sm text-white/82 transition hover:bg-white/10">继续编辑</button>
-                <button type="button" onClick={() => router.push("/notes")} className="flex-1 rounded-full bg-white px-4 py-3 text-sm font-medium text-slate-900 transition hover:brightness-110">回到目录</button>
+                <Button variant="secondary" size="sm" className="flex-1" onClick={() => setShowAfterSave(false)}>继续编辑</Button>
+                <Button variant="primary" size="sm" className="flex-1" onClick={() => router.push("/notes")}>回到目录</Button>
               </div>
             </motion.div>
           </motion.div>
