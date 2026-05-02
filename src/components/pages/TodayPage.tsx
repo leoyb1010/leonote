@@ -51,10 +51,10 @@ export function TodayPage({ data, signedIn }: TodayPageProps) {
   const { recent, tags, counts, projects } = data;
 
   return (
-    <div className="max-w-[var(--content-max)] mx-auto space-y-8 animate-fade-in">
+    <div className="w-full space-y-8 animate-fade-in">
       {/* Hero */}
       <div>
-        <h1 className="text-2xl lg:text-3xl font-bold text-[var(--text-primary)] mb-2 break-words">Today</h1>
+        <h1 className="text-2xl lg:text-3xl font-bold text-[var(--text-primary)] mb-2 ">Today</h1>
         <p className="text-sm text-[var(--text-muted)]">
           {counts.total > 0
             ? `${counts.total} 篇笔记 · ${counts.pinned} 置顶 · ${counts.favorite} 收藏`
@@ -115,16 +115,16 @@ export function TodayPage({ data, signedIn }: TodayPageProps) {
               >
                 <Link href={`/notes/${note.id}`}>
                   <Card padding="sm">
-                    <h3 className="text-sm font-medium text-[var(--text-primary)] line-clamp-1 mb-1 break-words">
+                    <h3 className="text-sm font-medium text-[var(--text-primary)] line-clamp-1 mb-1 ">
                       {note.title || "无标题"}
                     </h3>
-                    <p className="text-xs text-[var(--text-muted)] line-clamp-2 mb-2 break-words">
+                    <p className="text-xs text-[var(--text-muted)] line-clamp-2 mb-2 ">
                       {note.excerpt || "暂无预览"}
                     </p>
                     {note.tags.length > 0 && (
                       <div className="flex flex-wrap gap-1">
                         {note.tags.slice(0, 3).map((tag) => (
-                          <span key={tag} className="text-[10px] px-1.5 py-0.5 rounded-full bg-[var(--primary-soft)] text-[var(--primary)] break-words max-w-full">
+                          <span key={tag} className="text-[10px] px-1.5 py-0.5 rounded-full bg-[var(--primary-soft)] text-[var(--primary)]  max-w-full">
                             {tag}
                           </span>
                         ))}
@@ -173,7 +173,7 @@ export function TodayPage({ data, signedIn }: TodayPageProps) {
             {tags.map((tag) => (
               <span
                 key={tag}
-                className="text-xs px-2.5 py-1 rounded-full bg-[var(--primary-soft)] text-[var(--primary)] cursor-default break-words max-w-[200px]"
+                className="text-xs px-2.5 py-1 rounded-full bg-[var(--primary-soft)] text-[var(--primary)] cursor-default  max-w-[200px]"
               >
                 {tag}
               </span>

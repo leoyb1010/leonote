@@ -109,8 +109,8 @@
   /* ---------- Layout ---------- */
   --sidebar-width: 240px;
   --sidebar-collapsed: 64px;
-  --list-width: 340px;
-  --ai-panel-width: 360px;
+  --list-width: 320px;
+  --ai-panel-width: 320px;
   --content-max: 720px;
   --page-max: 100%;
 }

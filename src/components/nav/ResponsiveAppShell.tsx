@@ -20,25 +20,25 @@ export function ResponsiveAppShell({ children, header }: ResponsiveAppShellProps
 
   return (
     <div className="flex min-h-screen min-h-[100dvh] bg-[var(--bg-app)]">
-      {/* Desktop Sidebar */}
+      {/* Sidebar: fixed on left, hidden below xl (1280px), collapsible */}
       <DesktopSidebar
         currentPath={pathname}
         collapsed={sidebarCollapsed}
         onToggle={() => setSidebarCollapsed(!sidebarCollapsed)}
       />
 
-      {/* Main Content Area */}
-      <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
+      {/* Content: fills remaining space */}
+      <div className="flex-1 flex flex-col min-w-0">
         {header}
 
-        <main className="flex-1 pb-20 lg:pb-0 overflow-x-hidden">
-          <div className="w-full max-w-[var(--page-max)] mx-auto px-4 sm:px-6 lg:px-8 py-4 lg:py-6">
+        <main className="flex-1 pb-20 xl:pb-0">
+          <div className="w-full px-4 sm:px-6 xl:px-8 py-4 xl:py-6">
             {children}
           </div>
         </main>
       </div>
 
-      {/* Mobile Bottom Nav */}
+      {/* Bottom Nav: shown below xl */}
       <BottomNav currentPath={pathname} />
     </div>
   );

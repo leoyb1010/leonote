@@ -63,7 +63,7 @@ export function DesktopSidebar({
     <motion.aside
       animate={{ width: collapsed ? 64 : 240 }}
       transition={{ duration: 0.22, ease: [0.34, 1.56, 0.64, 1] }}
-      className="hidden lg:flex flex-col shrink-0 h-screen sticky top-0 border-r border-[var(--border-default)] bg-[var(--surface-base)]"
+      className="hidden xl:flex flex-col shrink-0 h-screen sticky top-0 border-r border-[var(--border-default)] bg-[var(--surface-base)]"
     >
       {/* Header */}
       <div

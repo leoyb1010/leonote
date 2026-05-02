@@ -37,7 +37,7 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
   const pinCount = notes.filter((note) => note.pinned).length;
 
   return (
-    <div className="max-w-[var(--content-max)] mx-auto space-y-6">
+    <div className="w-full space-y-6">
       <div>
         <h1 className="text-2xl font-bold text-[var(--text-primary)] flex items-center gap-2">
           <FolderKanban size={22} className="text-[var(--primary)]" />

@@ -49,8 +49,8 @@ export function ServerNoteList() {
   }, [query]);
 
   return (
-    <div className="max-w-[var(--content-max)] mx-auto space-y-5">
-      <h1 className="text-2xl font-bold text-[var(--text-primary)] break-words">全部笔记</h1>
+    <div className="w-full space-y-5">
+      <h1 className="text-2xl font-bold text-[var(--text-primary)] ">全部笔记</h1>
 
       <Card padding="sm">
         <div className="flex items-center gap-3">
