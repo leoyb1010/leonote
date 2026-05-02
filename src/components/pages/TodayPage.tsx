@@ -115,7 +115,7 @@ export function TodayPage({ data, signedIn }: TodayPageProps) {
               >
                 <Link href={`/notes/${note.id}`}>
                   <Card padding="sm">
-                    <h3 className="text-sm font-medium break-words text-[var(--text-primary)] line-clamp-1 mb-1 break-words">
+                    <h3 className="text-sm font-medium text-[var(--text-primary)] line-clamp-1 mb-1 break-words">
                       {note.title || "无标题"}
                     </h3>
                     <p className="text-xs text-[var(--text-muted)] line-clamp-2 mb-2 break-words">
@@ -153,7 +153,7 @@ export function TodayPage({ data, signedIn }: TodayPageProps) {
                 <Card padding="sm" className="min-w-0">
                   <div className="flex items-center gap-2 min-w-0">
                     <FolderKanban size={14} className="text-[var(--text-muted)] shrink-0" />
-                    <h3 className="text-sm font-medium break-words text-[var(--text-primary)] truncate">{proj.name}</h3>
+                    <h3 className="text-sm font-medium text-[var(--text-primary)] truncate">{proj.name}</h3>
                   </div>
                   <p className="text-xs text-[var(--text-muted)] mt-1.5">{proj.noteCount} 篇笔记</p>
                 </Card>

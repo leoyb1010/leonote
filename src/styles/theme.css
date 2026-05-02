@@ -112,7 +112,7 @@
   --list-width: 340px;
   --ai-panel-width: 360px;
   --content-max: 720px;
-  --page-max: 960px;
+  --page-max: 100%;
 }
 
 /* ---------- System Font Stack ---------- */

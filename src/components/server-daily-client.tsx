@@ -53,7 +53,7 @@ export function ServerDailyClient() {
         </GlassPanel>
       ) : null}
       <div className="space-y-3">
-        <div className="text-sm font-medium break-words text-[var(--text-secondary)]">最近几天</div>
+        <div className="text-sm font-medium text-[var(--text-secondary)]">最近几天</div>
         <div className="grid gap-4 xl:grid-cols-2">
           {recent.map((item) => (
             <NoteCard

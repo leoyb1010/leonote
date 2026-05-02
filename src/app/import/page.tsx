@@ -16,7 +16,7 @@ export default function ImportPage() {
         {items.map((item) => (
           <Card key={item.title} padding="sm">
             <div className="text-xs text-[var(--primary)] font-medium mb-2">{item.status}</div>
-            <h2 className="text-sm font-medium break-words text-[var(--text-primary)] mb-1">{item.title}</h2>
+            <h2 className="text-sm font-medium text-[var(--text-primary)] mb-1">{item.title}</h2>
             <p className="text-xs text-[var(--text-muted)] leading-relaxed">{item.desc}</p>
           </Card>
         ))}

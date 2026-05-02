@@ -33,9 +33,7 @@ export function ResponsiveAppShell({ children, header }: ResponsiveAppShellProps
 
         <main className="flex-1 pb-20 lg:pb-0 overflow-x-hidden">
           <div className="w-full max-w-[var(--page-max)] mx-auto px-4 sm:px-6 lg:px-8 py-4 lg:py-6">
-            <div className="break-words">
-              {children}
-            </div>
+            {children}
           </div>
         </main>
       </div>
