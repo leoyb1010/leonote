@@ -84,8 +84,8 @@ export function ServerSearchView() {
               {projects.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
             </select>
           </label>
-          <button type="button" onClick={() => setFavoriteOnly((v) => !v)} className={`rounded-[var(--radius-sm)] px-4 py-3 text-sm transition-colors ${favoriteOnly ? "bg-[var(--primary)] text-white" : "border border-[var(--border-default)] bg-[rgba(255,255,255,0.04)] text-[var(--text-secondary)]"}`}>仅看收藏</button>
-          <button type="button" onClick={() => setArchivedOnly((v) => !v)} className={`rounded-[var(--radius-sm)] px-4 py-3 text-sm transition-colors ${archivedOnly ? "bg-[var(--primary)] text-white" : "border border-[var(--border-default)] bg-[rgba(255,255,255,0.04)] text-[var(--text-secondary)]"}`}>仅看归档</button>
+          <button type="button" onClick={() => setFavoriteOnly((v) => !v)} className={`rounded-[var(--radius-sm)] px-4 py-3 text-sm transition-colors ${favoriteOnly ? "bg-[var(--primary)] text-[var(--text-primary)]" : "border border-[var(--border-default)] bg-[rgba(255,255,255,0.04)] text-[var(--text-secondary)]"}`}>仅看收藏</button>
+          <button type="button" onClick={() => setArchivedOnly((v) => !v)} className={`rounded-[var(--radius-sm)] px-4 py-3 text-sm transition-colors ${archivedOnly ? "bg-[var(--primary)] text-[var(--text-primary)]" : "border border-[var(--border-default)] bg-[rgba(255,255,255,0.04)] text-[var(--text-secondary)]"}`}>仅看归档</button>
         </div>
       </Card>
       {message && <p className="rounded-[var(--radius-lg)] border border-[var(--border-default)] bg-[var(--surface-raised)] p-4 text-sm text-[var(--text-muted)]">{message}</p>}

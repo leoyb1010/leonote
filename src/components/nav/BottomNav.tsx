@@ -39,7 +39,7 @@ export function BottomNav({ currentPath }: BottomNavProps) {
                 className={cn(
                   "flex items-center justify-center w-10 h-10 rounded-xl transition-all",
                   active
-                    ? "bg-[var(--primary)] text-white shadow-lg shadow-[var(--primary-soft)]"
+                    ? "bg-[var(--primary)] text-[var(--text-primary)] shadow-lg shadow-[var(--primary-soft)]"
                     : "bg-[var(--primary-soft)] text-[var(--primary)] active:scale-95"
                 )}
               >

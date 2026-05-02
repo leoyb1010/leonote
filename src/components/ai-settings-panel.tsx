@@ -94,7 +94,7 @@ export function AISettingsPanel() {
       </label>
 
       <div className="flex gap-3">
-        <button type="button" onClick={() => void save()} disabled={loading} className="rounded-[var(--radius-md)] bg-[var(--primary)] text-white px-5 py-3 text-sm font-medium transition hover:bg-[var(--primary-hover)] disabled:opacity-60">{loading ? "保存中" : "保存 AI 配置"}</button>
+        <button type="button" onClick={() => void save()} disabled={loading} className="rounded-[var(--radius-md)] bg-[var(--primary)] text-[var(--text-primary)] px-5 py-3 text-sm font-medium transition hover:bg-[var(--primary-hover)] disabled:opacity-60">{loading ? "保存中" : "保存 AI 配置"}</button>
       </div>
 
       <div className="rounded-[var(--radius-md)] border border-[var(--border-default)] bg-[rgba(255,255,255,0.05)] px-4 py-3 text-sm whitespace-pre-wrap text-[var(--text-muted)]">{message}</div>

@@ -287,26 +287,26 @@ export function EnhancedEditor({ initialNote }: { initialNote?: NoteShape }) {
               <div className="flex items-start justify-between gap-4">
                 <div>
                   <div className="text-[11px] font-semibold text-[var(--ai-accent)]">AI Summary</div>
-                  <h3 className="mt-2 text-lg font-semibold text-white">已生成笔记总结</h3>
+                  <h3 className="mt-2 text-lg font-semibold text-[var(--text-primary)]">已生成笔记总结</h3>
                 </div>
                 <button
                   type="button"
                   onClick={() => void insertSummary()}
                   disabled={summary.status === "inserting"}
-                  className="inline-flex items-center gap-2 rounded-full border border-[var(--border-default)] bg-[rgba(255,255,255,0.08)] px-4 py-2 text-sm text-white transition hover:bg-white/12 disabled:opacity-60"
+                  className="inline-flex items-center gap-2 rounded-full border border-[var(--border-default)] bg-[rgba(255,255,255,0.08)] px-4 py-2 text-sm text-[var(--text-primary)] transition hover:bg-white/12 disabled:opacity-60"
                 >
                   <Sparkles className="h-4 w-4" />
                   {summary.status === "inserting" ? "插入中" : "一键插入"}
                 </button>
               </div>
-              <p className="mt-4 whitespace-pre-wrap text-sm leading-7 text-[74">{summary.text}</p>
+              <p className="mt-4 whitespace-pre-wrap text-sm leading-7 text-[var(--text-secondary)]">{summary.text}</p>
             </GlassPanel>
           </motion.section>
         ) : null}
       </AnimatePresence>
 
       <GlassPanel blur="xl" glow="brand" hoverGlow className={cn("rounded-[var(--radius-lg)] p-5 transition duration-300", focusRing && "shadow-[0_0_0_1px_rgba(99,102,241,0.26),0_24px_80px_rgba(50,66,170,0.30)]")}>
-        <div className="mb-5 flex flex-wrap items-center justify-between gap-3 text-xs text-[55">
+        <div className="mb-5 flex flex-wrap items-center justify-between gap-3 text-xs text-[var(--text-muted)]">
           <div className="inline-flex items-center gap-3">
             <SaveStatusIndicator status={saveState === "saved" ? "saved" : saveState === "saving" ? "saving" : saveState === "error" ? "offline" : "idle"} />
             <span className="text-xs text-[var(--text-muted)]">{stats.words} 词 · {stats.chars} 字符</span>
@@ -318,7 +318,7 @@ export function EnhancedEditor({ initialNote }: { initialNote?: NoteShape }) {
               className={cn(
                 "rounded-[var(--radius-md)] px-3 py-1.5 text-xs transition-colors",
                 autoSaveEnabled
-                  ? "bg-[var(--primary)] text-white"
+                  ? "bg-[var(--primary)] text-[var(--text-primary)]"
                   : "bg-[var(--primary-soft)] text-[var(--text-muted)] hover:text-[var(--text-primary)]",
               )}
             >

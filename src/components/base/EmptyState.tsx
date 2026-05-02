@@ -46,14 +46,14 @@ export function EmptyState({
           {action.href ? (
             <a
               href={action.href}
-              className="inline-flex items-center px-4 py-2 text-sm font-medium rounded-md bg-[var(--primary)] text-white hover:bg-[var(--primary-hover)] transition-colors"
+              className="inline-flex items-center px-4 py-2 text-sm font-medium rounded-md bg-[var(--primary)] text-[var(--text-primary)] hover:bg-[var(--primary-hover)] transition-colors"
             >
               {action.label}
             </a>
           ) : (
             <button
               onClick={action.onClick}
-              className="inline-flex items-center px-4 py-2 text-sm font-medium rounded-md bg-[var(--primary)] text-white hover:bg-[var(--primary-hover)] transition-colors"
+              className="inline-flex items-center px-4 py-2 text-sm font-medium rounded-md bg-[var(--primary)] text-[var(--text-primary)] hover:bg-[var(--primary-hover)] transition-colors"
             >
               {action.label}
             </button>

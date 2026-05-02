@@ -17,7 +17,7 @@ interface ButtonProps extends Omit<HTMLMotionProps<"button">, "children"> {
 
 const variantStyles: Record<ButtonVariant, string> = {
   primary:
-    "bg-[var(--primary)] text-white hover:bg-[var(--primary-hover)] active:bg-[var(--primary)] shadow-sm",
+    "bg-[var(--primary)] text-[var(--text-primary)] hover:bg-[var(--primary-hover)] active:bg-[var(--primary)] shadow-sm",
   secondary:
     "bg-[var(--primary-soft)] text-[var(--primary)] hover:bg-[var(--primary-pressed)] active:bg-[var(--primary-soft)]",
   ghost:

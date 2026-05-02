@@ -23,7 +23,7 @@ export function BottomNav({ current = "/" }: { current?: string }) {
             className={cn(
               "rounded-[var(--radius-sm)] px-2 py-3 text-center text-xs transition-all duration-300 active:scale-[0.97]",
               active
-                ? "bg-[var(--primary)] text-white text-[var(--text-primary)] shadow-[0_10px_24px_rgba(255,255,255,0.14)]"
+                ? "bg-[var(--primary)] text-[var(--text-primary)] text-[var(--text-primary)] shadow-[0_10px_24px_rgba(255,255,255,0.14)]"
                 : "text-[var(--text-muted)] hover:-translate-y-[1px] hover:bg-[rgba(255,255,255,0.06)] hover:text-white",
             )}
           >

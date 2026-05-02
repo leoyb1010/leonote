@@ -94,7 +94,7 @@ export function ImportExportPanel({ noteId, embedded, onImported }: Props) {
           <Link2 className="h-4 w-4 text-[var(--ai-accent)] shrink-0" />
           <input value={link} onChange={(e) => setLink(e.target.value)} placeholder="粘贴网页链接、文档链接、资料链接" className="w-full bg-transparent text-sm text-[var(--text-primary)] outline-none placeholder:text-[var(--text-placeholder)]" />
         </div>
-        <button type="button" onClick={() => void handleImportLink()} disabled={loading} className="rounded-[var(--radius-md)] bg-[var(--primary)] text-white px-5 py-3 text-sm font-medium transition hover:bg-[var(--primary-hover)] disabled:opacity-60 shrink-0">导入链接</button>
+        <button type="button" onClick={() => void handleImportLink()} disabled={loading} className="rounded-[var(--radius-md)] bg-[var(--primary)] text-[var(--text-primary)] px-5 py-3 text-sm font-medium transition hover:bg-[var(--primary-hover)] disabled:opacity-60 shrink-0">导入链接</button>
       </div>
 
       <div className="grid gap-3 md:grid-cols-2">
@@ -120,7 +120,7 @@ export function ImportExportPanel({ noteId, embedded, onImported }: Props) {
       <textarea value={prompt} onChange={(e) => setPrompt(e.target.value)} placeholder="可选：例如「整理成会议纪要」、「导出成简短汇报稿」、「保留关键知识点」" className="min-h-[96px] w-full rounded-[var(--radius-md)] border border-[var(--border-default)] bg-[var(--surface-base)] px-4 py-3 text-sm text-[var(--text-primary)] outline-none placeholder:text-[var(--text-placeholder)] focus:border-[var(--border-focus)]" />
 
       <div className="flex flex-wrap gap-3">
-        <button type="button" onClick={() => void handleExport()} disabled={loading} className="inline-flex items-center gap-2 rounded-[var(--radius-md)] bg-[var(--primary)] text-white px-4 py-2.5 text-sm font-medium transition hover:bg-[var(--primary-hover)] disabled:opacity-60"><Download className="h-4 w-4" />{loading ? "处理中" : noteId ? "导出当前笔记" : "导出备份"}</button>
+        <button type="button" onClick={() => void handleExport()} disabled={loading} className="inline-flex items-center gap-2 rounded-[var(--radius-md)] bg-[var(--primary)] text-[var(--text-primary)] px-4 py-2.5 text-sm font-medium transition hover:bg-[var(--primary-hover)] disabled:opacity-60"><Download className="h-4 w-4" />{loading ? "处理中" : noteId ? "导出当前笔记" : "导出备份"}</button>
         <button type="button" onClick={() => inputRef.current?.click()} disabled={loading} className="inline-flex items-center gap-2 rounded-[var(--radius-md)] border border-[var(--border-default)] bg-[rgba(255,255,255,0.06)] px-4 py-2.5 text-sm text-[var(--text-secondary)] transition hover:bg-[rgba(255,255,255,0.08)] disabled:opacity-60"><FileUp className="h-4 w-4" />导入文件</button>
         <input ref={inputRef} type="file" accept="application/json,.json,text/plain,.txt,text/markdown,.md,text/html,.html" className="hidden" onChange={(e) => { const file = e.target.files?.[0]; if (file) void handleImportFile(file); }} />
       </div>

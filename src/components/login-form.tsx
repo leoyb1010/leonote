@@ -44,7 +44,7 @@ export function LoginForm() {
         <button onClick={() => setMode(mode === "login" ? "register" : "login")} disabled={loading} className="flex-1 rounded-[var(--radius-md)] border border-[var(--border-default)] bg-[rgba(255,255,255,0.06)] px-4 py-3 text-sm text-[var(--text-secondary)] transition hover:bg-[rgba(255,255,255,0.08)]" type="button">
           {mode === "login" ? "创建账号" : "返回登录"}
         </button>
-        <button onClick={submit} disabled={loading} className="flex-1 inline-flex items-center justify-center gap-2 rounded-[var(--radius-md)] bg-[var(--primary)] text-white px-4 py-3 text-sm font-medium transition hover:bg-[var(--primary-hover)] disabled:opacity-60" type="button">
+        <button onClick={submit} disabled={loading} className="flex-1 inline-flex items-center justify-center gap-2 rounded-[var(--radius-md)] bg-[var(--primary)] text-[var(--text-primary)] px-4 py-3 text-sm font-medium transition hover:bg-[var(--primary-hover)] disabled:opacity-60" type="button">
           {mode === "login" ? <LogIn className="h-4 w-4" /> : <UserPlus className="h-4 w-4" />}
           {loading ? "处理中" : mode === "login" ? "登录" : "注册"}
         </button>
