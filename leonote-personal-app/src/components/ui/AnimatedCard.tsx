@@ -51,7 +51,7 @@ export function AnimatedCard({ children, className, contentClassName, tilt = 10,
       }}
       onPointerLeave={reset}
       className={cn(
-        "group relative overflow-hidden rounded-[24px] border border-white/10 bg-[rgba(17,22,31,0.76)] shadow-[0_20px_64px_rgba(4,8,20,0.34)] backdrop-blur-xl",
+        "group relative overflow-hidden rounded-[var(--radius-lg)] border border-[var(--border-default)] bg-[rgba(17,22,31,0.76)] shadow-[0_20px_64px_rgba(4,8,20,0.34)] backdrop-blur-[12px]",
         className,
       )}
     >

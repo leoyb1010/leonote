@@ -2,7 +2,8 @@
 
 import { Bot, KeyRound } from "lucide-react";
 import { useEffect, useState } from "react";
-import { GlassPanel } from "@/components/ui/GlassPanel";
+import { Card } from "@/components/base/Card";
+import { Button } from "@/components/base/Button";
 
 type SettingsShape = {
   baseUrl: string;
@@ -12,6 +13,8 @@ type SettingsShape = {
   fallbackModel: string;
   enableAutoOrganize: boolean;
 };
+
+const inputClass = "w-full rounded-[var(--radius-sm)] border border-[var(--border-default)] bg-[var(--surface-base)] px-4 py-3 text-[var(--text-primary)] text-sm outline-none focus:border-[var(--border-focus)] transition-colors placeholder:text-[var(--text-placeholder)]";
 
 export function AISettingsPanel() {
   const [settings, setSettings] = useState<SettingsShape | null>(null);
@@ -27,10 +30,7 @@ export function AISettingsPanel() {
     fetch("/api/ai/settings", { cache: "no-store" })
       .then((res) => res.json().then((data) => ({ ok: res.ok, data })))
       .then(({ ok, data }) => {
-        if (!ok) {
-          setMessage(data.message || "读取 AI 配置失败");
-          return;
-        }
+        if (!ok) { setMessage(data.message || "读取 AI 配置失败"); return; }
         setSettings(data.settings);
         setBaseUrl(data.settings.baseUrl);
         setModel(data.settings.model);
@@ -43,71 +43,71 @@ export function AISettingsPanel() {
 
   const save = async () => {
     setLoading(true);
-    const res = await fetch("/api/ai/settings", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        baseUrl,
-        apiKey: apiKey.trim() || undefined,
-        model,
-        fallbackModel,
-        enableAutoOrganize,
-      }),
-    });
+    const res = await fetch("/api/ai/settings", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ baseUrl, apiKey: apiKey.trim() || undefined, model, fallbackModel, enableAutoOrganize }) });
     const data = await res.json();
     setLoading(false);
-    if (!res.ok) {
-      setMessage(data.message || "保存失败");
-      return;
-    }
+    if (!res.ok) { setMessage(data.message || "保存失败"); return; }
     setSettings(data.settings);
     setApiKey("");
     setMessage("AI 配置已保存。现在导入和笔记整理会走大模型。");
   };
 
   return (
-    <GlassPanel blur="xl" glow="brand" className="space-y-4 rounded-[28px] p-5">
-      <div>
-        <div className="text-[11px] uppercase tracking-[0.24em] text-white/45">AI Settings</div>
-        <h2 className="mt-2 text-base font-medium text-white inline-flex items-center gap-2"><Bot className="h-4 w-4 text-cyan-300" />AI 工作搭子</h2>
-        <p className="mt-2 text-sm leading-7 text-white/58">支持 DeepSeek OpenAI 兼容接口，可切换主模型 / 备用模型，并控制导入自动整理。</p>
+    <Card padding="lg">
+      <div className="space-y-5">
+        <div>
+          <div className="text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wide">AI Settings</div>
+          <h2 className="mt-1 text-base font-medium text-[var(--text-primary)] flex items-center gap-2">
+            <Bot size={16} className="text-[var(--ai-accent)]" />AI 工作搭子
+          </h2>
+          <p className="mt-2 text-sm text-[var(--text-secondary)] leading-relaxed">
+            支持 DeepSeek OpenAI 兼容接口，可切换主模型 / 备用模型，并控制导入自动整理。
+          </p>
+        </div>
+
+        <div className="grid gap-3 md:grid-cols-2">
+          <label className="space-y-2 text-sm text-[var(--text-secondary)]">
+            <span>Base URL</span>
+            <input value={baseUrl} onChange={(e) => setBaseUrl(e.target.value)} className={inputClass} />
+          </label>
+          <label className="space-y-2 text-sm text-[var(--text-secondary)]">
+            <span className="flex items-center gap-2">
+              <KeyRound size={14} className="text-[var(--ai-accent)]" />
+              API Key {settings?.hasApiKey ? `(当前：${settings.apiKeyMasked})` : ""}
+            </span>
+            <input value={apiKey} onChange={(e) => setApiKey(e.target.value)} placeholder="留空则保持当前" className={inputClass} />
+          </label>
+          <label className="space-y-2 text-sm text-[var(--text-secondary)]">
+            <span>主模型</span>
+            <select value={model} onChange={(e) => setModel(e.target.value)} className={inputClass}>
+              <option value="deepseek-v4-flash">deepseek-v4-flash</option>
+              <option value="deepseek-v4-pro">deepseek-v4-pro</option>
+            </select>
+          </label>
+          <label className="space-y-2 text-sm text-[var(--text-secondary)]">
+            <span>备用模型</span>
+            <select value={fallbackModel} onChange={(e) => setFallbackModel(e.target.value)} className={inputClass}>
+              <option value="deepseek-v4-pro">deepseek-v4-pro</option>
+              <option value="deepseek-v4-flash">deepseek-v4-flash</option>
+            </select>
+          </label>
+        </div>
+
+        <label className="flex items-center gap-3 rounded-[var(--radius-md)] border border-[var(--border-default)] bg-[rgba(255,255,255,0.04)] px-4 py-3 text-sm text-[var(--text-secondary)] cursor-pointer">
+          <input type="checkbox" checked={enableAutoOrganize} onChange={(e) => setEnableAutoOrganize(e.target.checked)} />
+          导入笔记 / 链接时自动调用 AI 做整理、摘要、标签、项目建议
+        </label>
+
+        <div className="flex gap-3">
+          <Button onClick={() => void save()} loading={loading} size="md">
+            保存 AI 配置
+          </Button>
+        </div>
+
+        <div className="rounded-[var(--radius-md)] border border-[var(--border-default)] bg-[var(--primary-soft)] px-4 py-3 text-sm text-[var(--text-secondary)] whitespace-pre-wrap">
+          {message}
+        </div>
       </div>
-
-      <div className="grid gap-3 md:grid-cols-2">
-        <label className="space-y-2 text-sm text-white/62">
-          <span>Base URL</span>
-          <input value={baseUrl} onChange={(e) => setBaseUrl(e.target.value)} className="w-full rounded-[18px] border border-white/8 bg-[rgba(8,11,18,0.56)] px-4 py-3 text-white outline-none" />
-        </label>
-        <label className="space-y-2 text-sm text-white/62">
-          <span className="inline-flex items-center gap-2"><KeyRound className="h-4 w-4 text-cyan-300" />API Key {settings?.hasApiKey ? `(当前：${settings.apiKeyMasked})` : ""}</span>
-          <input value={apiKey} onChange={(e) => setApiKey(e.target.value)} placeholder="留空则保持当前" className="w-full rounded-[18px] border border-white/8 bg-[rgba(8,11,18,0.56)] px-4 py-3 text-white outline-none placeholder:text-white/26" />
-        </label>
-        <label className="space-y-2 text-sm text-white/62">
-          <span>主模型</span>
-          <select value={model} onChange={(e) => setModel(e.target.value)} className="w-full rounded-[18px] border border-white/8 bg-[rgba(8,11,18,0.56)] px-4 py-3 text-white outline-none">
-            <option value="deepseek-v4-flash">deepseek-v4-flash</option>
-            <option value="deepseek-v4-pro">deepseek-v4-pro</option>
-          </select>
-        </label>
-        <label className="space-y-2 text-sm text-white/62">
-          <span>备用模型</span>
-          <select value={fallbackModel} onChange={(e) => setFallbackModel(e.target.value)} className="w-full rounded-[18px] border border-white/8 bg-[rgba(8,11,18,0.56)] px-4 py-3 text-white outline-none">
-            <option value="deepseek-v4-pro">deepseek-v4-pro</option>
-            <option value="deepseek-v4-flash">deepseek-v4-flash</option>
-          </select>
-        </label>
-      </div>
-
-      <label className="flex items-center gap-3 rounded-[20px] border border-white/8 bg-white/6 px-4 py-3 text-sm text-white/72">
-        <input type="checkbox" checked={enableAutoOrganize} onChange={(e) => setEnableAutoOrganize(e.target.checked)} />
-        导入笔记 / 链接时自动调用 AI 做整理、摘要、标签、项目建议
-      </label>
-
-      <div className="flex gap-3">
-        <button type="button" onClick={() => void save()} disabled={loading} className="rounded-full bg-white px-5 py-3 text-sm font-medium text-slate-900 transition hover:brightness-110 disabled:opacity-60">{loading ? "保存中" : "保存 AI 配置"}</button>
-      </div>
-
-      <div className="rounded-[20px] border border-white/8 bg-white/5 px-4 py-3 text-sm whitespace-pre-wrap text-white/60">{message}</div>
-    </GlassPanel>
+    </Card>
   );
 }

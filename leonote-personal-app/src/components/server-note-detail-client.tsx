@@ -64,16 +64,16 @@ export function ServerNoteDetailClient({ id }: { id: string }) {
   const restore = async () => { const res = await fetch(`/api/notes/${id}/restore`, { method: "POST" }); if (res.ok) await reload(); };
   const removeForever = async () => { if (!window.confirm("确认彻底删除？删除后不可恢复。")) return; const res = await fetch(`/api/notes/${id}`, { method: "DELETE" }); if (res.ok) router.push("/trash"); };
 
-  if (!note) return <GlassPanel blur="lg" glow="soft" className="rounded-[24px] p-4 text-sm text-white/62">{message}</GlassPanel>;
+  if (!note) return <GlassPanel blur="lg" glow="soft" className="rounded-[var(--radius-lg)] p-4 text-sm text-[var(--text-secondary)]">{message}</GlassPanel>;
 
   return (
     <div className="space-y-3">
-      <GlassPanel blur="lg" glow="soft" className="rounded-[18px] px-3 py-2">
-        <div className="flex flex-wrap gap-1.5 text-xs text-white/56">
-          <button onClick={() => void patch({ favorite: !note.favorite })} type="button" className="inline-flex items-center gap-1.5 rounded-full border border-white/8 bg-white/[0.04] px-3 py-1.5 transition hover:bg-white/8 hover:text-white"><Heart className="h-3.5 w-3.5" />{note.favorite ? "取消收藏" : "收藏"}</button>
-          <button onClick={() => void patch({ pinned: !note.pinned })} type="button" className="rounded-full border border-white/8 bg-white/[0.04] px-3 py-1.5 transition hover:bg-white/8 hover:text-white">{note.pinned ? "取消置顶" : "置顶"}</button>
-          <button onClick={() => void patch({ archived: !note.archived })} type="button" className="inline-flex items-center gap-1.5 rounded-full border border-white/8 bg-white/[0.04] px-3 py-1.5 transition hover:bg-white/8 hover:text-white"><Archive className="h-3.5 w-3.5" />{note.archived ? "取消归档" : "归档"}</button>
-          {note.deletedAt ? <><button onClick={() => void restore()} type="button" className="inline-flex items-center gap-1.5 rounded-full border border-white/8 bg-white/[0.04] px-3 py-1.5 transition hover:bg-white/8 hover:text-white"><RotateCcw className="h-3.5 w-3.5" />恢复</button><button onClick={() => void removeForever()} type="button" className="inline-flex items-center gap-1.5 rounded-full bg-[rgba(251,113,133,0.12)] px-3 py-1.5 text-rose-200 transition hover:bg-[rgba(251,113,133,0.18)]"><Trash2 className="h-3.5 w-3.5" />彻底删除</button></> : <button onClick={() => void moveToTrash()} type="button" className="inline-flex items-center gap-1.5 rounded-full border border-rose-200/10 bg-[rgba(251,113,133,0.10)] px-3 py-1.5 text-rose-100/76 transition hover:bg-[rgba(251,113,133,0.16)]"><Trash2 className="h-3.5 w-3.5" />移入回收站</button>}
+      <GlassPanel blur="lg" glow="soft" className="rounded-[var(--radius-sm)] px-3 py-2">
+        <div className="flex flex-wrap gap-1.5 text-xs text-[var(--text-muted)]">
+          <button onClick={() => void patch({ favorite: !note.favorite })} type="button" className="inline-flex items-center gap-1.5 rounded-full border border-[var(--border-default)] bg-white/[0.04] px-3 py-1.5 transition hover:bg-[rgba(255,255,255,0.08)] hover:text-white"><Heart className="h-3.5 w-3.5" />{note.favorite ? "取消收藏" : "收藏"}</button>
+          <button onClick={() => void patch({ pinned: !note.pinned })} type="button" className="rounded-full border border-[var(--border-default)] bg-white/[0.04] px-3 py-1.5 transition hover:bg-[rgba(255,255,255,0.08)] hover:text-white">{note.pinned ? "取消置顶" : "置顶"}</button>
+          <button onClick={() => void patch({ archived: !note.archived })} type="button" className="inline-flex items-center gap-1.5 rounded-full border border-[var(--border-default)] bg-white/[0.04] px-3 py-1.5 transition hover:bg-[rgba(255,255,255,0.08)] hover:text-white"><Archive className="h-3.5 w-3.5" />{note.archived ? "取消归档" : "归档"}</button>
+          {note.deletedAt ? <><button onClick={() => void restore()} type="button" className="inline-flex items-center gap-1.5 rounded-full border border-[var(--border-default)] bg-white/[0.04] px-3 py-1.5 transition hover:bg-[rgba(255,255,255,0.08)] hover:text-white"><RotateCcw className="h-3.5 w-3.5" />恢复</button><button onClick={() => void removeForever()} type="button" className="inline-flex items-center gap-1.5 rounded-full bg-[rgba(251,113,133,0.12)] px-3 py-1.5 text-rose-200 transition hover:bg-[rgba(251,113,133,0.18)]"><Trash2 className="h-3.5 w-3.5" />彻底删除</button></> : <button onClick={() => void moveToTrash()} type="button" className="inline-flex items-center gap-1.5 rounded-full border border-rose-200/10 bg-[rgba(251,113,133,0.10)] px-3 py-1.5 text-rose-100/76 transition hover:bg-[rgba(251,113,133,0.16)]"><Trash2 className="h-3.5 w-3.5" />移入回收站</button>}
         </div>
       </GlassPanel>
       <ServerNoteEditor initialNote={note} />

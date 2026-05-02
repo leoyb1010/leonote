@@ -42,13 +42,13 @@ export function MemoryFactsPanel() {
   const filteredItems = useMemo(() => (activeType === "全部" ? items : items.filter((item) => item.type === activeType)), [activeType, items]);
 
   return (
-    <GlassPanel blur="xl" glow="brand" className="relative overflow-hidden rounded-[28px] p-5">
+    <GlassPanel blur="xl" glow="brand" className="relative overflow-hidden rounded-[var(--radius-lg)] p-5">
       <AISpark density={14} subdued className="opacity-60" />
       <div className="relative z-10 space-y-5">
         <div>
-          <div className="text-[11px] uppercase tracking-[0.24em] text-white/45">Memory Facts</div>
+          <div className="text-[11px] font-semibold text-[var(--text-muted)">Memory Facts</div>
           <h2 className="mt-2 text-xl font-semibold text-white">长期记忆</h2>
-          <p className="mt-2 text-sm leading-7 text-white/58">这里放的是稳定信息，不是普通笔记。切换类别时使用 stagger 淡出重排，帮助你快速理解记忆分布。</p>
+          <p className="mt-2 text-sm leading-7 text-[var(--text-muted)]">这里放的是稳定信息，不是普通笔记。切换类别时使用 stagger 淡出重排，帮助你快速理解记忆分布。</p>
         </div>
 
         <div className="flex flex-wrap gap-2">
@@ -61,7 +61,7 @@ export function MemoryFactsPanel() {
                 onClick={() => setActiveType(type)}
                 className={cn(
                   "rounded-full border px-3 py-2 text-xs transition",
-                  active ? "border-cyan-300/24 bg-cyan-300/12 text-cyan-100" : "border-white/10 bg-white/6 text-white/56 hover:bg-white/10 hover:text-white",
+                  active ? "border-cyan-300/24 bg-cyan-300/12 text-[var(--ai-accent)]" : "border-[var(--border-default)] bg-[rgba(255,255,255,0.06)] text-[var(--text-muted)] hover:bg-[rgba(255,255,255,0.10)] hover:text-white",
                 )}
               >
                 {type}
@@ -81,7 +81,7 @@ export function MemoryFactsPanel() {
             </AnimatePresence>
           </motion.div>
         ) : (
-          <div className="rounded-[22px] border border-white/8 bg-white/5 px-4 py-4 text-sm text-white/58">{message}</div>
+          <div className="rounded-[var(--radius-md)] border border-[var(--border-default)] bg-[rgba(255,255,255,0.05)] px-4 py-4 text-sm text-[var(--text-muted)]">{message}</div>
         )}
       </div>
     </GlassPanel>

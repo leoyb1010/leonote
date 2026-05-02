@@ -74,24 +74,24 @@ export function ServerSearchView() {
 
   return (
     <section className="space-y-4">
-      <GlassPanel blur="xl" glow="soft" className="rounded-[24px] p-4">
-        <div className="flex items-center gap-3 rounded-[20px] border border-white/8 bg-[rgba(8,11,18,0.56)] px-4 py-3">
-          <Search className="h-4 w-4 text-white/36" />
-          <input aria-label="搜索笔记" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="搜索标题、正文、摘要、标签或项目" className="w-full bg-transparent text-sm text-white outline-none placeholder:text-white/26" />
+      <GlassPanel blur="xl" glow="soft" className="rounded-[var(--radius-lg)] p-4">
+        <div className="flex items-center gap-3 rounded-[var(--radius-md)] border border-[var(--border-default)] bg-[var(--surface-base)] px-4 py-3">
+          <Search className="h-4 w-4 text-[36" />
+          <input aria-label="搜索笔记" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="搜索标题、正文、摘要、标签或项目" className="w-full bg-transparent text-sm text-white outline-none placeholder:text-[var(--text-placeholder)" />
         </div>
         <div className="mt-3 grid gap-3 md:grid-cols-3">
-          <label className="flex items-center gap-2 rounded-[18px] border border-white/8 bg-white/6 px-3 py-3 text-sm text-white/72">
-            <Filter className="h-4 w-4 text-white/42" />
+          <label className="flex items-center gap-2 rounded-[var(--radius-sm)] border border-[var(--border-default)] bg-[rgba(255,255,255,0.06)] px-3 py-3 text-sm text-[var(--text-secondary)]">
+            <Filter className="h-4 w-4 text-[var(--text-muted)]" />
             <select value={projectId} onChange={(event) => setProjectId(event.target.value)} className="w-full bg-transparent outline-none">
               <option value="">全部项目</option>
               {projects.map((project) => <option key={project.id} value={project.id}>{project.name}</option>)}
             </select>
           </label>
-          <button type="button" onClick={() => setFavoriteOnly((value) => !value)} className={`rounded-[18px] px-4 py-3 text-sm transition ${favoriteOnly ? "bg-white text-slate-900" : "border border-white/8 bg-white/6 text-white/72"}`}>仅看收藏</button>
-          <button type="button" onClick={() => setArchivedOnly((value) => !value)} className={`rounded-[18px] px-4 py-3 text-sm transition ${archivedOnly ? "bg-white text-slate-900" : "border border-white/8 bg-white/6 text-white/72"}`}>仅看归档</button>
+          <button type="button" onClick={() => setFavoriteOnly((value) => !value)} className={`rounded-[var(--radius-sm)] px-4 py-3 text-sm transition ${favoriteOnly ? "bg-white text-[var(--text-primary)]" : "border border-[var(--border-default)] bg-[rgba(255,255,255,0.06)] text-[var(--text-secondary)]"}`}>仅看收藏</button>
+          <button type="button" onClick={() => setArchivedOnly((value) => !value)} className={`rounded-[var(--radius-sm)] px-4 py-3 text-sm transition ${archivedOnly ? "bg-white text-[var(--text-primary)]" : "border border-[var(--border-default)] bg-[rgba(255,255,255,0.06)] text-[var(--text-secondary)]"}`}>仅看归档</button>
         </div>
       </GlassPanel>
-      {message ? <GlassPanel blur="lg" glow="soft" className="rounded-[24px] p-4 text-sm text-white/62">{message}</GlassPanel> : null}
+      {message ? <GlassPanel blur="lg" glow="soft" className="rounded-[var(--radius-lg)] p-4 text-sm text-[var(--text-secondary)]">{message}</GlassPanel> : null}
       <motion.div variants={staggerContainer} initial="initial" animate="animate" className="grid gap-4 xl:grid-cols-2">
         {items.map((note) => (
           <motion.div key={note.id} variants={staggerItem}>

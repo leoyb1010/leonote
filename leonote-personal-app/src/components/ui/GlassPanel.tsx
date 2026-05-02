@@ -21,9 +21,9 @@ type GlassPanelProps = {
 
 const blurClassMap: Record<BlurLevel, string> = {
   sm: "backdrop-blur-sm",
-  md: "backdrop-blur-md",
-  lg: "backdrop-blur-xl",
-  xl: "backdrop-blur-2xl",
+  md: "backdrop-blur-[8px]",
+  lg: "backdrop-blur-[12px]",
+  xl: "backdrop-blur-[16px]",
 };
 
 const glowClassMap: Record<GlowLevel, string> = {
@@ -52,20 +52,20 @@ export function GlassPanel({
       whileTap="whileTap"
       style={style}
       className={cn(
-        "group relative overflow-hidden rounded-[24px] bg-[rgba(16,19,26,0.72)] text-white/92",
+        "group relative overflow-hidden rounded-[var(--radius-lg)] bg-[var(--surface-glass)] text-[92",
         blurClassMap[blur],
         glowClassMap[glow],
         className,
       )}
     >
       {borderGradient ? (
-        <div className="pointer-events-none absolute inset-0 rounded-[24px] p-px [background:linear-gradient(160deg,rgba(255,255,255,0.16),rgba(255,255,255,0.06)_32%,rgba(99,102,241,0.18)_66%,rgba(34,211,238,0.10)_100%)]">
-          <div className="h-full w-full rounded-[23px] bg-[rgba(16,19,26,0.72)]/95" />
+        <div className="pointer-events-none absolute inset-0 rounded-[var(--radius-lg)] p-px [background:linear-gradient(160deg,rgba(255,255,255,0.16),rgba(255,255,255,0.06)_32%,rgba(99,102,241,0.18)_66%,rgba(34,211,238,0.10)_100%)]">
+          <div className="h-full w-full rounded-[23px] bg-[var(--surface-glass)]/95" />
         </div>
       ) : null}
 
-      <div className="pointer-events-none absolute inset-0 rounded-[24px] bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.10),transparent_38%)] opacity-70" />
-      <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-white/10" />
+      <div className="pointer-events-none absolute inset-0 rounded-[var(--radius-lg)] bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.10),transparent_38%)] opacity-70" />
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-[rgba(255,255,255,0.10)]" />
       {hoverGlow ? (
         <div className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100 [background:radial-gradient(circle_at_var(--pointer-x,50%)_var(--pointer-y,0%),rgba(99,102,241,0.22),transparent_28%),radial-gradient(circle_at_80%_20%,rgba(34,211,238,0.14),transparent_24%)]" />
       ) : null}

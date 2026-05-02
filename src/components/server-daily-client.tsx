@@ -34,18 +34,26 @@ export function ServerDailyClient() {
 
   return (
     <section className="space-y-5">
-      {message ? <GlassPanel blur="lg" glow="soft" className="rounded-[24px] p-4 text-sm text-white/60">{message}</GlassPanel> : null}
+      {message ? (
+        <GlassPanel blur="lg" glow="soft" className="rounded-[var(--radius-lg)] p-4 text-sm text-[var(--text-muted)]">
+          {message}
+        </GlassPanel>
+      ) : null}
       {today ? (
-        <GlassPanel blur="xl" glow="brand" className="rounded-[24px] p-5">
+        <GlassPanel blur="xl" glow="brand" className="rounded-[var(--radius-lg)] p-5">
           <Link href={`/notes/${today.note.id}`} className="block">
-            <div className="inline-flex items-center gap-2 text-xs text-cyan-200/72"><CalendarDays className="h-4 w-4" />今日入口</div>
-            <h2 className="mt-3 text-lg font-medium text-white">{today.note.title}</h2>
-            <p className="mt-2 text-sm leading-7 text-white/60">{today.note.excerpt || "今天的每日笔记已经创建，点击继续写。"}</p>
+            <div className="inline-flex items-center gap-2 text-xs text-[var(--ai-accent)]">
+              <CalendarDays className="h-4 w-4" />今日入口
+            </div>
+            <h2 className="mt-3 text-lg font-medium text-[var(--text-primary)]">{today.note.title}</h2>
+            <p className="mt-2 text-sm leading-7 text-[var(--text-muted)]">
+              {today.note.excerpt || "今天的每日笔记已经创建，点击继续写。"}
+            </p>
           </Link>
         </GlassPanel>
       ) : null}
       <div className="space-y-3">
-        <div className="text-sm font-medium text-white/72">最近几天</div>
+        <div className="text-sm font-medium text-[var(--text-secondary)]">最近几天</div>
         <div className="grid gap-4 xl:grid-cols-2">
           {recent.map((item) => (
             <NoteCard

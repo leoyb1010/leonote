@@ -25,26 +25,23 @@ export function MemoryFactCard({ id, type, content, confidence, updatedAt, highl
     <motion.article
       layout
       variants={memoryFactFloat}
-      initial="initial"
-      animate="animate"
-      exit="exit"
-      whileHover="whileHover"
-      whileTap="whileTap"
+      initial="initial" animate="animate" exit="exit"
+      whileHover="whileHover" whileTap="whileTap"
       style={{ rotate: rotation }}
       className={cn(
-        "group relative mb-4 break-inside-avoid overflow-hidden rounded-[22px] border border-white/10 bg-[rgba(17,22,31,0.76)] p-4 text-white shadow-[0_18px_54px_rgba(3,7,18,0.30)] backdrop-blur-xl",
-        highlighted && "ring-1 ring-cyan-300/40 shadow-[0_0_0_1px_rgba(34,211,238,0.20),0_20px_70px_rgba(34,211,238,0.12)]",
+        "group relative mb-4 break-inside-avoid overflow-hidden rounded-[var(--radius-md)] border border-[var(--border-default)] bg-[var(--surface-glass)] p-4 shadow-[var(--shadow-md)] backdrop-blur-[12px]",
+        highlighted && "ring-1 ring-[var(--ai-accent)]/40 shadow-[0_0_0_1px_rgba(167,139,250,0.20),0_20px_60px_rgba(167,139,250,0.10)]",
         className,
       )}
     >
-      <div className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100 [background:radial-gradient(circle_at_top_right,rgba(99,102,241,0.20),transparent_32%),radial-gradient(circle_at_bottom_left,rgba(34,211,238,0.16),transparent_28%)]" />
+      <div className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100 bg-[radial-gradient(circle_at_top_right,rgba(124,140,255,0.14),transparent_32%),radial-gradient(circle_at_bottom_left,rgba(167,139,250,0.10),transparent_28%)]" />
       <div className="relative z-10">
-        <div className="flex items-center justify-between gap-3 text-[11px] uppercase tracking-[0.22em] text-white/52">
+        <div className="flex items-center justify-between gap-3 text-[11px] font-semibold text-[var(--text-muted)]">
           <span>{type}</span>
           <span>{Math.round(confidence * 100)}%</span>
         </div>
-        <p className="mt-3 text-sm leading-7 text-white/86">{content}</p>
-        <div className="mt-4 flex items-center justify-between gap-2 text-xs text-white/45">
+        <p className="mt-3 text-sm leading-relaxed text-[var(--text-secondary)]">{content}</p>
+        <div className="mt-4 flex items-center justify-between gap-2 text-xs text-[var(--text-muted)]">
           <span>Memory Fact</span>
           <span>{updatedAt ? new Date(updatedAt).toLocaleDateString("zh-CN") : "长期记忆"}</span>
         </div>

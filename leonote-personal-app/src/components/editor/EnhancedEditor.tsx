@@ -251,7 +251,7 @@ export function EnhancedEditor({ initialNote }: { initialNote?: NoteShape }) {
             className="pointer-events-none fixed z-[60]"
             style={{ left: saveBurst.x, top: saveBurst.y }}
           >
-            <div className="inline-flex items-center gap-2 rounded-full border border-emerald-300/20 bg-emerald-400/16 px-3 py-1.5 text-xs text-emerald-100 shadow-[0_10px_30px_rgba(16,185,129,0.18)] backdrop-blur-xl">
+            <div className="inline-flex items-center gap-2 rounded-full border border-emerald-300/20 bg-emerald-400/16 px-3 py-1.5 text-xs text-emerald-100 shadow-[0_10px_30px_rgba(16,185,129,0.18)] backdrop-blur-[12px]">
               <Check className="h-3.5 w-3.5" /> 已保存
             </div>
           </motion.div>
@@ -267,30 +267,30 @@ export function EnhancedEditor({ initialNote }: { initialNote?: NoteShape }) {
             animate="animate"
             exit="exit"
           >
-            <GlassPanel blur="lg" glow="soft" className="rounded-[20px] p-4">
+            <GlassPanel blur="lg" glow="soft" className="rounded-[var(--radius-md)] p-4">
               <div className="flex items-start justify-between gap-4">
                 <div>
-                  <div className="text-[11px] uppercase tracking-[0.24em] text-cyan-200/72">AI Summary</div>
+                  <div className="text-[11px] font-semibold text-[var(--ai-accent)]">AI Summary</div>
                   <h3 className="mt-2 text-lg font-semibold text-white">已生成笔记总结</h3>
                 </div>
                 <button
                   type="button"
                   onClick={() => void insertSummary()}
                   disabled={summary.status === "inserting"}
-                  className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/8 px-4 py-2 text-sm text-white transition hover:bg-white/12 disabled:opacity-60"
+                  className="inline-flex items-center gap-2 rounded-full border border-[var(--border-default)] bg-[rgba(255,255,255,0.08)] px-4 py-2 text-sm text-white transition hover:bg-white/12 disabled:opacity-60"
                 >
                   <Sparkles className="h-4 w-4" />
                   {summary.status === "inserting" ? "插入中" : "一键插入"}
                 </button>
               </div>
-              <p className="mt-4 whitespace-pre-wrap text-sm leading-7 text-white/74">{summary.text}</p>
+              <p className="mt-4 whitespace-pre-wrap text-sm leading-7 text-[74">{summary.text}</p>
             </GlassPanel>
           </motion.section>
         ) : null}
       </AnimatePresence>
 
-      <GlassPanel blur="xl" glow="soft" hoverGlow className={cn("rounded-[24px] p-3 transition duration-300 md:p-4", focusRing && "shadow-[0_0_0_1px_rgba(99,102,241,0.20),0_18px_58px_rgba(2,6,23,0.34)]")}>
-        <div className="mb-3 flex flex-wrap items-center justify-between gap-3 border-b border-white/8 pb-3 text-xs text-white/50">
+      <GlassPanel blur="xl" glow="soft" hoverGlow className={cn("rounded-[var(--radius-lg)] p-3 transition duration-300 md:p-4", focusRing && "shadow-[0_0_0_1px_rgba(99,102,241,0.20),0_18px_58px_rgba(2,6,23,0.34)]")}>
+        <div className="mb-3 flex flex-wrap items-center justify-between gap-3 border-b border-[var(--border-default)] pb-3 text-xs text-[var(--text-muted)">
           <div className="inline-flex items-center gap-3">
             <span>{statusText[saveState]}</span>
             <span>{stats.words} 词 · {stats.chars} 字符</span>
@@ -301,7 +301,7 @@ export function EnhancedEditor({ initialNote }: { initialNote?: NoteShape }) {
               onClick={toggleAutoSave}
               className={cn(
                 "rounded-full px-3 py-1.5 transition",
-                autoSaveEnabled ? "bg-white/12 text-white" : "bg-white/[0.04] text-white/54 hover:bg-white/8",
+                autoSaveEnabled ? "bg-white/12 text-white" : "bg-white/[0.04] text-[54 hover:bg-[rgba(255,255,255,0.08)]",
               )}
             >
               自动保存：{autoSaveEnabled ? "开" : "关"}
@@ -309,7 +309,7 @@ export function EnhancedEditor({ initialNote }: { initialNote?: NoteShape }) {
             <button
               type="button"
               onClick={() => void requestSummary()}
-              className="inline-flex items-center gap-2 rounded-full border border-white/8 bg-white/[0.04] px-3 py-1.5 text-white/62 transition hover:bg-white/8 hover:text-white"
+              className="inline-flex items-center gap-2 rounded-full border border-[var(--border-default)] bg-white/[0.04] px-3 py-1.5 text-[var(--text-secondary)] transition hover:bg-[rgba(255,255,255,0.08)] hover:text-white"
             >
               <Wand2 className="h-4 w-4" />
               {summary.status === "loading" ? "总结中" : "总结"}
@@ -331,7 +331,7 @@ export function EnhancedEditor({ initialNote }: { initialNote?: NoteShape }) {
               onBlur={() => setFocusRing(false)}
               onChange={(event) => setTitle(event.target.value)}
               placeholder="输入标题"
-              className="w-full rounded-[18px] border border-white/6 bg-[rgba(9,12,18,0.56)] px-4 py-3 text-xl font-semibold text-white outline-none transition focus:[box-shadow:0_0_0_1px_rgba(255,255,255,0.08),0_0_0_4px_rgba(99,102,241,0.10)]"
+              className="w-full rounded-[var(--radius-sm)] border border-[var(--border-subtle)] bg-[rgba(9,12,18,0.56)] px-4 py-3 text-xl font-semibold text-white outline-none transition focus:[box-shadow:0_0_0_1px_rgba(255,255,255,0.08),0_0_0_4px_rgba(99,102,241,0.10)]"
             />
             <div className="grid gap-2 md:grid-cols-2">
               <input
@@ -343,7 +343,7 @@ export function EnhancedEditor({ initialNote }: { initialNote?: NoteShape }) {
                 onBlur={() => setFocusRing(false)}
                 onChange={(event) => setProjectName(event.target.value)}
                 placeholder="所属项目，例如 Leonote"
-                className="w-full rounded-[16px] border border-white/6 bg-[rgba(9,12,18,0.48)] px-3 py-2.5 text-sm text-white/74 outline-none transition focus:[box-shadow:0_0_0_1px_rgba(255,255,255,0.08),0_0_0_4px_rgba(99,102,241,0.10)]"
+                className="w-full rounded-[16px] border border-[var(--border-subtle)] bg-[rgba(9,12,18,0.48)] px-3 py-2.5 text-sm text-[var(--text-secondary)] outline-none transition focus:[box-shadow:0_0_0_1px_rgba(255,255,255,0.08),0_0_0_4px_rgba(99,102,241,0.10)]"
               />
               <input
                 aria-label="笔记标签"
@@ -354,11 +354,11 @@ export function EnhancedEditor({ initialNote }: { initialNote?: NoteShape }) {
                 onBlur={() => setFocusRing(false)}
                 onChange={(event) => setTagsInput(event.target.value)}
                 placeholder="标签，空格分隔"
-                className="w-full rounded-[16px] border border-white/6 bg-[rgba(9,12,18,0.48)] px-3 py-2.5 text-sm text-white/74 outline-none transition focus:[box-shadow:0_0_0_1px_rgba(255,255,255,0.08),0_0_0_4px_rgba(99,102,241,0.10)]"
+                className="w-full rounded-[16px] border border-[var(--border-subtle)] bg-[rgba(9,12,18,0.48)] px-3 py-2.5 text-sm text-[var(--text-secondary)] outline-none transition focus:[box-shadow:0_0_0_1px_rgba(255,255,255,0.08),0_0_0_4px_rgba(99,102,241,0.10)]"
               />
             </div>
-            <div className="relative overflow-hidden rounded-[20px] border border-white/8 bg-[rgba(9,12,18,0.62)] p-[1px]">
-              <div className="pointer-events-none absolute inset-0 rounded-[20px] opacity-0 transition duration-300 focus-within:opacity-100 [background:linear-gradient(135deg,rgba(99,102,241,0.48),rgba(34,211,238,0.28))]" />
+            <div className="relative overflow-hidden rounded-[var(--radius-md)] border border-[var(--border-default)] bg-[var(--surface-base)] p-[1px]">
+              <div className="pointer-events-none absolute inset-0 rounded-[var(--radius-md)] opacity-0 transition duration-300 focus-within:opacity-100 [background:linear-gradient(135deg,rgba(99,102,241,0.48),rgba(34,211,238,0.28))]" />
               <div className="relative rounded-[19px] bg-[rgba(9,12,18,0.90)]">
                 <div className="pointer-events-none absolute inset-x-4 bottom-0 h-20 bg-[linear-gradient(180deg,transparent,rgba(99,102,241,0.08),rgba(34,211,238,0.10))] opacity-0 transition-opacity duration-500 focus-within:opacity-100" />
                 <textarea
@@ -371,25 +371,25 @@ export function EnhancedEditor({ initialNote }: { initialNote?: NoteShape }) {
                   onBlur={() => setFocusRing(false)}
                   onChange={(event) => setContent(event.target.value)}
                   placeholder="开始记录内容……"
-                  className="min-h-[58dvh] w-full resize-y rounded-[19px] bg-transparent px-4 py-4 text-[15px] leading-8 text-white/86 outline-none lg:min-h-[620px]"
+                  className="min-h-[58dvh] w-full resize-y rounded-[19px] bg-transparent px-4 py-4 text-[15px] leading-8 text-[86 outline-none lg:min-h-[620px]"
                 />
               </div>
             </div>
           </div>
 
           <aside className="space-y-3 xl:pt-0">
-            <GlassPanel blur="lg" glow="soft" className="max-h-[320px] overflow-auto rounded-[18px] p-3">
-              <div className="text-[11px] uppercase tracking-[0.22em] text-white/45">Preview</div>
-              <div className="mt-2 whitespace-pre-wrap text-sm leading-7 text-white/64">{content || "实时预览当前笔记内容。"}</div>
+            <GlassPanel blur="lg" glow="soft" className="max-h-[320px] overflow-auto rounded-[var(--radius-sm)] p-3">
+              <div className="text-[11px] font-semibold text-[var(--text-muted)">Preview</div>
+              <div className="mt-2 whitespace-pre-wrap text-sm leading-7 text-[64">{content || "实时预览当前笔记内容。"}</div>
             </GlassPanel>
-            <GlassPanel blur="lg" glow="soft" className="rounded-[18px] p-3">
-              <div className="flex items-center justify-between gap-2 text-[11px] uppercase tracking-[0.22em] text-white/45">
+            <GlassPanel blur="lg" glow="soft" className="rounded-[var(--radius-sm)] p-3">
+              <div className="flex items-center justify-between gap-2 text-[11px] font-semibold text-[var(--text-muted)">
                 <span>Status</span>
                 <span>{isNewNote ? "Draft" : "Saved Note"}</span>
               </div>
-              <div className="mt-2 space-y-2 text-sm leading-6 text-white/58">
+              <div className="mt-2 space-y-2 text-sm leading-6 text-[var(--text-muted)]">
                 <p>{isNewNote ? "新建页默认不自动保存，先落第一版内容再建立笔记实体。" : autoSaveEnabled ? "已有笔记停止输入约 2.6 秒后自动保存。" : "当前为纯手动保存模式。"}</p>
-                {message ? <div className="rounded-[14px] border border-white/8 bg-white/5 px-3 py-2 text-white/68">{message}</div> : null}
+                {message ? <div className="rounded-[14px] border border-[var(--border-default)] bg-[rgba(255,255,255,0.05)] px-3 py-2 text-[68">{message}</div> : null}
               </div>
             </GlassPanel>
           </aside>
@@ -400,14 +400,14 @@ export function EnhancedEditor({ initialNote }: { initialNote?: NoteShape }) {
 
       <AnimatePresence>
         {showAfterSave ? (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-50 flex items-center justify-center bg-[rgba(4,7,17,0.58)] px-5 backdrop-blur-md">
-            <motion.div initial={{ opacity: 0, y: 16, scale: 0.96 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: 10, scale: 0.98 }} className="w-full max-w-sm rounded-[28px] border border-white/10 bg-[rgba(14,18,27,0.88)] p-5 shadow-[0_30px_90px_rgba(2,6,23,0.48)]">
-              <div className="text-sm text-white/56">保存成功</div>
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-5 backdrop-blur-[8px]">
+            <motion.div initial={{ opacity: 0, y: 16, scale: 0.96 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: 10, scale: 0.98 }} className="w-full max-w-sm rounded-[var(--radius-lg)] border border-[var(--border-default)] bg-[var(--surface-raised)] p-5 shadow-[0_30px_90px_rgba(2,6,23,0.48)]">
+              <div className="text-sm text-[var(--text-muted)]">保存成功</div>
               <h3 className="mt-2 text-lg font-semibold text-white">要关闭当前页面并回到目录吗？</h3>
-              <p className="mt-2 text-sm leading-6 text-white/56">自动保存偏好已记住。你也可以继续在这个沉浸式编辑空间里写下去。</p>
+              <p className="mt-2 text-sm leading-6 text-[var(--text-muted)]">自动保存偏好已记住。你也可以继续在这个沉浸式编辑空间里写下去。</p>
               <div className="mt-5 flex gap-3">
-                <button type="button" onClick={() => setShowAfterSave(false)} className="flex-1 rounded-full border border-white/10 bg-white/6 px-4 py-3 text-sm text-white/82 transition hover:bg-white/10">继续编辑</button>
-                <button type="button" onClick={() => router.push("/notes")} className="flex-1 rounded-full bg-white px-4 py-3 text-sm font-medium text-slate-900 transition hover:brightness-110">回到目录</button>
+                <button type="button" onClick={() => setShowAfterSave(false)} className="flex-1 rounded-full border border-[var(--border-default)] bg-[rgba(255,255,255,0.06)] px-4 py-3 text-sm text-[var(--text-secondary)] transition hover:bg-[rgba(255,255,255,0.10)]">继续编辑</button>
+                <button type="button" onClick={() => router.push("/notes")} className="flex-1 rounded-full bg-white px-4 py-3 text-sm font-medium text-[var(--text-primary)] transition hover:brightness-110">回到目录</button>
               </div>
             </motion.div>
           </motion.div>

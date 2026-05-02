@@ -12,7 +12,7 @@ const items = [
 
 export function BottomNav({ current = "/" }: { current?: string }) {
   return (
-    <nav className="sticky bottom-4 z-30 mt-auto grid grid-cols-5 gap-2 rounded-[26px] border border-white/10 bg-[rgba(12,16,25,0.78)] p-2 shadow-[0_24px_72px_rgba(2,6,23,0.34)] backdrop-blur-2xl lg:hidden">
+    <nav className="sticky bottom-4 z-30 mt-auto grid grid-cols-5 gap-2 rounded-[26px] border border-[var(--border-default)] bg-[rgba(12,16,25,0.78)] p-2 shadow-[0_24px_72px_rgba(2,6,23,0.34)] backdrop-blur-[16px] lg:hidden">
       {items.map((item) => {
         const active = current === item.href;
         const Icon = item.icon;
@@ -21,10 +21,10 @@ export function BottomNav({ current = "/" }: { current?: string }) {
             key={item.href}
             href={item.href}
             className={cn(
-              "rounded-[18px] px-2 py-3 text-center text-xs transition-all duration-300 active:scale-[0.97]",
+              "rounded-[var(--radius-sm)] px-2 py-3 text-center text-xs transition-all duration-300 active:scale-[0.97]",
               active
-                ? "bg-white text-slate-900 shadow-[0_10px_24px_rgba(255,255,255,0.14)]"
-                : "text-white/56 hover:-translate-y-[1px] hover:bg-white/6 hover:text-white",
+                ? "bg-[var(--primary)] text-white text-[var(--text-primary)] shadow-[0_10px_24px_rgba(255,255,255,0.14)]"
+                : "text-[var(--text-muted)] hover:-translate-y-[1px] hover:bg-[rgba(255,255,255,0.06)] hover:text-white",
             )}
           >
             <span className="flex flex-col items-center gap-1">

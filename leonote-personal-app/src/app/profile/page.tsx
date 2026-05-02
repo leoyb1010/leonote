@@ -95,7 +95,7 @@ export default function ProfilePage() {
       {needLogin ? (
         <GlassPanel blur="lg" glow="soft" className="rounded-[24px] p-5 text-sm text-white/62">
           <div>{message}</div>
-          <Link href="/login" className="mt-4 inline-flex rounded-full bg-white px-4 py-2 text-sm font-medium text-slate-900 transition hover:brightness-110">去登录</Link>
+          <Link href="/login" className="mt-4 inline-flex rounded-full bg-white px-4 py-2 text-sm font-medium text-[var(--text-primary)] transition hover:brightness-110">去登录</Link>
         </GlassPanel>
       ) : (
         <>
@@ -117,7 +117,7 @@ export default function ProfilePage() {
             <h2 className="text-base font-medium text-white">修改资料</h2>
             <div className="mt-4 space-y-3">
               <input value={name} onChange={(e) => setName(e.target.value)} placeholder="昵称" className="w-full rounded-[20px] border border-white/8 bg-[rgba(8,11,18,0.56)] px-4 py-4 text-sm text-white outline-none placeholder:text-white/26" />
-              <button type="button" onClick={() => void saveProfile()} disabled={saving} className="rounded-full bg-white px-4 py-2.5 text-sm font-medium text-slate-900 transition hover:brightness-110 disabled:opacity-60">{saving ? "保存中" : "保存资料"}</button>
+              <button type="button" onClick={() => void saveProfile()} disabled={saving} className="rounded-full bg-white px-4 py-2.5 text-sm font-medium text-[var(--text-primary)] transition hover:brightness-110 disabled:opacity-60">{saving ? "保存中" : "保存资料"}</button>
             </div>
           </GlassPanel>
 
@@ -126,7 +126,7 @@ export default function ProfilePage() {
             <div className="mt-4 space-y-3">
               <input type="password" value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)} placeholder="当前密码" className="w-full rounded-[20px] border border-white/8 bg-[rgba(8,11,18,0.56)] px-4 py-4 text-sm text-white outline-none placeholder:text-white/26" />
               <input type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} placeholder="新密码（至少 8 位）" className="w-full rounded-[20px] border border-white/8 bg-[rgba(8,11,18,0.56)] px-4 py-4 text-sm text-white outline-none placeholder:text-white/26" />
-              <button type="button" onClick={() => void updatePassword()} disabled={changingPassword} className="rounded-full bg-white px-4 py-2.5 text-sm font-medium text-slate-900 transition hover:brightness-110 disabled:opacity-60">{changingPassword ? "更新中" : "更新密码"}</button>
+              <button type="button" onClick={() => void updatePassword()} disabled={changingPassword} className="rounded-full bg-white px-4 py-2.5 text-sm font-medium text-[var(--text-primary)] transition hover:brightness-110 disabled:opacity-60">{changingPassword ? "更新中" : "更新密码"}</button>
             </div>
           </GlassPanel>
 
