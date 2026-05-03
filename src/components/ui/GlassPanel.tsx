@@ -41,7 +41,6 @@ export function GlassPanel({
 }: GlassPanelProps) {
   return (
     <motion.div
-      initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       whileHover={hoverGlow ? { borderColor: "rgba(255,255,255,0.14)" } : undefined}
       style={style}

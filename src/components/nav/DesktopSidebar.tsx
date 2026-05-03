@@ -73,13 +73,9 @@ export function DesktopSidebar({
         )}
       >
         {!collapsed && (
-          <motion.span
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="text-sm font-semibold text-[var(--text-primary)] tracking-tight"
-          >
+          <span className="text-sm font-semibold text-[var(--text-primary)] tracking-tight animate-fade-in">
             Leonote
-          </motion.span>
+          </span>
         )}
         <button
           onClick={onToggle}
@@ -107,13 +103,9 @@ export function DesktopSidebar({
           >
             <span className="shrink-0">{item.icon}</span>
             {!collapsed && (
-              <motion.span
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                className="truncate"
-              >
+              <span className="truncate">
                 {item.label}
-              </motion.span>
+              </span>
             )}
           </Link>
         ))}
@@ -136,13 +128,9 @@ export function DesktopSidebar({
           >
             <span className="shrink-0">{item.icon}</span>
             {!collapsed && (
-              <motion.span
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                className="truncate"
-              >
+              <span className="truncate">
                 {item.label}
-              </motion.span>
+              </span>
             )}
           </Link>
         ))}
@@ -161,13 +149,9 @@ export function DesktopSidebar({
         >
           <User size={18} />
           {!collapsed && (
-            <motion.span
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="truncate"
-            >
+            <span className="truncate">
               账户
-            </motion.span>
+            </span>
           )}
         </Link>
       </div>
