@@ -30,16 +30,16 @@ export function AppShell({
               <div className="min-w-0">
                 <p className="text-[11px] uppercase tracking-[0.28em] text-[var(--text-muted)]">Leonote</p>
                 <h1 className="mt-3 text-3xl font-semibold tracking-[-0.04em] text-[var(--text-primary)] md:text-4xl">{title}</h1>
-                {subtitle ? <p className="mt-3 max-w-3xl text-sm leading-7 text-[var(--text-muted) md:text-[15px]">{subtitle}</p> : null}
+                {subtitle ? <p className="mt-3 max-w-3xl text-sm leading-7 text-[var(--text-muted)] md:text-[15px]">{subtitle}</p> : null}
               </div>
               <div className="flex flex-wrap gap-2">
-                <Link className="inline-flex items-center gap-2 rounded-full border border-[var(--border-default)] bg-[rgba(255,255,255,0.06)] px-4 py-2.5 text-sm text-[var(--text-secondary) transition-all duration-200 hover:-translate-y-[1px] hover:bg-[rgba(255,255,255,0.10)] hover:text-white active:scale-[0.98]" href="/search">
+                <Link className="inline-flex items-center gap-2 rounded-full border border-[var(--border-default)] bg-[rgba(255,255,255,0.06)] px-4 py-2.5 text-sm text-[var(--text-secondary)] transition-all duration-200 hover:-translate-y-[1px] hover:bg-[rgba(255,255,255,0.10)] hover:text-white active:scale-[0.98]" href="/search">
                   <Search className="h-4 w-4" /> 搜索
                 </Link>
-                <Link className="inline-flex items-center gap-2 rounded-full border border-[var(--border-default)] bg-[rgba(255,255,255,0.06)] px-4 py-2.5 text-sm text-[var(--text-secondary) transition-all duration-200 hover:-translate-y-[1px] hover:bg-[rgba(255,255,255,0.10)] hover:text-white active:scale-[0.98]" href="/settings">
+                <Link className="inline-flex items-center gap-2 rounded-full border border-[var(--border-default)] bg-[rgba(255,255,255,0.06)] px-4 py-2.5 text-sm text-[var(--text-secondary)] transition-all duration-200 hover:-translate-y-[1px] hover:bg-[rgba(255,255,255,0.10)] hover:text-white active:scale-[0.98]" href="/settings">
                   <Bell className="h-4 w-4" /> 设置
                 </Link>
-                <Link className="inline-flex items-center gap-2 rounded-full bg-[var(--primary)] text-white px-4 py-2.5 text-sm font-medium text-[var(--text-primary)] shadow-[0_10px_24px_rgba(255,255,255,0.14)] transition-all duration-200 hover:-translate-y-[1px] hover:brightness-110 active:scale-[0.98]" href="/notes/new">
+                <Link className="inline-flex items-center gap-2 rounded-full bg-[var(--primary)] text-white px-4 py-2.5 text-sm font-medium text-white shadow-[0_10px_24px_rgba(255,255,255,0.14)] transition-all duration-200 hover:-translate-y-[1px] hover:brightness-110 active:scale-[0.98]" href="/notes/new">
                   <Plus className="h-4 w-4" /> 新建
                 </Link>
               </div>
