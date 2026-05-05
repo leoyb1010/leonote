@@ -31,7 +31,7 @@ export function LoginForm() {
   };
 
   return (
-    <GlassPanel blur="xl" glow="soft" className="w-full max-w-md rounded-[var(--radius-xl)] p-6">
+    <GlassPanel blur="xl" className="w-full max-w-md rounded-[var(--radius-xl)] p-6">
       <p className="text-xs uppercase tracking-wider text-[var(--text-muted)] font-semibold">Leonote</p>
       <h1 className="mt-3 text-3xl font-semibold tracking-tight text-[var(--text-primary)]">{mode === "login" ? "欢迎回来" : "创建首个账号"}</h1>
       <p className="mt-2 text-sm leading-relaxed text-[var(--text-muted)]">{mode === "login" ? "登录后继续记录、整理与回顾。" : "当前版本仅允许创建首个账号。"}</p>

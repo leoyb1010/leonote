@@ -1,10 +1,9 @@
 import crypto from "node:crypto";
 
 function getKey() {
-  return crypto
-    .createHash("sha256")
-    .update(process.env.AUTH_SECRET || "")
-    .digest();
+  const secret = process.env.AUTH_SECRET;
+  if (!secret) throw new Error("AUTH_SECRET is required for secret encryption");
+  return crypto.createHash("sha256").update(secret).digest();
 }
 
 export function encryptSecret(plain: string) {

@@ -19,7 +19,7 @@ export function DataBackupCard() {
   return (
     <GlassPanel
       blur="lg"
-      glow="soft"
+     
       className="rounded-[var(--radius-lg)] p-5"
     >
       <h2 className="inline-flex items-center gap-2 text-base font-medium text-[var(--text-primary)]">

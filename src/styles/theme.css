@@ -1,56 +1,64 @@
-/* ===== Leonote v1.1.0 Design Tokens ===== */
+/* ===== Leonote v1.2 Design Tokens ===== */
 /* Quiet Intelligence · Calm Workspace · Private Knowledge OS */
 
 :root {
   color-scheme: dark;
 
   /* ---------- Background ---------- */
-  --bg-app: #080a0f;
-  --bg-subtle: #0b0e14;
+  --bg-app: #0b0b0f;
+  --bg-subtle: #101014;
 
   /* ---------- Surface ---------- */
-  --surface-base: #10131b;
-  --surface-raised: #151925;
-  --surface-overlay: rgba(18, 22, 32, 0.82);
-  --surface-glass: rgba(18, 22, 32, 0.68);
+  --surface-1: #131318;
+  --surface-2: #1c1c22;
+  --surface-3: #2c2c33;
+  --surface-overlay: rgba(28, 28, 34, 0.86);
+  --surface-glass: rgba(28, 28, 34, 0.58);
+
+  /* backward compatibility */
+  --surface-base: var(--surface-1);
+  --surface-raised: var(--surface-2);
 
   /* ---------- Border ---------- */
-  --border-subtle: rgba(255, 255, 255, 0.06);
-  --border-default: rgba(255, 255, 255, 0.08);
-  --border-strong: rgba(255, 255, 255, 0.14);
-  --border-focus: rgba(124, 140, 255, 0.32);
+  --border-subtle: rgba(255, 255, 255, 0.055);
+  --border-default: rgba(255, 255, 255, 0.09);
+  --border-strong: rgba(255, 255, 255, 0.16);
+  --border-focus: rgba(110, 123, 255, 0.36);
 
   /* ---------- Text ---------- */
-  --text-primary: #f4f7fb;
-  --text-secondary: #a4adbb;
-  --text-muted: #687386;
-  --text-placeholder: rgba(244, 247, 251, 0.28);
+  --text-primary: #f2f3f5;
+  --text-secondary: #b8bcc4;
+  --text-muted: #6b7280;
+  --text-faint: #4b5161;
+  --text-placeholder: rgba(242, 243, 245, 0.28);
 
   /* ---------- Brand / Primary ---------- */
-  --primary: #7c8cff;
-  --primary-hover: #97a3ff;
-  --primary-soft: rgba(124, 140, 255, 0.14);
-  --primary-pressed: rgba(124, 140, 255, 0.22);
+  --primary: #6e7bff;
+  --primary-hover: #8a95ff;
+  --primary-soft: rgba(110, 123, 255, 0.10);
+  --primary-pressed: rgba(110, 123, 255, 0.16);
 
   /* ---------- AI Accent ---------- */
-  --ai-accent: #a78bfa;
-  --ai-soft: rgba(167, 139, 250, 0.13);
+  --ai-accent: #9b8cff;
+  --ai-soft: rgba(155, 140, 255, 0.10);
 
   /* ---------- Semantic ---------- */
-  --success: #65d6ad;
-  --success-soft: rgba(101, 214, 173, 0.13);
-  --warning: #f4c76b;
-  --warning-soft: rgba(244, 199, 107, 0.12);
-  --danger: #f87171;
-  --danger-soft: rgba(248, 113, 113, 0.12);
-  --info: #5eb6ee;
-  --info-soft: rgba(94, 182, 238, 0.12);
+  --success: #5ec9a8;
+  --success-soft: rgba(94, 201, 168, 0.11);
+  --warning: #e8bd62;
+  --warning-soft: rgba(232, 189, 98, 0.11);
+  --danger: #f26d6d;
+  --danger-soft: rgba(242, 109, 109, 0.11);
+  --info: #62aee8;
+  --info-soft: rgba(98, 174, 232, 0.11);
 
   /* ---------- Shadow ---------- */
-  --shadow-sm: 0 1px 3px rgba(2, 6, 23, 0.24);
-  --shadow-md: 0 4px 16px rgba(2, 6, 23, 0.28);
-  --shadow-lg: 0 12px 40px rgba(2, 6, 23, 0.36);
-  --shadow-glow: 0 0 40px rgba(124, 140, 255, 0.12);
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.28);
+  --shadow-md: 0 10px 32px rgba(0, 0, 0, 0.36);
+
+  /* deprecated: mapped to new shadows */
+  --shadow-lg: var(--shadow-md);
+  --shadow-glow: none;
 
   /* ---------- Radius ---------- */
   --radius-xs: 6px;
@@ -61,14 +69,27 @@
   --radius-2xl: 24px;
   --radius-pill: 9999px;
 
-  /* ---------- Motion ---------- */
-  --motion-fast: 120ms;
-  --motion-base: 160ms;
-  --motion-medium: 220ms;
-  --motion-slow: 320ms;
-  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
-  --ease-in-out: cubic-bezier(0.42, 0, 0.58, 1);
-  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  /* ---------- Duration ---------- */
+  --duration-instant: 80ms;
+  --duration-quick: 140ms;
+  --duration-base: 220ms;
+  --duration-slow: 320ms;
+
+  /* backward compatibility */
+  --motion-fast: var(--duration-quick);
+  --motion-base: var(--duration-base);
+  --motion-medium: var(--duration-base);
+  --motion-slow: var(--duration-slow);
+
+  /* ---------- Easing ---------- */
+  --ease-standard: cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-emphasized: cubic-bezier(0.2, 0, 0, 1);
+  --ease-decelerate: cubic-bezier(0, 0, 0.2, 1);
+
+  /* backward compatibility — mapped to new easings, no spring */
+  --ease-out: var(--ease-emphasized);
+  --ease-in-out: var(--ease-standard);
+  --ease-spring: var(--ease-emphasized);
 
   /* ---------- Spacing Scale ---------- */
   --space-4xs: 2px;
@@ -107,64 +128,77 @@
   --leading-loose: 1.8;
 
   /* ---------- Layout ---------- */
-  --sidebar-width: 240px;
-  --sidebar-collapsed: 64px;
+  --sidebar-width: 224px;
+  --sidebar-collapsed: 56px;
   --list-width: 320px;
   --ai-panel-width: 320px;
-  --content-max: 720px;
-  --page-max: 100%;
+  --content-max: 760px;
+  --page-max: 1040px;
 }
 
 /* ---------- System Font Stack ---------- */
 :root {
-  --font-ui: "Inter", "PingFang SC", "Microsoft YaHei", "Noto Sans SC", ui-sans-serif, system-ui, sans-serif;
+  --font-ui:
+    -apple-system, BlinkMacSystemFont,
+    "SF Pro Text", "Inter",
+    "PingFang SC", "Microsoft YaHei", "Noto Sans SC",
+    ui-sans-serif, system-ui, sans-serif;
   --font-mono: "SF Mono", "Fira Code", "Cascadia Code", "JetBrains Mono", ui-monospace, monospace;
-  --font-reading: "PingFang SC", "Noto Sans SC", "Microsoft YaHei", ui-sans-serif, system-ui, sans-serif;
+  --font-reading:
+    -apple-system, BlinkMacSystemFont,
+    "SF Pro Text",
+    "PingFang SC", "Noto Sans SC", "Microsoft YaHei",
+    ui-sans-serif, system-ui, sans-serif;
 }
 
 /* ---------- Light Theme ---------- */
 :root[data-theme="light"] {
   color-scheme: light;
 
-  --bg-app: #f8f9fb;
-  --bg-subtle: #f0f2f5;
+  --bg-app: #f6f6f7;
+  --bg-subtle: #eeeeef;
 
-  --surface-base: #ffffff;
-  --surface-raised: #f5f6f8;
-  --surface-overlay: rgba(255, 255, 255, 0.92);
-  --surface-glass: rgba(255, 255, 255, 0.82);
+  --surface-1: #ffffff;
+  --surface-2: #f3f3f4;
+  --surface-3: #e8e8ea;
+  --surface-overlay: rgba(255, 255, 255, 0.88);
+  --surface-glass: rgba(255, 255, 255, 0.72);
 
-  --border-subtle: rgba(0, 0, 0, 0.05);
-  --border-default: rgba(0, 0, 0, 0.08);
-  --border-strong: rgba(0, 0, 0, 0.12);
-  --border-focus: rgba(99, 102, 241, 0.32);
+  --surface-base: var(--surface-1);
+  --surface-raised: var(--surface-1);
 
-  --text-primary: #111827;
-  --text-secondary: #4b5563;
-  --text-muted: #9ca3af;
-  --text-placeholder: rgba(17, 24, 39, 0.28);
+  --border-subtle: rgba(0, 0, 0, 0.06);
+  --border-default: rgba(0, 0, 0, 0.09);
+  --border-strong: rgba(0, 0, 0, 0.14);
+  --border-focus: rgba(79, 99, 255, 0.32);
 
-  --primary: #6366f1;
-  --primary-hover: #4f46e5;
-  --primary-soft: rgba(99, 102, 241, 0.12);
-  --primary-pressed: rgba(99, 102, 241, 0.2);
+  --text-primary: #17171a;
+  --text-secondary: #51545c;
+  --text-muted: #858994;
+  --text-faint: #a8acb5;
+  --text-placeholder: rgba(23, 23, 26, 0.28);
 
-  --ai-accent: #7c3aed;
-  --ai-soft: rgba(124, 58, 237, 0.1);
+  --primary: #4f63ff;
+  --primary-hover: #3f52df;
+  --primary-soft: rgba(79, 99, 255, 0.09);
+  --primary-pressed: rgba(79, 99, 255, 0.15);
 
-  --success: #059669;
-  --success-soft: rgba(5, 150, 105, 0.1);
-  --warning: #d97706;
-  --warning-soft: rgba(217, 119, 6, 0.1);
-  --danger: #dc2626;
-  --danger-soft: rgba(220, 38, 38, 0.1);
-  --info: #0284c7;
-  --info-soft: rgba(2, 132, 199, 0.1);
+  --ai-accent: #6b4fff;
+  --ai-soft: rgba(107, 79, 255, 0.08);
 
-  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.06);
-  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.08);
-  --shadow-lg: 0 12px 40px rgba(0, 0, 0, 0.12);
-  --shadow-glow: 0 0 40px rgba(99, 102, 241, 0.08);
+  --success: #158c5a;
+  --success-soft: rgba(21, 140, 90, 0.08);
+  --warning: #b87315;
+  --warning-soft: rgba(184, 115, 21, 0.08);
+  --danger: #cf2a2a;
+  --danger-soft: rgba(207, 42, 42, 0.08);
+  --info: #1b6fa8;
+  --info-soft: rgba(27, 111, 168, 0.08);
+
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.06);
+  --shadow-md: 0 10px 32px rgba(0, 0, 0, 0.10);
+  --shadow-lg: var(--shadow-md);
+  --shadow-glow: none;
 }
 
 /* ---------- Safe Area ---------- */
@@ -179,9 +213,9 @@
 /* ---------- Reduced Motion ---------- */
 @media (prefers-reduced-motion: reduce) {
   :root {
-    --motion-fast: 0ms;
-    --motion-base: 0ms;
-    --motion-medium: 0ms;
-    --motion-slow: 0ms;
+    --duration-instant: 0ms;
+    --duration-quick: 0ms;
+    --duration-base: 0ms;
+    --duration-slow: 0ms;
   }
 }

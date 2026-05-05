@@ -31,10 +31,8 @@ export function ResponsiveAppShell({ children, header }: ResponsiveAppShellProps
       <div className="flex-1 flex flex-col min-w-0">
         {header}
 
-        <main className="flex-1 pb-20 xl:pb-0">
-          <div className="w-full px-4 sm:px-6 xl:px-8 py-4 xl:py-6">
-            {children}
-          </div>
+        <main className="flex-1 pb-[88px] xl:pb-0">
+          {children}
         </main>
       </div>
 

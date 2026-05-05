@@ -1,10 +1,12 @@
 import { ServerFilterView } from "@/components/server-filter-view";
+import { PageContainer } from "@/components/layout/PageContainer";
+import { PageHeader } from "@/components/layout/PageHeader";
 
 export default function ArchivePage() {
   return (
-    <div>
-      <h1 className="text-2xl font-bold text-[var(--text-primary)] mb-6">归档</h1>
+    <PageContainer width="default">
+      <PageHeader title="归档" />
       <ServerFilterView type="archived" />
-    </div>
+    </PageContainer>
   );
 }

@@ -23,24 +23,14 @@ export interface NavItem {
 }
 
 const navItems: NavItem[] = [
-  { id: "today", label: "Today", icon: <Sun size={18} />, href: "/" },
-  { id: "notes", label: "Notes", icon: <FileText size={18} />, href: "/notes" },
-  {
-    id: "projects",
-    label: "Projects",
-    icon: <FolderKanban size={18} />,
-    href: "/projects",
-  },
+  { id: "today", label: "今天", icon: <Sun size={18} />, href: "/" },
+  { id: "notes", label: "笔记", icon: <FileText size={18} />, href: "/notes" },
+  { id: "projects", label: "项目", icon: <FolderKanban size={18} />, href: "/projects" },
   { id: "ai", label: "AI", icon: <Sparkles size={18} />, href: "/ai" },
 ];
 
 const bottomItems: NavItem[] = [
-  {
-    id: "settings",
-    label: "设置",
-    icon: <Settings size={18} />,
-    href: "/settings",
-  },
+  { id: "settings", label: "设置", icon: <Settings size={18} />, href: "/settings" },
 ];
 
 interface DesktopSidebarProps {
@@ -61,29 +51,22 @@ export function DesktopSidebar({
 
   return (
     <motion.aside
-      animate={{ width: collapsed ? 64 : 240 }}
-      transition={{ duration: 0.22, ease: [0.34, 1.56, 0.64, 1] }}
-      className="hidden xl:flex flex-col shrink-0 h-screen sticky top-0 border-r border-[var(--border-default)] bg-[var(--surface-base)]"
+      animate={{ width: collapsed ? 56 : 224 }}
+      transition={{ duration: 0.22, ease: [0.2, 0, 0, 1] }}
+      className="hidden xl:flex flex-col shrink-0 h-screen sticky top-0 border-r border-[var(--border-subtle)] bg-[var(--bg-app)]"
     >
-      {/* Header */}
+      {/* Header: logo only */}
       <div
         className={cn(
-          "flex items-center h-14 px-4 border-b border-[var(--border-default)]",
-          collapsed ? "justify-center" : "justify-between"
+          "flex items-center h-12 px-4",
+          collapsed ? "justify-center" : "justify-start"
         )}
       >
         {!collapsed && (
-          <span className="text-sm font-semibold text-[var(--text-primary)] tracking-tight animate-fade-in">
+          <span className="text-sm font-medium tracking-[-0.02em] text-[var(--text-primary)]">
             Leonote
           </span>
         )}
-        <button
-          onClick={onToggle}
-          className="p-1.5 rounded-md text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[rgba(255,255,255,0.06)] transition-colors"
-          aria-label={collapsed ? "展开侧栏" : "收起侧栏"}
-        >
-          {collapsed ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
-        </button>
       </div>
 
       {/* Main Nav */}
@@ -93,67 +76,68 @@ export function DesktopSidebar({
             key={item.id}
             href={item.href}
             className={cn(
-              "flex items-center gap-3 px-3 py-2.5 rounded-md text-sm transition-colors",
-              "hover:bg-[rgba(255,255,255,0.06)]",
+              "relative flex items-center gap-3 rounded-md px-2.5 py-2 text-sm transition-[background-color,color] duration-[var(--duration-quick)]",
+              "hover:bg-[rgba(255,255,255,0.035)]",
               collapsed && "justify-center px-0",
               isActive(item.href)
-                ? "text-[var(--primary)] bg-[var(--primary-soft)]"
+                ? "bg-[rgba(255,255,255,0.045)] text-[var(--text-primary)] before:absolute before:left-0 before:top-[22%] before:bottom-[22%] before:w-[2px] before:rounded-r-full before:bg-[var(--primary)]"
                 : "text-[var(--text-secondary)]"
             )}
           >
             <span className="shrink-0">{item.icon}</span>
-            {!collapsed && (
-              <span className="truncate">
-                {item.label}
-              </span>
-            )}
+            {!collapsed && <span className="truncate">{item.label}</span>}
           </Link>
         ))}
       </nav>
 
-      {/* Bottom Nav */}
-      <div className="py-3 px-2 space-y-1 border-t border-[var(--border-default)]">
+      {/* Bottom: settings + user + fold */}
+      <div className="py-3 px-2 space-y-1 border-t border-[var(--border-subtle)]">
         {bottomItems.map((item) => (
           <Link
             key={item.id}
             href={item.href}
             className={cn(
-              "flex items-center gap-3 px-3 py-2.5 rounded-md text-sm transition-colors",
-              "hover:bg-[rgba(255,255,255,0.06)]",
+              "relative flex items-center gap-3 rounded-md px-2.5 py-2 text-sm transition-[background-color,color] duration-[var(--duration-quick)]",
+              "hover:bg-[rgba(255,255,255,0.035)]",
               collapsed && "justify-center px-0",
               isActive(item.href)
-                ? "text-[var(--primary)] bg-[var(--primary-soft)]"
+                ? "bg-[rgba(255,255,255,0.045)] text-[var(--text-primary)] before:absolute before:left-0 before:top-[22%] before:bottom-[22%] before:w-[2px] before:rounded-r-full before:bg-[var(--primary)]"
                 : "text-[var(--text-secondary)]"
             )}
           >
             <span className="shrink-0">{item.icon}</span>
-            {!collapsed && (
-              <span className="truncate">
-                {item.label}
-              </span>
-            )}
+            {!collapsed && <span className="truncate">{item.label}</span>}
           </Link>
         ))}
-      </div>
 
-      {/* User */}
-      <div className="px-2 pb-4">
         <Link
           href="/profile"
           className={cn(
-            "flex items-center gap-3 px-3 py-2.5 rounded-md text-sm",
-            "hover:bg-[rgba(255,255,255,0.06)] transition-colors",
+            "flex items-center gap-3 rounded-md px-2.5 py-2 text-sm transition-colors duration-[var(--duration-quick)]",
+            "hover:bg-[rgba(255,255,255,0.035)]",
             collapsed && "justify-center px-0",
             "text-[var(--text-muted)]"
           )}
         >
           <User size={18} />
-          {!collapsed && (
-            <span className="truncate">
-              账户
-            </span>
-          )}
+          {!collapsed && <span className="truncate">账户</span>}
         </Link>
+      </div>
+
+      {/* Fold button at bottom */}
+      <div className="px-2 pb-4">
+        <button
+          onClick={onToggle}
+          className={cn(
+            "w-full flex items-center gap-3 rounded-md px-2.5 py-2 text-sm transition-colors duration-[var(--duration-quick)]",
+            "hover:bg-[rgba(255,255,255,0.035)] text-[var(--text-muted)] hover:text-[var(--text-primary)]",
+            collapsed && "justify-center px-0"
+          )}
+          aria-label={collapsed ? "展开侧栏" : "收起侧栏"}
+        >
+          {collapsed ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
+          {!collapsed && <span className="truncate">收起</span>}
+        </button>
       </div>
     </motion.aside>
   );

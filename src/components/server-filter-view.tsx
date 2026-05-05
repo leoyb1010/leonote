@@ -1,11 +1,8 @@
 "use client";
 
-import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
-import { NoteCard } from "@/components/notes/NoteCard";
-import { Card } from "@/components/base/Card";
+import { NoteRow } from "@/components/notes/NoteRow";
 import { Button } from "@/components/base/Button";
-import { staggerContainer, staggerItem } from "@/lib/animations";
 
 type ApiNote = {
   id: string;
@@ -75,19 +72,17 @@ export function ServerFilterView({ type }: { type: "favorite" | "archived" | "de
 
   if (message && !items.length) {
     return (
-      <Card padding="sm">
-        <p className="text-sm text-[var(--text-muted)]">{message}</p>
-      </Card>
+      <p className="text-sm text-[var(--text-muted)] py-8 text-center">{message}</p>
     );
   }
 
   return (
     <section className="space-y-4">
-      <motion.div variants={staggerContainer} initial="initial" animate="animate" className="grid gap-4 xl:grid-cols-2">
+      <div className="divide-y divide-[var(--border-subtle)] rounded-[var(--radius-lg)] border border-[var(--border-subtle)] bg-[var(--surface-1)] p-1">
         {items.map((note) => (
-          <motion.div key={note.id} variants={staggerItem} className="space-y-3">
-            <NoteCard note={note} />
-            <div className="flex flex-wrap gap-2 px-1">
+          <div key={note.id}>
+            <NoteRow note={note} />
+            <div className="flex flex-wrap gap-2 px-3.5 pb-3">
               {type === "favorite" && (
                 <Button variant="ghost" size="sm" onClick={() => void patch(note.id, { favorite: false })}>取消收藏</Button>
               )}
@@ -101,9 +96,9 @@ export function ServerFilterView({ type }: { type: "favorite" | "archived" | "de
                 </>
               )}
             </div>
-          </motion.div>
+          </div>
         ))}
-      </motion.div>
+      </div>
     </section>
   );
 }

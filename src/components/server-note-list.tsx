@@ -1,11 +1,12 @@
 "use client";
 
-import { motion } from "framer-motion";
 import { Search } from "lucide-react";
 import { useEffect, useState } from "react";
-import { NoteCard } from "@/components/notes/NoteCard";
-import { Card } from "@/components/base/Card";
+import { NoteRow } from "@/components/notes/NoteRow";
 import { EmptyState } from "@/components/base/EmptyState";
+import { PageHeader } from "@/components/layout/PageHeader";
+import Link from "next/link";
+import { Button } from "@/components/base/Button";
 
 type ApiNote = {
   id: string;
@@ -49,10 +50,18 @@ export function ServerNoteList() {
   }, [query]);
 
   return (
-    <div className="w-full space-y-5">
-      <h1 className="text-2xl font-bold text-[var(--text-primary)] ">全部笔记</h1>
+    <div className="space-y-5">
+      <PageHeader
+        title="全部笔记"
+        description={items.length > 0 ? `${items.length} 篇笔记` : undefined}
+        actions={
+          <Link href="/notes/new">
+            <Button size="sm">新建</Button>
+          </Link>
+        }
+      />
 
-      <Card padding="sm">
+      <div className="rounded-[var(--radius-lg)] bg-[var(--surface-1)] px-3.5 py-2.5 ring-1 ring-[var(--border-default)]">
         <div className="flex items-center gap-3">
           <Search size={16} className="text-[var(--text-muted)] shrink-0" />
           <input
@@ -62,7 +71,7 @@ export function ServerNoteList() {
             className="w-full bg-transparent text-sm text-[var(--text-primary)] outline-none placeholder:text-[var(--text-placeholder)]"
           />
         </div>
-      </Card>
+      </div>
 
       {loading && items.length === 0 ? (
         <p className="text-sm text-[var(--text-muted)] py-8 text-center">{message}</p>
@@ -74,16 +83,9 @@ export function ServerNoteList() {
           action={{ label: "新建笔记", href: "/notes/new" }}
         />
       ) : (
-        <div className="grid gap-3 sm:grid-cols-2">
-          {items.map((note, i) => (
-            <motion.div
-              key={note.id}
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: i * 0.03, duration: 0.2 }}
-            >
-              <NoteCard note={note} />
-            </motion.div>
+        <div className="divide-y divide-[var(--border-subtle)] rounded-[var(--radius-lg)] border border-[var(--border-subtle)] bg-[var(--surface-1)] p-1">
+          {items.map((note) => (
+            <NoteRow key={note.id} note={note} />
           ))}
         </div>
       )}

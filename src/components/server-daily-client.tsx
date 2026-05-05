@@ -35,12 +35,12 @@ export function ServerDailyClient() {
   return (
     <section className="space-y-5">
       {message ? (
-        <GlassPanel blur="lg" glow="soft" className="rounded-[var(--radius-lg)] p-4 text-sm text-[var(--text-muted)]">
+        <GlassPanel blur="lg" className="rounded-[var(--radius-lg)] p-4 text-sm text-[var(--text-muted)]">
           {message}
         </GlassPanel>
       ) : null}
       {today ? (
-        <GlassPanel blur="xl" glow="brand" className="rounded-[var(--radius-lg)] p-5">
+        <GlassPanel blur="xl" className="rounded-[var(--radius-lg)] p-5">
           <Link href={`/notes/${today.note.id}`} className="block">
             <div className="inline-flex items-center gap-2 text-xs text-[var(--ai-accent)]">
               <CalendarDays className="h-4 w-4" />今日入口

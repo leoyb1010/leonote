@@ -23,7 +23,6 @@ export function CommandPalette() {
   const router = useRouter();
   const inputRef = React.useRef<HTMLInputElement>(null);
 
-  // Toggle with Cmd/Ctrl + K
   useEffect(() => {
     const down = (e: KeyboardEvent) => {
       if (e.key === "k" && (e.metaKey || e.ctrlKey)) {
@@ -35,7 +34,6 @@ export function CommandPalette() {
     return () => document.removeEventListener("keydown", down);
   }, []);
 
-  // Focus input on open
   useEffect(() => {
     if (open) {
       setTimeout(() => inputRef.current?.focus(), 50);
@@ -46,7 +44,7 @@ export function CommandPalette() {
 
   const allCommands: CommandItem[] = [
     { id: "new-note", label: "新建笔记", description: "创建一篇新笔记", icon: <Plus size={16} />, action: () => router.push("/notes/new"), shortcut: "⌘N" },
-    { id: "today", label: "Today", description: "查看今日回顾", icon: <Sun size={16} />, action: () => router.push("/") },
+    { id: "today", label: "今天", description: "查看今日回顾", icon: <Sun size={16} />, action: () => router.push("/") },
     { id: "notes", label: "所有笔记", description: "浏览全部笔记", icon: <FileText size={16} />, action: () => router.push("/notes") },
     { id: "projects", label: "项目", description: "管理项目看板", icon: <FolderKanban size={16} />, action: () => router.push("/projects") },
     { id: "ai", label: "AI 问答", description: "向 AI 提问", icon: <Sparkles size={16} />, action: () => router.push("/ai") },
@@ -77,8 +75,8 @@ export function CommandPalette() {
             className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setOpen(false)}
           />
           <motion.div
-            initial={{ opacity: 0, scale: 0.96, y: -8 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.96, y: -8 }} transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
-            className="relative w-full max-w-md mx-4 bg-[var(--surface-raised)] border border-[var(--border-strong)] rounded-xl shadow-2xl overflow-hidden"
+            initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -4 }} transition={{ duration: 0.18, ease: [0.2, 0, 0, 1] }}
+            className="relative w-full max-w-md mx-4 bg-[var(--surface-2)] border border-[var(--border-strong)] rounded-xl overflow-hidden"
           >
             <div className="flex items-center gap-3 px-4 py-3 border-b border-[var(--border-default)]">
               <Search size={16} className="text-[var(--text-muted)] shrink-0" />
@@ -91,7 +89,7 @@ export function CommandPalette() {
               ) : (
                 filtered.map((cmd, idx) => (
                   <button key={cmd.id} onClick={() => { cmd.action(); setOpen(false); }} onMouseEnter={() => setSelectedIndex(idx)}
-                    className={`w-full flex items-center gap-3 px-4 py-2.5 text-left transition-colors ${idx === selectedIndex ? "bg-[var(--primary-soft)] text-[var(--primary)]" : "text-[var(--text-secondary)] hover:bg-[rgba(255,255,255,0.04)]"}`}
+                    className={`w-full flex items-center gap-3 px-4 py-2.5 text-left transition-colors ${idx === selectedIndex ? "bg-[rgba(255,255,255,0.06)] text-[var(--text-primary)]" : "text-[var(--text-secondary)] hover:bg-[rgba(255,255,255,0.04)]"}`}
                   >
                     <span className="shrink-0">{cmd.icon}</span>
                     <div className="flex-1 min-w-0"><div className="text-sm font-medium">{cmd.label}</div>{cmd.description && <div className="text-xs text-[var(--text-muted)]">{cmd.description}</div>}</div>

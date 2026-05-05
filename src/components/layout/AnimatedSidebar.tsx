@@ -40,7 +40,7 @@ export function AnimatedSidebar({ current = "/" }: AnimatedSidebarProps) {
       whileHover="whileHover" whileTap="whileTap"
       className={cn("sticky top-6 hidden self-start lg:block", collapsed ? "w-[88px]" : "w-[288px]")}
     >
-      <GlassPanel blur="lg" glow="soft" hoverGlow className="min-h-[calc(100vh-3rem)] rounded-[var(--radius-2xl)] p-4">
+      <GlassPanel blur="lg" className="min-h-[calc(100vh-3rem)] rounded-[var(--radius-2xl)] p-4">
         <AISpark className="opacity-40" density={9} subdued />
         <div className="relative z-10 flex h-full flex-col">
           <div className="mb-6 flex items-center justify-between gap-3 px-1">

@@ -101,13 +101,13 @@ export function AIChatPanel({ noteId, linkedMemories = [] }: { noteId: string; l
   return (
     <div className="space-y-4">
       {summaryCard && (
-        <GlassPanel blur="lg" glow="brand" className="rounded-[var(--radius-lg)] p-5">
+        <GlassPanel blur="lg" className="rounded-[var(--radius-lg)] p-5">
           <div className="text-xs text-[var(--ai-accent)] font-medium uppercase mb-2">AI Summary</div>
           <p className="text-sm text-[var(--text-secondary)] leading-relaxed whitespace-pre-wrap">{summaryCard}</p>
         </GlassPanel>
       )}
 
-      <GlassPanel blur="xl" glow="brand" className="relative overflow-hidden rounded-[var(--radius-xl)] p-5">
+      <GlassPanel blur="xl" className="relative overflow-hidden rounded-[var(--radius-xl)] p-5">
         <div className="relative z-10 space-y-4">
           <div className="flex items-start justify-between gap-3">
             <div>
@@ -124,7 +124,7 @@ export function AIChatPanel({ noteId, linkedMemories = [] }: { noteId: string; l
           {memories.length > 0 && (
             <div className="columns-1 gap-3 md:columns-2">
               {memories.map((mem) => (
-                <GlassPanel key={mem.id} blur="lg" glow={highlightedIds.includes(mem.id) ? "brand" : "soft"} className={cn("rounded-[var(--radius-md)] p-4 mb-3 break-inside-avoid", highlightedIds.includes(mem.id) && "ring-1 ring-[var(--ai-accent)]/40")}>
+                <GlassPanel key={mem.id} blur="lg" className={cn("rounded-[var(--radius-md)] p-4 mb-3 break-inside-avoid", highlightedIds.includes(mem.id) && "ring-1 ring-[var(--ai-accent)]/40")}>
                   <div className="flex items-center justify-between gap-2 text-xs uppercase tracking-wider text-[var(--text-muted)]">
                     <span>{mem.type || "Memory"}</span>
                     <BrainCircuit size={14} className="text-[var(--ai-accent)]" />

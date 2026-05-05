@@ -1,5 +1,6 @@
 import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
+import { searchNoteIds } from "@/lib/search";
 
 type DbClient = typeof prisma | Prisma.TransactionClient;
 
@@ -92,14 +93,21 @@ export async function listNotes(userId: string, options?: { status?: string; q?:
   const projectId = options?.projectId?.trim();
   const take = options?.take === null ? undefined : options?.take === undefined ? 100 : Math.min(Math.max(options.take, 1), 500);
 
+  // Try FTS5 search first for Chinese-friendly token matching
+  let ftsIds: string[] | undefined;
+  if (q) {
+    ftsIds = await searchNoteIds(userId, q, take || 100);
+  }
+
   return prisma.note.findMany({
     where: {
       userId,
+      ...(ftsIds ? { id: { in: ftsIds } } : {}),
       projectId: projectId || undefined,
       deletedAt: status === "trash" ? { not: null } : status === "all" ? undefined : null,
       isArchived: status === "archived" ? true : status === "active" ? false : undefined,
       tags: tag ? { some: { tag: { name: tag } } } : undefined,
-      OR: q
+      OR: q && !ftsIds
         ? [
             { title: { contains: q } },
             { content: { contains: q } },

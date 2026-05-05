@@ -1,5 +1,5 @@
 const CACHE_NAME = `leonote-${"__BUILD_ID__"}`;
-const STATIC_ASSETS = ["/manifest.json", "/icon-192.png", "/icon-512.png"];
+const STATIC_ASSETS = ["/manifest.json", "/icon-192.png", "/icon-512.png", "/offline.html"];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(

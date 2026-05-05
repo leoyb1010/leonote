@@ -24,7 +24,7 @@ export function AppShell({
 
         <div className="relative flex min-h-screen min-w-0 flex-1 flex-col">
           <AISpark density={10} subdued className="opacity-30" />
-          <GlassPanel blur="xl" glow="soft" className="noise-mask relative flex min-h-[calc(100vh-2rem)] flex-col overflow-hidden rounded-[32px] px-4 py-4 sm:px-5 md:px-6 lg:px-8">
+          <GlassPanel blur="xl" className="noise-mask relative flex min-h-[calc(100vh-2rem)] flex-col overflow-hidden rounded-[32px] px-4 py-4 sm:px-5 md:px-6 lg:px-8">
             <div className="pointer-events-none absolute inset-x-0 top-0 h-24 bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.08),transparent_62%)]" />
             <header className="relative z-10 mb-6 flex flex-col gap-4 border-b border-[var(--border-default)] pb-5 md:flex-row md:items-start md:justify-between">
               <div className="min-w-0">

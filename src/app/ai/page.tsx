@@ -6,6 +6,8 @@ import { Button } from "@/components/base/Button";
 import { EmptyState } from "@/components/base/EmptyState";
 import { Sparkles, Send, RefreshCw } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { PageContainer } from "@/components/layout/PageContainer";
+import { PageHeader } from "@/components/layout/PageHeader";
 
 interface Message {
   role: "user" | "assistant";
@@ -44,10 +46,11 @@ export default function AIPage() {
   };
 
   return (
-    <div className="w-full space-y-6">
-      <h1 className="text-2xl font-bold text-[var(--text-primary)] flex items-center gap-2">
-        <Sparkles size={22} className="text-[var(--ai-accent)]" /> AI 助手
-      </h1>
+    <PageContainer width="ai">
+      <PageHeader
+        title="AI 助手"
+        actions={<Sparkles size={22} className="text-[var(--ai-accent)]" />}
+      />
 
       {/* Chat */}
       <div className="space-y-4 min-h-[400px]">
@@ -117,6 +120,6 @@ export default function AIPage() {
           发送
         </Button>
       </div>
-    </div>
+    </PageContainer>
   );
 }

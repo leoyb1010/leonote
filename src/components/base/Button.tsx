@@ -17,21 +17,21 @@ interface ButtonProps extends Omit<HTMLMotionProps<"button">, "children"> {
 
 const variantStyles: Record<ButtonVariant, string> = {
   primary:
-    "bg-[var(--primary)] text-[var(--text-primary)] hover:bg-[var(--primary-hover)] active:bg-[var(--primary)] shadow-sm",
+    "bg-[var(--primary)] text-white hover:bg-[var(--primary-hover)] active:bg-[var(--primary)]",
   secondary:
-    "bg-[var(--primary-soft)] text-[var(--primary)] hover:bg-[var(--primary-pressed)] active:bg-[var(--primary-soft)]",
+    "bg-transparent text-[var(--text-secondary)] border border-[var(--border-default)] hover:border-[var(--border-strong)] hover:text-[var(--text-primary)] active:bg-[rgba(255,255,255,0.04)]",
   ghost:
-    "bg-transparent text-[var(--text-secondary)] hover:bg-[rgba(255,255,255,0.06)] hover:text-[var(--text-primary)] active:bg-[rgba(255,255,255,0.08)]",
+    "bg-transparent text-[var(--text-secondary)] hover:bg-[rgba(255,255,255,0.04)] hover:text-[var(--text-primary)] active:bg-[rgba(255,255,255,0.06)]",
   danger:
-    "bg-[var(--danger-soft)] text-[var(--danger)] hover:bg-[rgba(248,113,113,0.2)] active:bg-[var(--danger-soft)]",
+    "bg-transparent text-[var(--danger)] hover:bg-[var(--danger-soft)] active:bg-[rgba(242,109,109,0.16)]",
   outline:
     "bg-transparent text-[var(--text-secondary)] border border-[var(--border-default)] hover:border-[var(--border-strong)] hover:text-[var(--text-primary)] active:bg-[rgba(255,255,255,0.04)]",
 };
 
 const sizeStyles: Record<ButtonSize, string> = {
-  sm: "px-3 py-1.5 text-xs rounded-md gap-1.5",
-  md: "px-4 py-2 text-sm rounded-md gap-2",
-  lg: "px-5 py-2.5 text-base rounded-lg gap-2",
+  sm: "h-7 px-3 text-xs rounded-md gap-1.5",
+  md: "h-8 px-4 text-sm rounded-md gap-1.5",
+  lg: "h-10 px-5 text-sm rounded-md gap-2",
 };
 
 export function Button({
@@ -46,11 +46,10 @@ export function Button({
 }: ButtonProps) {
   return (
     <motion.button
-      whileTap={{ scale: 0.98 }}
-      whileHover={{ scale: disabled || loading ? 1 : 1.01 }}
-      transition={{ duration: 0.12, ease: "easeOut" }}
+      whileTap={disabled || loading ? undefined : { scale: 0.97 }}
+      transition={{ duration: 0.1, ease: [0.2, 0, 0, 1] }}
       className={cn(
-        "inline-flex items-center justify-center font-medium transition-colors duration-[var(--motion-fast)] cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed",
+        "inline-flex items-center justify-center font-medium transition-[background-color,border-color,color,opacity] duration-[var(--duration-quick)] cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed",
         variantStyles[variant],
         sizeStyles[size],
         className
@@ -59,7 +58,7 @@ export function Button({
       {...props}
     >
       {loading ? (
-        <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
+        <svg className="animate-spin h-3.5 w-3.5" viewBox="0 0 24 24">
           <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
           <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
         </svg>

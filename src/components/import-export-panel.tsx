@@ -133,5 +133,5 @@ export function ImportExportPanel({ noteId, embedded, onImported }: Props) {
     return <div className="rounded-[var(--radius-lg)] border border-[var(--border-default)] bg-[var(--surface-glass)]">{content}</div>;
   }
 
-  return <GlassPanel blur="xl" glow="soft" className="rounded-[var(--radius-lg)]">{content}</GlassPanel>;
+  return <GlassPanel blur="xl" className="rounded-[var(--radius-lg)]">{content}</GlassPanel>;
 }

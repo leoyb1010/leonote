@@ -2,7 +2,8 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { getSessionUserId } from "@/lib/session";
 import { prisma } from "@/lib/prisma";
-import { ensureProject, requireOwnedNote, syncNoteTags, toNoteDTO } from "@/lib/server-notes";
+import { ensureProject, requireOwnedNote, toNoteDTO } from "@/lib/server-notes";
+import { updateNoteWithRevision } from "@/lib/note-mutations";
 
 const schema = z.object({
   title: z.string().optional(),
@@ -58,9 +59,11 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
     return NextResponse.json({ ok: false, message: "项目不存在或不属于当前账号" }, { status: 400 });
   }
 
-  await prisma.note.update({
-    where: { id },
-    data: {
+  const reason = request.headers.get("x-leonote-save-reason") || "save";
+
+  const updated = await updateNoteWithRevision(
+    { id: existing.id, title: existing.title, content: existing.content, excerpt: existing.excerpt, userId },
+    {
       title: parsed.data.title,
       content: parsed.data.content,
       excerpt: parsed.data.excerpt,
@@ -68,13 +71,12 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
       isPinned: parsed.data.pinned,
       isArchived: parsed.data.archived,
       projectId,
+      tags: parsed.data.tags,
     },
-  });
+    reason,
+  );
 
-  if (parsed.data.tags) await syncNoteTags(id, userId, parsed.data.tags);
-
-  const note = await prisma.note.findUniqueOrThrow({ where: { id }, include: { project: true, tags: { include: { tag: true } } } });
-  return NextResponse.json({ ok: true, note: toNoteDTO(note) });
+  return NextResponse.json({ ok: true, note: toNoteDTO(updated) });
 }
 
 export async function DELETE(_request: Request, context: { params: Promise<{ id: string }> }) {

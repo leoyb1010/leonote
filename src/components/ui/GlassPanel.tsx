@@ -1,20 +1,15 @@
 "use client";
 
-import type { CSSProperties, ReactNode } from "react";
-import { motion } from "framer-motion";
+import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
 
 type BlurLevel = "sm" | "md" | "lg" | "xl";
-type GlowLevel = "none" | "soft" | "brand";
 
 type GlassPanelProps = {
   children: ReactNode;
   className?: string;
   contentClassName?: string;
   blur?: BlurLevel;
-  glow?: GlowLevel;
-  hoverGlow?: boolean;
-  style?: CSSProperties;
 };
 
 const blurMap: Record<BlurLevel, string> = {
@@ -24,37 +19,22 @@ const blurMap: Record<BlurLevel, string> = {
   xl: "backdrop-blur-[16px]",
 };
 
-const glowMap: Record<GlowLevel, string> = {
-  none: "shadow-[var(--shadow-sm)]",
-  soft: "shadow-[var(--shadow-md)]",
-  brand: "shadow-[var(--shadow-glow)]",
-};
-
 export function GlassPanel({
   children,
   className,
   contentClassName,
   blur = "lg",
-  glow = "none",
-  hoverGlow = false,
-  style,
 }: GlassPanelProps) {
   return (
-    <motion.div
-      animate={{ opacity: 1 }}
-      whileHover={hoverGlow ? { borderColor: "rgba(255,255,255,0.14)" } : undefined}
-      style={style}
+    <div
       className={cn(
         "relative overflow-hidden rounded-[var(--radius-lg)] border border-[var(--border-default)]",
         "bg-[var(--surface-glass)]",
         blurMap[blur],
-        glowMap[glow],
-        "transition-colors duration-[var(--motion-fast)]",
-        hoverGlow && "hover:border-[var(--border-strong)]",
         className
       )}
     >
       <div className={cn("relative z-10", contentClassName)}>{children}</div>
-    </motion.div>
+    </div>
   );
 }

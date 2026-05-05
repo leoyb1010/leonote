@@ -45,7 +45,7 @@ export function MemoryFactsPanel() {
   );
 
   return (
-    <GlassPanel blur="xl" glow="brand" className="relative overflow-hidden rounded-[var(--radius-xl)] p-5">
+    <GlassPanel blur="xl" className="relative overflow-hidden rounded-[var(--radius-xl)] p-5">
       <AISpark density={14} subdued className="opacity-60" />
       <div className="relative z-10 space-y-5">
         <div>

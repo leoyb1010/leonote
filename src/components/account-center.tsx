@@ -56,7 +56,7 @@ export function AccountCenter() {
 
   return (
     <>
-      <GlassPanel blur="xl" glow="soft" className="mb-5 rounded-[var(--radius-lg)] p-5">
+      <GlassPanel blur="xl" className="mb-5 rounded-[var(--radius-lg)] p-5">
         <div className="text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider">Account Center</div>
         {user ? (
           <>

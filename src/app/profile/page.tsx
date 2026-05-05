@@ -6,6 +6,8 @@ import { useEffect, useState } from "react";
 import { DataBackupCard } from "@/components/data-backup-card";
 import { Card } from "@/components/base/Card";
 import { Button } from "@/components/base/Button";
+import { PageContainer } from "@/components/layout/PageContainer";
+import { PageHeader } from "@/components/layout/PageHeader";
 
 type User = {
   id: string;
@@ -83,8 +85,9 @@ export default function ProfilePage() {
   };
 
   return (
-    <div className="w-full space-y-6">
-      <h1 className="text-2xl font-bold text-[var(--text-primary)]">个人资料与安全</h1>
+    <PageContainer width="form">
+      <PageHeader title="个人资料与安全" />
+      <div className="space-y-6">
 
       {needLogin ? (
         <Card>
@@ -151,6 +154,7 @@ export default function ProfilePage() {
           <DataBackupCard />
         </>
       )}
-    </div>
+      </div>
+    </PageContainer>
   );
 }

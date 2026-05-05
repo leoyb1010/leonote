@@ -16,5 +16,13 @@ export function checkRateLimit(
   if (bucket.count > limit) {
     return { ok: false, retryAfterMs: bucket.resetAt - now };
   }
+
+  // Periodic cleanup: remove expired entries when map grows large
+  if (buckets.size > 5000) {
+    for (const [k, v] of buckets) {
+      if (v.resetAt < now) buckets.delete(k);
+    }
+  }
+
   return { ok: true };
 }

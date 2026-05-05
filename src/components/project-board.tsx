@@ -23,6 +23,7 @@ export function ProjectBoard({ initialProjects, signedIn }: { initialProjects: P
   const [editingName, setEditingName] = useState("");
   const [editingDescription, setEditingDescription] = useState("");
   const [editingStatus, setEditingStatus] = useState("active");
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [draggingProjectId, setDraggingProjectId] = useState<string | null>(null);
   const [draggingNoteId, setDraggingNoteId] = useState<string | null>(null);
   const [dropTargetId, setDropTargetId] = useState<string | null>(null);
@@ -85,14 +86,14 @@ export function ProjectBoard({ initialProjects, signedIn }: { initialProjects: P
   };
 
   if (!signedIn) {
-    return <GlassPanel blur="lg" glow="soft" className="rounded-[var(--radius-lg)] p-5 text-sm text-[var(--text-secondary)]">当前未登录。先去 <Link href="/login" className="font-medium text-[var(--primary)] underline underline-offset-4">登录</Link></GlassPanel>;
+    return <GlassPanel blur="lg" className="rounded-[var(--radius-lg)] p-5 text-sm text-[var(--text-secondary)]">当前未登录。先去 <Link href="/login" className="font-medium text-[var(--primary)] underline underline-offset-4">登录</Link></GlassPanel>;
   }
 
   return (
     <div className="space-y-5">
       <h1 className="text-2xl font-bold text-[var(--text-primary)]">项目</h1>
 
-      <GlassPanel blur="xl" glow="brand" className="rounded-[var(--radius-lg)] p-5">
+      <GlassPanel blur="xl" className="rounded-[var(--radius-lg)] p-5">
         <div className="flex items-center justify-between gap-3">
           <div>
             <div className="text-xs font-semibold text-[var(--text-muted)]">New Project</div>
@@ -117,7 +118,7 @@ export function ProjectBoard({ initialProjects, signedIn }: { initialProjects: P
           const statusLabel = STATUS_OPTIONS.find((o) => o.value === (project.status || "active"))?.label ?? "进行中";
           return (
             <motion.div key={project.id} variants={staggerItem} layout>
-              <GlassPanel blur="lg" glow={draggingProjectId === project.id || dropTargetId === project.id ? "brand" : "soft"} className="rounded-[var(--radius-xl)] p-5 transition duration-300" hoverGlow>
+              <GlassPanel blur="lg" className="rounded-[var(--radius-xl)] p-5 transition duration-300">
                 {editing ? (
                   <div className="space-y-3">
                     <input value={editingName} onChange={(e) => setEditingName(e.target.value)} placeholder="项目名称" className="w-full rounded-[var(--radius-sm)] border border-[var(--border-default)] bg-[var(--surface-base)] px-4 py-3 text-sm text-[var(--text-primary)] outline-none" />

@@ -54,7 +54,7 @@ export function AISettingsPanel() {
   };
 
   return (
-    <GlassPanel blur="xl" glow="soft" className="space-y-4 rounded-[var(--radius-lg)] p-5">
+    <GlassPanel blur="xl" className="space-y-4 rounded-[var(--radius-lg)] p-5">
       <div>
         <div className="text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider">AI Settings</div>
         <h2 className="mt-2 text-base font-medium text-[var(--text-primary)] inline-flex items-center gap-2">

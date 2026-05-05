@@ -2,9 +2,8 @@
 
 import React from "react";
 import { cn } from "@/lib/utils";
-import { motion, type HTMLMotionProps } from "framer-motion";
 
-interface CardProps extends HTMLMotionProps<"div"> {
+interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
   hover?: boolean;
   padding?: "sm" | "md" | "lg";
   children: React.ReactNode;
@@ -24,20 +23,18 @@ export function Card({
   ...props
 }: CardProps) {
   return (
-    <motion.div
-      whileHover={hover ? { y: -1 } : undefined}
-      transition={{ duration: 0.12, ease: "easeOut" }}
+    <div
       className={cn(
-        "bg-[var(--surface-raised)] border border-[var(--border-default)] rounded-[var(--radius-lg)]",
-        "transition-colors duration-[var(--motion-fast)]",
-        hover && "hover:border-[var(--border-strong)]",
+        "rounded-[var(--radius-lg)] border border-[var(--border-default)] bg-[var(--surface-2)]",
+        "transition-[border-color,background-color] duration-[var(--duration-quick)]",
+        hover && "hover:border-[var(--border-strong)] hover:bg-[var(--surface-2)]",
         paddingStyles[padding],
         className
       )}
       {...props}
     >
       {children}
-    </motion.div>
+    </div>
   );
 }
 
