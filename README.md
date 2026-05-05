@@ -182,6 +182,22 @@ npm run ci           # 全链路：lint → typecheck → test → build
 
 ---
 
+## 版本记录
+
+| 版本 | 日期 | 更新内容 |
+|---|---|---|
+| **v1.1.0** | 2026-05-05 | 修复 requireSessionUserId 语义（null → throw）；新增 offline.html 离线回退页；SW 离线缓存策略完善；环境变量注册开关默认打开 |
+| **v1.0.0** | 2026-05-04 | 上线级重构：架构收敛、安全加固、体验升级。修复 SSR opacity:0 导致白屏、Tailwind 类名损坏、窄屏布局崩溃、全局硬编码颜色/白条/背景图；UX 打磨 |
+| **v0.9.0** | 2026-05-03 | PWA 支持（manifest + service worker）；macOS 原生 DMG（Tauri + WKWebView）；全面焕新 Design System + 导航重构 + 跨端适配 + AI 增强 |
+| **v0.8.0** | 2026-05-02 | Design Token 体系（CSS Variables）；响应式布局（桌面侧栏 + 移动端 TabBar）；中文字体栈优化；safe-area 适配 |
+| **v0.7.0** | 2026-05-01 | AI 知识助手工作流：笔记总结、问答、长期记忆提取；导入自动整理；全局 AI 对话；API Key AES-256-GCM 加密存储 |
+| **v0.6.0** | 2026-04-30 | 项目看板（Kanban）；每日笔记；导入导出（JSON/Markdown/TXT/HTML/网页链接 + SSRF 防御）；数据备份 |
+| **v0.5.0** | 2026-04-29 | 用户系统（注册/登录/改密）；Session 签名 cookie + tokenVersion 机制；三级限流（登录/注册/AI）；注册开关 |
+| **v0.4.0** | 2026-04-28 | 笔记 CRUD 完善：收藏、置顶、归档、回收站、标签系统；Markdown 预览（GFM + XSS 防御）；自动保存 |
+| **v0.3.0** | 2026-04-27 | 全局命令面板（Cmd+K）；玻璃拟态 UI 系统；framer-motion 动画体系；深色/浅色主题切换 |
+| **v0.2.0** | 2026-04-26 | Prisma + SQLite 数据层；Next.js App Router 迁移；基础笔记 CRUD API；登录页面 |
+| **v0.1.0** | 2026-04-25 | 项目初始化：Next.js 16 + React 19 + TypeScript + Tailwind CSS；Tauri 2 桌面壳；基础工程脚手架 |
+
 ## License
 
 Private — 个人使用项目。

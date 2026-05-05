@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { slugifyProjectName } from "@/lib/server-notes";
-import { requireSessionUserId } from "@/lib/session";
+import { getSessionUserId } from "@/lib/session";
 
 const schema = z.object({
   name: z.string().trim().min(1, "项目名称不能为空"),
@@ -16,7 +16,7 @@ async function getOwnedProject(userId: string, id: string) {
 }
 
 export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
-  const userId = await requireSessionUserId();
+  const userId = await getSessionUserId();
   if (!userId) return NextResponse.json({ ok: false, message: "未登录" }, { status: 401 });
 
   const { id } = await params;
@@ -55,7 +55,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
 }
 
 export async function DELETE(_request: Request, { params }: { params: Promise<{ id: string }> }) {
-  const userId = await requireSessionUserId();
+  const userId = await getSessionUserId();
   if (!userId) return NextResponse.json({ ok: false, message: "未登录" }, { status: 401 });
 
   const { id } = await params;

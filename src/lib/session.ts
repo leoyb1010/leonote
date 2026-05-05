@@ -18,7 +18,9 @@ export async function getSessionUserId() {
 }
 
 export async function requireSessionUserId() {
-  return getSessionUserId();
+  const userId = await getSessionUserId();
+  if (!userId) throw new Error("Unauthorized");
+  return userId;
 }
 
 export async function getCurrentUser() {

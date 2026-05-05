@@ -7,6 +7,8 @@ data/*
 !data/.gitkeep
 prisma/dev.db
 prisma/dev.db-journal
+prisma/data/
+prisma/*.db-journal
 prisma/*.backup-*
 prisma/migrations/migration_lock.toml
 *.tsbuildinfo
