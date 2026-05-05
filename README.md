@@ -1,6 +1,6 @@
 # Leonote
 
-> 面向个人长期使用的中文笔记 + 轻知识库产品。
+> 安静、可信、理性的个人知识工作台 — 中文笔记 + 轻知识库。
 > 自托管 Web 优先，PWA 支持，桌面端 WebView 壳。
 
 ---
@@ -90,9 +90,12 @@ AI_FALLBACK_MODEL="deepseek-v4-pro"
 
 ### 笔记核心
 - Markdown 编辑 + 实时安全预览（支持 GFM 表格、任务列表、代码块）
+- Apple 风格编辑器 — 760px 固定宽度，28px 标题，沉浸式书写体验
 - 自动保存（默认开启，停笔 2.6 秒后触发）
 - 手动保存 / Cmd+S 快捷键
+- 版本历史（NoteRevision）— 保存时自动快照、查看、恢复历史版本
 - 标签系统、项目归属、收藏、置顶、归档、回收站
+- 快速记录（QuickCapture）— 今日页面直接输入，回车保存
 
 ### AI 助手
 - 笔记总结、围绕笔记问答、长期记忆提取
@@ -101,6 +104,10 @@ AI_FALLBACK_MODEL="deepseek-v4-pro"
 - DeepSeek / OpenAI 兼容接口
 - AI Key 数据库加密存储（AES-256-GCM）
 
+### 搜索
+- FTS5 全文搜索 + trigram 分词器，中文短语匹配
+- 搜索结果关联笔记列表，实时过滤
+
 ### 导入导出
 - 导入：JSON / Markdown / TXT / HTML / 网页链接
 - 导出：JSON 全量导出 / 当前笔记 Markdown 导出
@@ -108,17 +115,20 @@ AI_FALLBACK_MODEL="deepseek-v4-pro"
 
 ### 安全
 - Session 签名 cookie（tokenVersion 机制，改密立即失效全部旧会话）
-- 登录 / 注册 / AI 接口三级限流
+- 登录 / 注册 / AI 接口三级限流（含 LRU Map GC）
 - 生产环境 `__Host-` cookie 前缀
 - Markdown 预览 XSS 防御（rehype-sanitize）
 - 注册开关控制（首个用户后默认关闭）
+- AUTH_SECRET 强制验证
 
 ### 设计
-- 深色 / 浅色主题
+- 深色 / 浅色主题（v1.2 Design Token 体系）
 - 响应式布局（桌面侧栏 / 移动端底部 TabBar）
 - 全局命令面板（Cmd+K）
 - 移动端 safe-area 适配
 - 中文字体栈优化（PingFang SC / Microsoft YaHei / Noto Sans SC）
+- PageContainer 页面居中布局（6 种宽度变体）
+- 列表默认视图（NoteRow），降低动画，Apple 风格克制设计
 
 ---
 
@@ -141,6 +151,7 @@ AI_FALLBACK_MODEL="deepseek-v4-pro"
 ```
 User (用户)
   ├── Note (笔记) → Tag (标签) via NoteTag
+  │     └── NoteRevision (版本历史)
   ├── Project (项目)
   ├── DailyNote (每日记录)
   ├── AISetting (AI 配置，API Key 加密存储)
@@ -186,6 +197,7 @@ npm run ci           # 全链路：lint → typecheck → test → build
 
 | 版本 | 日期 | 更新内容 |
 |---|---|---|
+| **v1.2.0** | 2026-05-05 | 悄然专业工作台：FTS5 全文搜索 + trigram 分词；NoteRevision 版本历史（查看/恢复/GC）；Apple 风格编辑器重写（760px）；今日页重构（QuickCapture/NoteRow/模版）；Design Token 体系 v1.2；PageContainer 居中布局；动画减少（移除 hover scale/shadow）；离线回退页暗色匹配；AUTH_SECRET 强制校验；限流 GC |
 | **v1.1.0** | 2026-05-05 | 修复 requireSessionUserId 语义（null → throw）；新增 offline.html 离线回退页；SW 离线缓存策略完善；环境变量注册开关默认打开 |
 | **v1.0.0** | 2026-05-04 | 上线级重构：架构收敛、安全加固、体验升级。修复 SSR opacity:0 导致白屏、Tailwind 类名损坏、窄屏布局崩溃、全局硬编码颜色/白条/背景图；UX 打磨 |
 | **v0.9.0** | 2026-05-03 | PWA 支持（manifest + service worker）；macOS 原生 DMG（Tauri + WKWebView）；全面焕新 Design System + 导航重构 + 跨端适配 + AI 增强 |
