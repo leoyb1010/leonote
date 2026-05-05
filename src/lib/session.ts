@@ -5,7 +5,16 @@ import { prisma } from "@/lib/prisma";
 export async function getSessionUserId() {
   const cookieStore = await cookies();
   const session = readSessionValue(cookieStore.get(SESSION_COOKIE)?.value);
-  return session?.userId ?? null;
+  if (!session?.userId) return null;
+
+  const user = await prisma.user.findUnique({
+    where: { id: session.userId },
+    select: { tokenVersion: true },
+  });
+  if (!user) return null;
+  if (user.tokenVersion !== session.tokenVersion) return null;
+
+  return session.userId;
 }
 
 export async function requireSessionUserId() {
@@ -17,6 +26,12 @@ export async function getCurrentUser() {
   if (!userId) return null;
   return prisma.user.findUnique({
     where: { id: userId },
-    select: { id: true, email: true, name: true, createdAt: true, updatedAt: true },
+    select: {
+      id: true,
+      email: true,
+      name: true,
+      createdAt: true,
+      updatedAt: true,
+    },
   });
 }

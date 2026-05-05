@@ -35,7 +35,7 @@ export function GlassPanel({
   className,
   contentClassName,
   blur = "lg",
-  glow = "soft",
+  glow = "none",
   hoverGlow = false,
   style,
 }: GlassPanelProps) {

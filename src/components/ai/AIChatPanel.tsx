@@ -1,11 +1,11 @@
 "use client";
 
-import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 import { BrainCircuit, SendHorizonal, Sparkles, Wand2 } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { GlassPanel } from "@/components/ui/GlassPanel";
 import { Button } from "@/components/base/Button";
-import { aiMessageAppear, staggerContainer, staggerItem } from "@/lib/animations";
+import { staggerContainer, staggerItem } from "@/lib/animations";
 import { cn } from "@/lib/utils";
 
 type MemoryItem = { id: string; type?: string; label: string; content?: string; confidence?: number };
@@ -24,7 +24,6 @@ export function AIChatPanel({ noteId, linkedMemories = [] }: { noteId: string; l
     linkedMemories.map((item) => ({ id: item.id, label: item.label, content: item.content })),
   );
 
-  const memoryMap = useMemo(() => new Map(memories.map((item) => [item.id, item])), [memories]);
 
   useEffect(() => {
     if (linkedMemories.length) return;

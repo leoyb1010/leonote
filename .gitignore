@@ -2,8 +2,12 @@ node_modules
 .next
 .vercel
 .env
+.env.production
+data/*
+!data/.gitkeep
 prisma/dev.db
 prisma/dev.db-journal
 prisma/*.backup-*
+prisma/migrations/migration_lock.toml
 *.tsbuildinfo
 .DS_Store

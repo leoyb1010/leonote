@@ -5,7 +5,7 @@ const config = [
   ...nextVitals,
   ...nextTs,
   {
-    ignores: ['.next/**', 'node_modules/**', 'prisma/dev.db*'],
+    ignores: ['.next/**', 'node_modules/**', 'prisma/dev.db*', 'scripts/**'],
   },
 ];
 

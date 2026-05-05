@@ -1,7 +1,6 @@
-import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { readSessionValue, SESSION_COOKIE } from "@/lib/auth";
+import { getSessionUserId } from "@/lib/session";
 import { prisma } from "@/lib/prisma";
 import { ensureProject, requireOwnedNote, syncNoteTags, toNoteDTO } from "@/lib/server-notes";
 
@@ -17,13 +16,6 @@ const schema = z.object({
   projectName: z.string().optional(),
 });
 
-async function requireUserId() {
-  const cookieStore = await cookies();
-  const session = readSessionValue(cookieStore.get(SESSION_COOKIE)?.value);
-  if (!session?.userId) return null;
-  return session.userId;
-}
-
 async function resolveProjectId(userId: string, projectId: string | null | undefined, projectName?: string) {
   if (projectName?.trim()) {
     const project = await ensureProject(userId, projectName);
@@ -37,7 +29,7 @@ async function resolveProjectId(userId: string, projectId: string | null | undef
 }
 
 export async function GET(_request: Request, context: { params: Promise<{ id: string }> }) {
-  const userId = await requireUserId();
+  const userId = await getSessionUserId();
   if (!userId) return NextResponse.json({ ok: false, message: "未登录" }, { status: 401 });
 
   const { id } = await context.params;
@@ -48,7 +40,7 @@ export async function GET(_request: Request, context: { params: Promise<{ id: st
 }
 
 export async function PATCH(request: Request, context: { params: Promise<{ id: string }> }) {
-  const userId = await requireUserId();
+  const userId = await getSessionUserId();
   if (!userId) return NextResponse.json({ ok: false, message: "未登录" }, { status: 401 });
 
   const { id } = await context.params;
@@ -86,7 +78,7 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
 }
 
 export async function DELETE(_request: Request, context: { params: Promise<{ id: string }> }) {
-  const userId = await requireUserId();
+  const userId = await getSessionUserId();
   if (!userId) return NextResponse.json({ ok: false, message: "未登录" }, { status: 401 });
 
   const { id } = await context.params;

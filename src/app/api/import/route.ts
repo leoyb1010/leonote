@@ -1,10 +1,9 @@
-import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import { lookup } from "node:dns/promises";
 import net from "node:net";
 import type { Prisma } from "@prisma/client";
 import { z } from "zod";
-import { readSessionValue, SESSION_COOKIE } from "@/lib/auth";
+import { getSessionUserId } from "@/lib/session";
 import { prisma } from "@/lib/prisma";
 import { ensureProject, requireOwnedNote, syncNoteTags, toNoteDTO } from "@/lib/server-notes";
 import { organizeImportedContent } from "@/lib/import-organizer";
@@ -23,13 +22,6 @@ const jsonArraySchema = z.array(z.object({
   projectName: z.string().optional(),
 }));
 const jsonExportSchema = z.object({ notes: jsonArraySchema });
-
-async function requireUserId() {
-  const cookieStore = await cookies();
-  const session = readSessionValue(cookieStore.get(SESSION_COOKIE)?.value);
-  if (!session?.userId) return null;
-  return session.userId;
-}
 
 async function createImportedNote(tx: Prisma.TransactionClient, userId: string, data: { title: string; content: string; excerpt?: string; tags?: string[]; projectName?: string }) {
   const project = await ensureProject(userId, data.projectName, tx);
@@ -88,7 +80,7 @@ async function applyToExistingNote({ noteId, userId, content, mode }: { noteId: 
 }
 
 export async function POST(request: Request) {
-  const userId = await requireUserId();
+  const userId = await getSessionUserId();
   if (!userId) return NextResponse.json({ ok: false, message: "未登录" }, { status: 401 });
 
   const contentLength = Number(request.headers.get("content-length") ?? "0");

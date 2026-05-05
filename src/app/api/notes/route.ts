@@ -1,7 +1,6 @@
-import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { readSessionValue, SESSION_COOKIE } from "@/lib/auth";
+import { getSessionUserId } from "@/lib/session";
 import { prisma } from "@/lib/prisma";
 import { ensureProject, listNotes, syncNoteTags, toNoteDTO } from "@/lib/server-notes";
 
@@ -13,13 +12,6 @@ const schema = z.object({
   projectName: z.string().optional(),
   projectId: z.string().optional(),
 });
-
-async function requireUserId() {
-  const cookieStore = await cookies();
-  const session = readSessionValue(cookieStore.get(SESSION_COOKIE)?.value);
-  if (!session?.userId) return null;
-  return session.userId;
-}
 
 async function resolveProjectId(userId: string, projectId?: string | null, projectName?: string) {
   if (projectName?.trim()) {
@@ -33,7 +25,7 @@ async function resolveProjectId(userId: string, projectId?: string | null, proje
 }
 
 export async function GET(request: Request) {
-  const userId = await requireUserId();
+  const userId = await getSessionUserId();
   if (!userId) return NextResponse.json({ ok: false, message: "未登录" }, { status: 401 });
 
   const { searchParams } = new URL(request.url);
@@ -52,7 +44,7 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
-  const userId = await requireUserId();
+  const userId = await getSessionUserId();
   if (!userId) return NextResponse.json({ ok: false, message: "未登录" }, { status: 401 });
 
   const body = await request.json();

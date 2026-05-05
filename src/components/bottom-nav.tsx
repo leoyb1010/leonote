@@ -12,7 +12,7 @@ const items = [
 
 export function BottomNav({ current = "/" }: { current?: string }) {
   return (
-    <nav className="sticky bottom-4 z-30 mt-auto grid grid-cols-5 gap-2 rounded-[26px] border border-[var(--border-default)] bg-[rgba(12,16,25,0.78)] p-2 shadow-[0_24px_72px_rgba(2,6,23,0.34)] backdrop-blur-[16px] lg:hidden">
+    <nav className="sticky bottom-0 z-30 mt-auto grid grid-cols-5 gap-2 rounded-t-[20px] border-t border-[var(--border-default)] bg-[rgba(12,16,25,0.92)] p-2 pb-[calc(0.5rem+env(safe-area-inset-bottom))] shadow-[0_-8px_32px_rgba(2,6,23,0.24)] backdrop-blur-[16px] lg:hidden safe-area-bottom">
       {items.map((item) => {
         const active = current === item.href;
         const Icon = item.icon;

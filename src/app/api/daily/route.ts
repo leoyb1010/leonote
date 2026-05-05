@@ -1,15 +1,7 @@
-import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
-import { readSessionValue, SESSION_COOKIE } from "@/lib/auth";
+import { getSessionUserId } from "@/lib/session";
 import { prisma } from "@/lib/prisma";
 import { toNoteDTO } from "@/lib/server-notes";
-
-async function requireUserId() {
-  const cookieStore = await cookies();
-  const session = readSessionValue(cookieStore.get(SESSION_COOKIE)?.value);
-  if (!session?.userId) return null;
-  return session.userId;
-}
 
 function startOfDay(date = new Date()) {
   const value = new Date(date);
@@ -18,7 +10,7 @@ function startOfDay(date = new Date()) {
 }
 
 export async function GET() {
-  const userId = await requireUserId();
+  const userId = await getSessionUserId();
   if (!userId) return NextResponse.json({ ok: false, message: "未登录" }, { status: 401 });
 
   const today = startOfDay();

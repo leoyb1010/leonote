@@ -1,7 +1,11 @@
 import crypto from "node:crypto";
 import bcrypt from "bcryptjs";
 
-export const SESSION_COOKIE = "leonote_session";
+export const SESSION_COOKIE =
+  process.env.NODE_ENV === "production"
+    ? "__Host-leonote_session"
+    : "leonote_session";
+
 const SESSION_TTL_MS = 1000 * 60 * 60 * 24 * 7;
 
 function getAuthSecret() {
@@ -11,7 +15,10 @@ function getAuthSecret() {
 }
 
 function sign(payload: string) {
-  return crypto.createHmac("sha256", getAuthSecret()).update(payload).digest("base64url");
+  return crypto
+    .createHmac("sha256", getAuthSecret())
+    .update(payload)
+    .digest("base64url");
 }
 
 export async function hashPassword(password: string) {
@@ -22,22 +29,31 @@ export async function verifyPassword(password: string, hash: string) {
   return bcrypt.compare(password, hash);
 }
 
-export function createSessionValue(userId: string) {
+export function createSessionValue(userId: string, tokenVersion: number) {
   const exp = Date.now() + SESSION_TTL_MS;
-  const payload = `${userId}.${exp}`;
+  const payload = `${userId}.${exp}.${tokenVersion}`;
   const signature = sign(payload);
   return `${payload}.${signature}`;
 }
 
 export function readSessionValue(raw?: string) {
   if (!raw) return null;
-  const [userId, expRaw, signature] = raw.split(".");
+  const [userId, expRaw, , signature] = raw.split(".");
   if (!userId || !expRaw || !signature) return null;
-  const payload = `${userId}.${expRaw}`;
+
+  const parts = raw.split(".");
+  if (parts.length < 4) return null;
+
+  const payload = parts.slice(0, 3).join(".");
   if (sign(payload) !== signature) return null;
+
   const exp = Number(expRaw);
   if (!Number.isFinite(exp) || Date.now() > exp) return null;
-  return { userId, exp };
+
+  const tokenVersion = Number(parts[2]);
+  if (!Number.isFinite(tokenVersion)) return null;
+
+  return { userId, exp, tokenVersion };
 }
 
 export function getSessionCookieOptions(exp: number) {
