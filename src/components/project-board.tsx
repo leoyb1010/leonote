@@ -102,7 +102,7 @@ export function ProjectBoard({ initialProjects, signedIn }: { initialProjects: P
           <span className="rounded-[var(--radius-pill)] border border-[var(--border-default)] bg-[rgba(255,255,255,0.05)] px-3 py-1 text-xs text-[var(--text-muted)]">看板视图</span>
         </div>
         <div className="mt-4 grid gap-3 md:grid-cols-[minmax(0,1fr)_minmax(280px,0.9fr)_auto]">
-          <input value={name} onChange={(e) => setName(e.target.value)} placeholder="项目名称" className="w-full rounded-[var(--radius-md)] border border-[var(--border-default)] bg-[var(--surface-base)] px-4 py-3 text-sm text-[var(--text-primary)] outline-none placeholder:text-[var(--text-placeholder)] focus:border-[var(--border-focus)] transition-colors" />
+          <input value={name} onChange={(e) => setName(e.target.value)} placeholder="项目名称" className="w-full h-10 rounded-[var(--radius-md)] border border-[var(--border-default)] bg-[var(--surface-base)] px-4 text-sm text-[var(--text-primary)] outline-none placeholder:text-[var(--text-placeholder)] focus:border-[var(--border-focus)] transition-colors" />
           <textarea value={description} onChange={(e) => setDescription(e.target.value)} placeholder="项目简介、目标或工作范围" className="min-h-[64px] w-full rounded-[var(--radius-md)] border border-[var(--border-default)] bg-[var(--surface-base)] px-4 py-3 text-sm text-[var(--text-primary)] outline-none placeholder:text-[var(--text-placeholder)] focus:border-[var(--border-focus)] transition-colors resize-none" />
           <Button onClick={() => void createProject()} icon={<Plus size={16} />}>创建项目</Button>
         </div>
@@ -121,9 +121,9 @@ export function ProjectBoard({ initialProjects, signedIn }: { initialProjects: P
               <GlassPanel blur="lg" className="rounded-[var(--radius-xl)] p-5 transition duration-300">
                 {editing ? (
                   <div className="space-y-3">
-                    <input value={editingName} onChange={(e) => setEditingName(e.target.value)} placeholder="项目名称" className="w-full rounded-[var(--radius-sm)] border border-[var(--border-default)] bg-[var(--surface-base)] px-4 py-3 text-sm text-[var(--text-primary)] outline-none" />
+                    <input value={editingName} onChange={(e) => setEditingName(e.target.value)} placeholder="项目名称" className="w-full h-10 rounded-[var(--radius-sm)] border border-[var(--border-default)] bg-[var(--surface-base)] px-4 text-sm text-[var(--text-primary)] outline-none" />
                     <textarea value={editingDescription} onChange={(e) => setEditingDescription(e.target.value)} placeholder="项目简介" className="min-h-[96px] w-full rounded-[var(--radius-sm)] border border-[var(--border-default)] bg-[var(--surface-base)] px-4 py-3 text-sm text-[var(--text-primary)] outline-none resize-none" />
-                    <select value={editingStatus} onChange={(e) => setEditingStatus(e.target.value)} className="w-full rounded-[var(--radius-sm)] border border-[var(--border-default)] bg-[var(--surface-base)] px-4 py-3 text-sm text-[var(--text-primary)] outline-none">
+                    <select value={editingStatus} onChange={(e) => setEditingStatus(e.target.value)} className="w-full h-10 rounded-[var(--radius-sm)] border border-[var(--border-default)] bg-[var(--surface-base)] px-4 text-sm text-[var(--text-primary)] outline-none">
                       {STATUS_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
                     </select>
                     <div className="flex gap-2">

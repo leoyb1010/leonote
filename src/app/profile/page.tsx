@@ -117,9 +117,9 @@ export default function ProfilePage() {
               <input
                 value={name} onChange={(e) => setName(e.target.value)}
                 placeholder="昵称"
-                className="w-full rounded-[var(--radius-md)] border border-[var(--border-default)] bg-[var(--surface-base)] px-4 py-3 text-sm text-[var(--text-primary)] outline-none placeholder:text-[var(--text-placeholder)] focus:border-[var(--border-focus)] transition-colors"
+                className="w-full h-10 rounded-[var(--radius-md)] border border-[var(--border-default)] bg-[var(--surface-base)] px-4 text-sm text-[var(--text-primary)] outline-none placeholder:text-[var(--text-placeholder)] focus:border-[var(--border-focus)] transition-colors"
               />
-              <Button onClick={() => void saveProfile()} loading={saving} variant="primary" size="sm">
+              <Button onClick={() => void saveProfile()} loading={saving} variant="primary" size="lg">
                 保存资料
               </Button>
             </div>
@@ -133,14 +133,14 @@ export default function ProfilePage() {
               <input
                 type="password" value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)}
                 placeholder="当前密码"
-                className="w-full rounded-[var(--radius-md)] border border-[var(--border-default)] bg-[var(--surface-base)] px-4 py-3 text-sm text-[var(--text-primary)] outline-none placeholder:text-[var(--text-placeholder)] focus:border-[var(--border-focus)] transition-colors"
+                className="w-full h-10 rounded-[var(--radius-md)] border border-[var(--border-default)] bg-[var(--surface-base)] px-4 text-sm text-[var(--text-primary)] outline-none placeholder:text-[var(--text-placeholder)] focus:border-[var(--border-focus)] transition-colors"
               />
               <input
                 type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)}
                 placeholder="新密码（至少 8 位）"
                 className="w-full rounded-[var(--radius-md)] border border-[var(--border-default)] bg-[var(--surface-base)] px-4 py-3 text-sm text-[var(--text-primary)] outline-none placeholder:text-[var(--text-placeholder)] focus:border-[var(--border-focus)] transition-colors"
               />
-              <Button onClick={() => void updatePassword()} loading={changingPassword} variant="secondary" size="sm">
+              <Button onClick={() => void updatePassword()} loading={changingPassword} variant="secondary" size="lg">
                 更新密码
               </Button>
             </div>

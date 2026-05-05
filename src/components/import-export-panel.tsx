@@ -99,26 +99,26 @@ export function ImportExportPanel({ noteId, embedded, onImported }: Props) {
       </div>
 
       <div className="grid gap-3 md:grid-cols-2">
-        <label className="flex items-center gap-3 rounded-[var(--radius-md)] border border-[var(--border-default)] bg-[rgba(255,255,255,0.06)] px-4 py-3 text-sm text-[var(--text-secondary)] cursor-pointer">
+        <label className="flex items-center gap-3 rounded-[var(--radius-md)] border border-[var(--border-default)] bg-[rgba(255,255,255,0.06)] h-10 px-4 text-sm text-[var(--text-secondary)] cursor-pointer">
           <input type="checkbox" checked={aiEnabled} onChange={(e) => setAiEnabled(e.target.checked)} />
           <Sparkles className="h-4 w-4 text-[var(--ai-accent)]" />AI 辅助整理
         </label>
-        <label className="flex items-center gap-3 rounded-[var(--radius-md)] border border-[var(--border-default)] bg-[rgba(255,255,255,0.06)] px-4 py-3 text-sm text-[var(--text-secondary)] cursor-pointer">
+        <label className="flex items-center gap-3 rounded-[var(--radius-md)] border border-[var(--border-default)] bg-[rgba(255,255,255,0.06)] h-10 px-4 text-sm text-[var(--text-secondary)] cursor-pointer">
           <input type="checkbox" checked={keepOriginal} onChange={(e) => setKeepOriginal(e.target.checked)} /> 保留原文
         </label>
         <label className="space-y-2 text-sm text-[var(--text-secondary)]">
           <span>导入方式</span>
-          <select value={mode} onChange={(e) => setMode(e.target.value as "append" | "replace" | "standalone")} className="w-full rounded-[var(--radius-sm)] border border-[var(--border-default)] bg-[var(--surface-base)] px-4 py-3 text-[var(--text-primary)] outline-none focus:border-[var(--border-focus)]">
+          <select value={mode} onChange={(e) => setMode(e.target.value as "append" | "replace" | "standalone")} className="w-full rounded-[var(--radius-sm)] border border-[var(--border-default)] bg-[var(--surface-base)] h-10 px-4 text-[var(--text-primary)] outline-none focus:border-[var(--border-focus)]">
             {noteId ? <><option value="append">追加到当前笔记</option><option value="replace">替换当前笔记</option></> : null}
             <option value="standalone">独立生成新笔记</option>
           </select>
         </label>
-        <label className="flex items-center gap-3 rounded-[var(--radius-md)] border border-[var(--border-default)] bg-[rgba(255,255,255,0.06)] px-4 py-3 text-sm text-[var(--text-secondary)] cursor-pointer">
+        <label className="flex items-center gap-3 rounded-[var(--radius-md)] border border-[var(--border-default)] bg-[rgba(255,255,255,0.06)] h-10 px-4 text-sm text-[var(--text-secondary)] cursor-pointer">
           <input type="checkbox" checked={exportAi} onChange={(e) => setExportAi(e.target.checked)} /> 导出 AI 总结版
         </label>
       </div>
 
-      <textarea value={prompt} onChange={(e) => setPrompt(e.target.value)} placeholder="可选：例如「整理成会议纪要」、「导出成简短汇报稿」、「保留关键知识点」" className="min-h-[96px] w-full rounded-[var(--radius-md)] border border-[var(--border-default)] bg-[var(--surface-base)] px-4 py-3 text-sm text-[var(--text-primary)] outline-none placeholder:text-[var(--text-placeholder)] focus:border-[var(--border-focus)]" />
+      <textarea value={prompt} onChange={(e) => setPrompt(e.target.value)} placeholder="可选：例如「整理成会议纪要」、「导出成简短汇报稿」、「保留关键知识点」" className="min-h-[96px] w-full rounded-[var(--radius-md)] border border-[var(--border-default)] bg-[var(--surface-base)] px-4 py-3 text-sm text-[var(--text-primary)] outline-none placeholder:text-[var(--text-placeholder)] focus:border-[var(--border-focus)] resize-none" />
 
       <div className="flex flex-wrap gap-3">
         <Button size="lg" onClick={() => void handleExport()} loading={loading} icon={<Download className="h-4 w-4" />}>{loading ? "处理中" : noteId ? "导出当前笔记" : "导出备份"}</Button>
@@ -126,7 +126,7 @@ export function ImportExportPanel({ noteId, embedded, onImported }: Props) {
         <input ref={inputRef} type="file" accept="application/json,.json,text/plain,.txt,text/markdown,.md,text/html,.html" className="hidden" onChange={(e) => { const file = e.target.files?.[0]; if (file) void handleImportFile(file); }} />
       </div>
 
-      <div className="rounded-[var(--radius-md)] border border-[var(--border-default)] bg-[rgba(255,255,255,0.05)] px-4 py-3 text-sm whitespace-pre-wrap text-[var(--text-muted)]">{message}</div>
+      <div className="rounded-[var(--radius-md)] border border-[var(--border-default)] bg-[rgba(255,255,255,0.05)] px-4 py-2.5 text-sm whitespace-pre-wrap text-[var(--text-muted)]">{message}</div>
     </div>
   );
 
