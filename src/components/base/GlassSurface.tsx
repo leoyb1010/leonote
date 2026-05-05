@@ -14,10 +14,10 @@ interface GlassSurfaceProps {
 
 const levelStyles: Record<GlassLevel, string> = {
   subtle:
-    "bg-[rgba(18,22,32,0.48)] border-[var(--border-subtle)] backdrop-blur-[8px]",
+    "bg-[var(--surface-subtle-glass)] border-[var(--border-subtle)] backdrop-blur-[8px]",
   base: "bg-[var(--surface-glass)] border-[var(--border-default)] backdrop-blur-[12px]",
   strong:
-    "bg-[rgba(21,25,37,0.88)] border-[var(--border-strong)] backdrop-blur-[16px]",
+    "bg-[var(--surface-strong-glass)] border-[var(--border-strong)] backdrop-blur-[16px]",
 };
 
 export function GlassSurface({

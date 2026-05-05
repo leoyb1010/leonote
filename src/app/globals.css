@@ -92,7 +92,7 @@ select {
 
 /* ===== Utility: Glass Surface (subtle) ===== */
 .glass-subtle {
-  background: rgba(18, 22, 32, 0.48);
+  background: var(--surface-subtle-glass);
   border: 1px solid var(--border-subtle);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);

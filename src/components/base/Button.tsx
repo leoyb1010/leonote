@@ -20,13 +20,13 @@ const variantStyles: Record<ButtonVariant, string> = {
   primary:
     "bg-[var(--primary)] text-white hover:bg-[var(--primary-hover)] active:bg-[var(--primary)]",
   secondary:
-    "bg-transparent text-[var(--text-secondary)] border border-[var(--border-default)] hover:border-[var(--border-strong)] hover:text-[var(--text-primary)] active:bg-[rgba(255,255,255,0.04)]",
+    "bg-transparent text-[var(--text-secondary)] border border-[var(--border-default)] hover:border-[var(--border-strong)] hover:text-[var(--text-primary)] active:bg-[var(--interactive-hover)]",
   ghost:
-    "bg-transparent text-[var(--text-secondary)] hover:bg-[rgba(255,255,255,0.04)] hover:text-[var(--text-primary)] active:bg-[rgba(255,255,255,0.06)]",
+    "bg-transparent text-[var(--text-secondary)] hover:bg-[var(--interactive-hover)] hover:text-[var(--text-primary)] active:bg-[var(--interactive-active)]",
   danger:
     "bg-transparent text-[var(--danger)] hover:bg-[var(--danger-soft)] active:bg-[rgba(242,109,109,0.16)]",
   outline:
-    "bg-transparent text-[var(--text-secondary)] border border-[var(--border-default)] hover:border-[var(--border-strong)] hover:text-[var(--text-primary)] active:bg-[rgba(255,255,255,0.04)]",
+    "bg-transparent text-[var(--text-secondary)] border border-[var(--border-default)] hover:border-[var(--border-strong)] hover:text-[var(--text-primary)] active:bg-[var(--interactive-hover)]",
 };
 
 const sizeStyles: Record<ButtonSize, string> = {
