@@ -13,3 +13,4 @@ prisma/*.backup-*
 prisma/migrations/migration_lock.toml
 *.tsbuildinfo
 .DS_Store
+test-results/
