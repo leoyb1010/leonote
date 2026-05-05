@@ -8,7 +8,7 @@ Leonote 桌面端是一个 Tauri WebView 壳，不负责本地存储。所有数
 
 ## 为什么不是本地数据库
 
-v1.0.0 的目标是四端（Mac / Windows / iOS / 鸿蒙）共享同一数据源。本地数据库方案（SQLite + 本地 Next.js server）会让多端同步变成需要解决的问题，而不是已经解决的问题。
+v1.1.0 的目标是四端（Mac / Windows / iOS / 鸿蒙）共享同一数据源。本地数据库方案（SQLite + 本地 Next.js server）会让多端同步变成需要解决的问题，而不是已经解决的问题。
 
 WebView 壳方案让桌面端成为 Web 版的"原生窗口"，立即可用。
 
