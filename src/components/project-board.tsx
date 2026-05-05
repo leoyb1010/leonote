@@ -99,7 +99,7 @@ export function ProjectBoard({ initialProjects, signedIn }: { initialProjects: P
             <div className="text-xs font-semibold text-[var(--text-muted)]">New Project</div>
             <h2 className="mt-2 text-lg font-semibold text-[var(--text-primary)]">新建项目</h2>
           </div>
-          <span className="rounded-[var(--radius-pill)] border border-[var(--border-default)] bg-[rgba(255,255,255,0.05)] px-3 py-1 text-xs text-[var(--text-muted)]">看板视图</span>
+          <span className="rounded-[var(--radius-pill)] border border-[var(--border-default)] bg-[var(--interactive-active)] px-3 py-1 text-xs text-[var(--text-muted)]">看板视图</span>
         </div>
         <div className="mt-4 grid gap-3 md:grid-cols-[minmax(0,1fr)_minmax(280px,0.9fr)_auto]">
           <input value={name} onChange={(e) => setName(e.target.value)} placeholder="项目名称" className="w-full h-10 rounded-[var(--radius-md)] border border-[var(--border-default)] bg-[var(--surface-base)] px-4 text-sm text-[var(--text-primary)] outline-none placeholder:text-[var(--text-placeholder)] focus:border-[var(--border-focus)] transition-colors" />
@@ -109,7 +109,7 @@ export function ProjectBoard({ initialProjects, signedIn }: { initialProjects: P
       </GlassPanel>
 
       {message && (
-        <div className="rounded-[var(--radius-md)] border border-[var(--border-default)] bg-[rgba(255,255,255,0.04)] px-4 py-3 text-sm text-[var(--text-muted)]">{message}</div>
+        <div className="rounded-[var(--radius-md)] border border-[var(--border-default)] bg-[var(--interactive-hover)] px-4 py-3 text-sm text-[var(--text-muted)]">{message}</div>
       )}
 
       <motion.div layout variants={staggerContainer} initial="initial" animate="animate" className="grid gap-4 xl:grid-cols-3">
@@ -139,7 +139,7 @@ export function ProjectBoard({ initialProjects, signedIn }: { initialProjects: P
                           <div className="text-xs font-semibold text-[var(--text-muted)]">{statusLabel}</div>
                           <h2 className="mt-2 text-lg font-semibold text-[var(--text-primary)]">{project.name}</h2>
                         </div>
-                        <span className="inline-flex h-10 min-w-10 items-center justify-center rounded-2xl border border-[var(--border-default)] bg-[rgba(255,255,255,0.06)] px-3 text-sm text-[var(--text-secondary)]">{project.noteCount}</span>
+                        <span className="inline-flex h-10 min-w-10 items-center justify-center rounded-2xl border border-[var(--border-default)] bg-[var(--interactive-active)] px-3 text-sm text-[var(--text-secondary)]">{project.noteCount}</span>
                       </div>
                       <p className="mt-3 text-sm text-[var(--text-secondary)] leading-relaxed">{project.description || "暂未填写项目简介。"}</p>
                       {project.updatedAt && <div className="mt-4 text-xs text-[var(--text-muted)]">最近活跃：{new Date(project.updatedAt).toLocaleString("zh-CN")}</div>}
@@ -160,7 +160,7 @@ export function ProjectBoard({ initialProjects, signedIn }: { initialProjects: P
                         <div key={note.id} draggable onDragStart={(e) => { e.dataTransfer.setData("text/plain", note.id); setDraggingNoteId(note.id); setDraggingProjectId(project.id); }} onDragEnd={() => { setDraggingNoteId(null); setDraggingProjectId(null); setDropTargetId(null); }} className={draggingNoteId === note.id ? "opacity-60" : "opacity-100"}>
                           <NoteCard note={note} compact className="cursor-grab active:cursor-grabbing" />
                         </div>
-                      )) : <div className="rounded-[var(--radius-sm)] border border-[var(--border-default)] bg-[rgba(255,255,255,0.04)] px-3 py-3 text-xs text-[var(--text-muted)]">当前项目还没有可拖动的最近笔记。</div>}
+                      )) : <div className="rounded-[var(--radius-sm)] border border-[var(--border-default)] bg-[var(--interactive-hover)] px-3 py-3 text-xs text-[var(--text-muted)]">当前项目还没有可拖动的最近笔记。</div>}
                     </div>
                   </>
                 )}

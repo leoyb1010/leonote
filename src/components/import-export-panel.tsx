@@ -99,11 +99,11 @@ export function ImportExportPanel({ noteId, embedded, onImported }: Props) {
       </div>
 
       <div className="grid gap-3 md:grid-cols-2">
-        <label className="flex items-center gap-3 rounded-[var(--radius-md)] border border-[var(--border-default)] bg-[rgba(255,255,255,0.06)] h-10 px-4 text-sm text-[var(--text-secondary)] cursor-pointer">
+        <label className="flex items-center gap-3 rounded-[var(--radius-md)] border border-[var(--border-default)] bg-[var(--interactive-active)] h-10 px-4 text-sm text-[var(--text-secondary)] cursor-pointer">
           <input type="checkbox" checked={aiEnabled} onChange={(e) => setAiEnabled(e.target.checked)} />
           <Sparkles className="h-4 w-4 text-[var(--ai-accent)]" />AI 辅助整理
         </label>
-        <label className="flex items-center gap-3 rounded-[var(--radius-md)] border border-[var(--border-default)] bg-[rgba(255,255,255,0.06)] h-10 px-4 text-sm text-[var(--text-secondary)] cursor-pointer">
+        <label className="flex items-center gap-3 rounded-[var(--radius-md)] border border-[var(--border-default)] bg-[var(--interactive-active)] h-10 px-4 text-sm text-[var(--text-secondary)] cursor-pointer">
           <input type="checkbox" checked={keepOriginal} onChange={(e) => setKeepOriginal(e.target.checked)} /> 保留原文
         </label>
         <label className="space-y-2 text-sm text-[var(--text-secondary)]">
@@ -113,7 +113,7 @@ export function ImportExportPanel({ noteId, embedded, onImported }: Props) {
             <option value="standalone">独立生成新笔记</option>
           </select>
         </label>
-        <label className="flex items-center gap-3 rounded-[var(--radius-md)] border border-[var(--border-default)] bg-[rgba(255,255,255,0.06)] h-10 px-4 text-sm text-[var(--text-secondary)] cursor-pointer">
+        <label className="flex items-center gap-3 rounded-[var(--radius-md)] border border-[var(--border-default)] bg-[var(--interactive-active)] h-10 px-4 text-sm text-[var(--text-secondary)] cursor-pointer">
           <input type="checkbox" checked={exportAi} onChange={(e) => setExportAi(e.target.checked)} /> 导出 AI 总结版
         </label>
       </div>
@@ -126,7 +126,7 @@ export function ImportExportPanel({ noteId, embedded, onImported }: Props) {
         <input ref={inputRef} type="file" accept="application/json,.json,text/plain,.txt,text/markdown,.md,text/html,.html" className="hidden" onChange={(e) => { const file = e.target.files?.[0]; if (file) void handleImportFile(file); }} />
       </div>
 
-      <div className="rounded-[var(--radius-md)] border border-[var(--border-default)] bg-[rgba(255,255,255,0.05)] px-4 py-2.5 text-sm whitespace-pre-wrap text-[var(--text-muted)]">{message}</div>
+      <div className="rounded-[var(--radius-md)] border border-[var(--border-default)] bg-[var(--interactive-active)] px-4 py-2.5 text-sm whitespace-pre-wrap text-[var(--text-muted)]">{message}</div>
     </div>
   );
 

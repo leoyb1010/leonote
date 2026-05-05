@@ -270,7 +270,7 @@ export function EnhancedEditor({ initialNote }: { initialNote?: NoteShape }) {
                 type="button"
                 onClick={() => void insertSummary()}
                 disabled={summary.status === "inserting"}
-                className="inline-flex items-center gap-2 rounded-full border border-[var(--border-default)] px-3 py-1.5 text-xs text-[var(--text-primary)] transition hover:bg-[rgba(255,255,255,0.04)] disabled:opacity-60"
+                className="inline-flex items-center gap-2 rounded-full border border-[var(--border-default)] px-3 py-1.5 text-xs text-[var(--text-primary)] transition hover:bg-[var(--interactive-hover)] disabled:opacity-60"
               >
                 <Sparkles className="h-3 w-3" />
                 {summary.status === "inserting" ? "插入中" : "插入"}
@@ -312,21 +312,21 @@ export function EnhancedEditor({ initialNote }: { initialNote?: NoteShape }) {
           <div className="flex items-center rounded-md border border-[var(--border-default)] mr-2">
             <button
               onClick={() => setViewMode("write")}
-              className={cn("p-1.5 transition-colors rounded-l-md", viewMode === "write" ? "bg-[rgba(255,255,255,0.06)] text-[var(--text-primary)]" : "text-[var(--text-muted)] hover:text-[var(--text-primary)]")}
+              className={cn("p-1.5 transition-colors rounded-l-md", viewMode === "write" ? "bg-[var(--interactive-active)] text-[var(--text-primary)]" : "text-[var(--text-muted)] hover:text-[var(--text-primary)]")}
               title="写作"
             >
               <PenLine size={14} />
             </button>
             <button
               onClick={() => setViewMode("split")}
-              className={cn("p-1.5 transition-colors hidden lg:block", viewMode === "split" ? "bg-[rgba(255,255,255,0.06)] text-[var(--text-primary)]" : "text-[var(--text-muted)] hover:text-[var(--text-primary)]")}
+              className={cn("p-1.5 transition-colors hidden lg:block", viewMode === "split" ? "bg-[var(--interactive-active)] text-[var(--text-primary)]" : "text-[var(--text-muted)] hover:text-[var(--text-primary)]")}
               title="分屏"
             >
               <Columns2 size={14} />
             </button>
             <button
               onClick={() => setViewMode("preview")}
-              className={cn("p-1.5 transition-colors rounded-r-md", viewMode === "preview" ? "bg-[rgba(255,255,255,0.06)] text-[var(--text-primary)]" : "text-[var(--text-muted)] hover:text-[var(--text-primary)]")}
+              className={cn("p-1.5 transition-colors rounded-r-md", viewMode === "preview" ? "bg-[var(--interactive-active)] text-[var(--text-primary)]" : "text-[var(--text-muted)] hover:text-[var(--text-primary)]")}
               title="预览"
             >
               <Eye size={14} />
@@ -345,7 +345,7 @@ export function EnhancedEditor({ initialNote }: { initialNote?: NoteShape }) {
           <div className="relative">
             <button
               onClick={() => setShowMore(!showMore)}
-              className="p-1.5 rounded-md text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[rgba(255,255,255,0.04)] transition-colors"
+              className="p-1.5 rounded-md text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--interactive-hover)] transition-colors"
             >
               <MoreHorizontal size={14} />
             </button>
@@ -355,7 +355,7 @@ export function EnhancedEditor({ initialNote }: { initialNote?: NoteShape }) {
                 <div className="absolute right-0 top-full mt-1 z-20 w-48 rounded-lg border border-[var(--border-strong)] bg-[var(--surface-2)] py-1 shadow-[var(--shadow-md)]">
                   <button
                     onClick={() => { toggleAutoSave(); setShowMore(false); }}
-                    className="w-full px-3 py-2 text-left text-xs text-[var(--text-secondary)] hover:bg-[rgba(255,255,255,0.04)] transition-colors"
+                    className="w-full px-3 py-2 text-left text-xs text-[var(--text-secondary)] hover:bg-[var(--interactive-hover)] transition-colors"
                   >
                     自动保存：{autoSaveEnabled ? "开" : "关"}
                   </button>

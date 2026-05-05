@@ -89,7 +89,7 @@ export function AISettingsPanel() {
         </label>
       </div>
 
-      <label className="flex items-center gap-3 rounded-[var(--radius-md)] border border-[var(--border-default)] bg-[rgba(255,255,255,0.06)] px-4 py-2.5 text-sm text-[var(--text-secondary)] cursor-pointer">
+      <label className="flex items-center gap-3 rounded-[var(--radius-md)] border border-[var(--border-default)] bg-[var(--interactive-active)] px-4 py-2.5 text-sm text-[var(--text-secondary)] cursor-pointer">
         <input type="checkbox" checked={enableAutoOrganize} onChange={(e) => setEnableAutoOrganize(e.target.checked)} />
         导入笔记 / 链接时自动调用 AI 做整理、摘要、标签、项目建议
       </label>
@@ -98,7 +98,7 @@ export function AISettingsPanel() {
         <Button size="lg" onClick={() => void save()} loading={loading}>保存 AI 配置</Button>
       </div>
 
-      <div className="rounded-[var(--radius-md)] border border-[var(--border-default)] bg-[rgba(255,255,255,0.05)] px-4 py-2.5 text-sm whitespace-pre-wrap text-[var(--text-muted)]">{message}</div>
+      <div className="rounded-[var(--radius-md)] border border-[var(--border-default)] bg-[var(--interactive-active)] px-4 py-2.5 text-sm whitespace-pre-wrap text-[var(--text-muted)]">{message}</div>
     </GlassPanel>
   );
 }

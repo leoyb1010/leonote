@@ -72,7 +72,7 @@ export function CommandPalette() {
         <div className="fixed inset-0 z-[100] flex items-start justify-center pt-[15vh]">
           <motion.div
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.15 }}
-            className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setOpen(false)}
+            className="absolute inset-0 bg-[var(--overlay-scrim)] backdrop-blur-sm" onClick={() => setOpen(false)}
           />
           <motion.div
             initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -4 }} transition={{ duration: 0.18, ease: [0.2, 0, 0, 1] }}
@@ -89,7 +89,7 @@ export function CommandPalette() {
               ) : (
                 filtered.map((cmd, idx) => (
                   <button key={cmd.id} onClick={() => { cmd.action(); setOpen(false); }} onMouseEnter={() => setSelectedIndex(idx)}
-                    className={`w-full flex items-center gap-3 px-4 py-2.5 text-left transition-colors ${idx === selectedIndex ? "bg-[rgba(255,255,255,0.06)] text-[var(--text-primary)]" : "text-[var(--text-secondary)] hover:bg-[rgba(255,255,255,0.04)]"}`}
+                    className={`w-full flex items-center gap-3 px-4 py-2.5 text-left transition-colors ${idx === selectedIndex ? "bg-[var(--interactive-active)] text-[var(--text-primary)]" : "text-[var(--text-secondary)] hover:bg-[var(--interactive-hover)]"}`}
                   >
                     <span className="shrink-0">{cmd.icon}</span>
                     <div className="flex-1 min-w-0"><div className="text-sm font-medium">{cmd.label}</div>{cmd.description && <div className="text-xs text-[var(--text-muted)]">{cmd.description}</div>}</div>

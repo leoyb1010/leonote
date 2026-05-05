@@ -81,7 +81,7 @@ export function AnimatedSidebar({ current = "/" }: AnimatedSidebarProps) {
                       "group relative flex items-center gap-3 overflow-hidden rounded-[var(--radius-md)] px-3 py-3 text-sm transition duration-300",
                       active
                         ? "bg-[var(--primary-soft)] text-[var(--primary)]"
-                        : "text-[var(--text-secondary)] hover:bg-[rgba(255,255,255,0.06)] hover:text-[var(--text-primary)]",
+                        : "text-[var(--text-secondary)] hover:bg-[var(--interactive-active)] hover:text-[var(--text-primary)]",
                     )}
                   >
                     {item.pulse && index === memoryIndex ? (

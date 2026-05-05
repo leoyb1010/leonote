@@ -62,17 +62,17 @@ export function AccountCenter() {
         {user ? (
           <>
             <div className="mt-3 flex items-center gap-3">
-              <div className="inline-flex h-12 w-12 items-center justify-center rounded-2xl border border-[var(--border-default)] bg-[rgba(255,255,255,0.06)] text-[var(--ai-accent)]"><User2 className="h-5 w-5" /></div>
+              <div className="inline-flex h-12 w-12 items-center justify-center rounded-2xl border border-[var(--border-default)] bg-[var(--interactive-active)] text-[var(--ai-accent)]"><User2 className="h-5 w-5" /></div>
               <div>
                 <div className="text-xl font-semibold text-[var(--text-primary)]">{user.name}</div>
                 <div className="mt-1 text-sm text-[var(--text-muted)]">{user.email}</div>
               </div>
             </div>
             <div className="mt-4 grid grid-cols-2 gap-3 md:grid-cols-4">
-              <div className="rounded-[var(--radius-md)] border border-[var(--border-default)] bg-[rgba(255,255,255,0.06)] px-4 py-3"><div className="text-xs text-[var(--text-muted)]">账号状态</div><div className="mt-1 text-sm font-medium text-[var(--text-primary)]">正常</div></div>
-              <div className="rounded-[var(--radius-md)] border border-[var(--border-default)] bg-[rgba(255,255,255,0.06)] px-4 py-3"><div className="text-xs text-[var(--text-muted)]">登录方式</div><div className="mt-1 text-sm font-medium text-[var(--text-primary)]">邮箱 + 密码</div></div>
-              <div className="rounded-[var(--radius-md)] border border-[var(--border-default)] bg-[rgba(255,255,255,0.06)] px-4 py-3"><div className="text-xs text-[var(--text-muted)]">数据模式</div><div className="mt-1 text-sm font-medium text-[var(--text-primary)]">本地单人</div></div>
-              <div className="rounded-[var(--radius-md)] border border-[var(--border-default)] bg-[rgba(255,255,255,0.06)] px-4 py-3"><div className="text-xs text-[var(--text-muted)]">安全</div><div className="mt-1 text-sm font-medium text-[var(--text-primary)] inline-flex items-center gap-1"><Shield className="h-3.5 w-3.5 text-[var(--ai-accent)]" />签名会话</div></div>
+              <div className="rounded-[var(--radius-md)] border border-[var(--border-default)] bg-[var(--interactive-active)] px-4 py-3"><div className="text-xs text-[var(--text-muted)]">账号状态</div><div className="mt-1 text-sm font-medium text-[var(--text-primary)]">正常</div></div>
+              <div className="rounded-[var(--radius-md)] border border-[var(--border-default)] bg-[var(--interactive-active)] px-4 py-3"><div className="text-xs text-[var(--text-muted)]">登录方式</div><div className="mt-1 text-sm font-medium text-[var(--text-primary)]">邮箱 + 密码</div></div>
+              <div className="rounded-[var(--radius-md)] border border-[var(--border-default)] bg-[var(--interactive-active)] px-4 py-3"><div className="text-xs text-[var(--text-muted)]">数据模式</div><div className="mt-1 text-sm font-medium text-[var(--text-primary)]">本地单人</div></div>
+              <div className="rounded-[var(--radius-md)] border border-[var(--border-default)] bg-[var(--interactive-active)] px-4 py-3"><div className="text-xs text-[var(--text-muted)]">安全</div><div className="mt-1 text-sm font-medium text-[var(--text-primary)] inline-flex items-center gap-1"><Shield className="h-3.5 w-3.5 text-[var(--ai-accent)]" />签名会话</div></div>
             </div>
             <div className="mt-3 space-y-1 text-sm text-[var(--text-muted)]">
               <div>创建时间：{new Date(user.createdAt).toLocaleString("zh-CN")}</div>
@@ -85,7 +85,7 @@ export function AccountCenter() {
             </div>
           </>
         ) : (
-          <div className="mt-3 rounded-[var(--radius-md)] border border-[var(--border-default)] bg-[rgba(255,255,255,0.05)] px-4 py-4 text-sm text-[var(--text-muted)]">
+          <div className="mt-3 rounded-[var(--radius-md)] border border-[var(--border-default)] bg-[var(--interactive-active)] px-4 py-4 text-sm text-[var(--text-muted)]">
             <div>{message}</div>
             {needLogin ? <Link href="/login" className={buttonClass("primary", "lg", "mt-3")}>去登录</Link> : null}
           </div>
@@ -94,7 +94,7 @@ export function AccountCenter() {
       {!needLogin && (
         <section className="space-y-3">
           {items.map((item) => (
-            <Link key={item.label} href={item.href} className="block rounded-[var(--radius-md)] border border-[var(--border-default)] bg-[rgba(255,255,255,0.05)] px-4 py-4 text-sm text-[var(--text-secondary)] transition hover:-translate-y-px hover:bg-[rgba(255,255,255,0.08)]">
+            <Link key={item.label} href={item.href} className="block rounded-[var(--radius-md)] border border-[var(--border-default)] bg-[var(--interactive-active)] px-4 py-4 text-sm text-[var(--text-secondary)] transition hover:-translate-y-px hover:bg-[rgba(255,255,255,0.08)]">
               {item.label}
             </Link>
           ))}

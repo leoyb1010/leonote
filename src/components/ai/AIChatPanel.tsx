@@ -138,13 +138,13 @@ export function AIChatPanel({ noteId, linkedMemories = [] }: { noteId: string; l
 
           <motion.div variants={staggerContainer} initial="initial" animate="animate" className="space-y-3">
             {messages.length === 0 ? (
-              <div className="rounded-[var(--radius-md)] border border-[var(--border-default)] bg-[rgba(255,255,255,0.04)] px-4 py-4 text-sm text-[var(--text-muted)] leading-relaxed">
+              <div className="rounded-[var(--radius-md)] border border-[var(--border-default)] bg-[var(--interactive-hover)] px-4 py-4 text-sm text-[var(--text-muted)] leading-relaxed">
                 可以直接问：这篇笔记的核心决策是什么？它和我过往哪些长期记忆冲突或一致？
               </div>
             ) : (
               messages.map((chat) => (
                 <motion.div key={chat.id} variants={staggerItem} className={cn("rounded-[var(--radius-md)] border p-4 text-sm leading-relaxed",
-                  chat.role === "assistant" ? "border-[var(--ai-soft)] bg-[var(--surface-raised)] text-[var(--text-primary)]" : "border-[var(--border-default)] bg-[rgba(255,255,255,0.04)] text-[var(--text-secondary)]")}>
+                  chat.role === "assistant" ? "border-[var(--ai-soft)] bg-[var(--surface-raised)] text-[var(--text-primary)]" : "border-[var(--border-default)] bg-[var(--interactive-hover)] text-[var(--text-secondary)]")}>
                   <div className="mb-2 flex items-center gap-2 text-xs uppercase tracking-wider text-[var(--text-muted)]">
                     {chat.role === "assistant" ? <Sparkles size={14} className="text-[var(--ai-accent)]" /> : null}
                     {chat.role === "assistant" ? "Leonote AI" : "You"}
@@ -171,7 +171,7 @@ export function AIChatPanel({ noteId, linkedMemories = [] }: { noteId: string; l
           </div>
 
           {message && (
-            <div className="rounded-[var(--radius-md)] border border-[var(--border-default)] bg-[rgba(255,255,255,0.04)] px-4 py-3 text-sm whitespace-pre-wrap text-[var(--text-muted)]">{message}</div>
+            <div className="rounded-[var(--radius-md)] border border-[var(--border-default)] bg-[var(--interactive-hover)] px-4 py-3 text-sm whitespace-pre-wrap text-[var(--text-muted)]">{message}</div>
           )}
         </div>
       </GlassPanel>

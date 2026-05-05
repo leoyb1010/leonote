@@ -32,8 +32,8 @@ export function NoteRow({ note, href, selected = false, className }: NoteRowProp
       className={cn(
         "group relative block rounded-[var(--radius-md)] border border-transparent px-3.5 py-3",
         "transition-[background-color,border-color] duration-[var(--duration-quick)]",
-        "hover:bg-[rgba(255,255,255,0.03)]",
-        selected && "bg-[rgba(255,255,255,0.045)] before:absolute before:left-0 before:top-3 before:bottom-3 before:w-[2px] before:rounded-r-full before:bg-[var(--primary)]",
+        "hover:bg-[var(--interactive-hover)]",
+        selected && "bg-[var(--interactive-selected)] before:absolute before:left-0 before:top-3 before:bottom-3 before:w-[2px] before:rounded-r-full before:bg-[var(--primary)]",
         className,
       )}
     >
@@ -54,7 +54,7 @@ export function NoteRow({ note, href, selected = false, className }: NoteRowProp
 
           <div className="mt-2 flex min-w-0 items-center gap-2 text-xs text-[var(--text-faint)]">
             {note.project?.name ? (
-              <span className="truncate rounded-full bg-[rgba(255,255,255,0.035)] px-2 py-0.5 text-[var(--text-secondary)]">
+              <span className="truncate rounded-full bg-[var(--interactive-hover)] px-2 py-0.5 text-[var(--text-secondary)]">
                 {note.project.name}
               </span>
             ) : null}

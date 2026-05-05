@@ -77,10 +77,10 @@ export function DesktopSidebar({
             href={item.href}
             className={cn(
               "relative flex items-center gap-3 rounded-md px-2.5 py-2 text-sm transition-[background-color,color] duration-[var(--duration-quick)]",
-              "hover:bg-[rgba(255,255,255,0.035)]",
+              "hover:bg-[var(--interactive-hover)]",
               collapsed && "justify-center px-0",
               isActive(item.href)
-                ? "bg-[rgba(255,255,255,0.045)] text-[var(--text-primary)] before:absolute before:left-0 before:top-[22%] before:bottom-[22%] before:w-[2px] before:rounded-r-full before:bg-[var(--primary)]"
+                ? "bg-[var(--interactive-selected)] text-[var(--text-primary)] before:absolute before:left-0 before:top-[22%] before:bottom-[22%] before:w-[2px] before:rounded-r-full before:bg-[var(--primary)]"
                 : "text-[var(--text-secondary)]"
             )}
           >
@@ -98,10 +98,10 @@ export function DesktopSidebar({
             href={item.href}
             className={cn(
               "relative flex items-center gap-3 rounded-md px-2.5 py-2 text-sm transition-[background-color,color] duration-[var(--duration-quick)]",
-              "hover:bg-[rgba(255,255,255,0.035)]",
+              "hover:bg-[var(--interactive-hover)]",
               collapsed && "justify-center px-0",
               isActive(item.href)
-                ? "bg-[rgba(255,255,255,0.045)] text-[var(--text-primary)] before:absolute before:left-0 before:top-[22%] before:bottom-[22%] before:w-[2px] before:rounded-r-full before:bg-[var(--primary)]"
+                ? "bg-[var(--interactive-selected)] text-[var(--text-primary)] before:absolute before:left-0 before:top-[22%] before:bottom-[22%] before:w-[2px] before:rounded-r-full before:bg-[var(--primary)]"
                 : "text-[var(--text-secondary)]"
             )}
           >
@@ -114,7 +114,7 @@ export function DesktopSidebar({
           href="/profile"
           className={cn(
             "flex items-center gap-3 rounded-md px-2.5 py-2 text-sm transition-colors duration-[var(--duration-quick)]",
-            "hover:bg-[rgba(255,255,255,0.035)]",
+            "hover:bg-[var(--interactive-hover)]",
             collapsed && "justify-center px-0",
             "text-[var(--text-muted)]"
           )}
@@ -130,7 +130,7 @@ export function DesktopSidebar({
           onClick={onToggle}
           className={cn(
             "w-full flex items-center gap-3 rounded-md px-2.5 py-2 text-sm transition-colors duration-[var(--duration-quick)]",
-            "hover:bg-[rgba(255,255,255,0.035)] text-[var(--text-muted)] hover:text-[var(--text-primary)]",
+            "hover:bg-[var(--interactive-hover)] text-[var(--text-muted)] hover:text-[var(--text-primary)]",
             collapsed && "justify-center px-0"
           )}
           aria-label={collapsed ? "展开侧栏" : "收起侧栏"}

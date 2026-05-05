@@ -39,7 +39,7 @@ export function ServerHomeClient({ data, signedIn }: { data: HomeViewData | null
           <p className="mt-3 max-w-2xl text-sm leading-7 text-[var(--text-muted)]">Leonote 现在把笔记、项目和长期记忆沉淀在一个更安静的深色工作流里。写作、检索、整理，都更有呼吸感。</p>
           <div className="mt-5 grid grid-cols-2 gap-3 md:grid-cols-4">
             {quickActions.map((item) => (
-              <Link key={item.label} href={item.href} className="rounded-[var(--radius-md)] border border-[var(--border-default)] bg-[rgba(255,255,255,0.06)] px-3 py-4 text-center text-sm text-[var(--text-secondary)] transition hover:-translate-y-[1px] hover:bg-[rgba(255,255,255,0.10)] hover:text-white">
+              <Link key={item.label} href={item.href} className="rounded-[var(--radius-md)] border border-[var(--border-default)] bg-[var(--interactive-active)] px-3 py-4 text-center text-sm text-[var(--text-secondary)] transition hover:-translate-y-[1px] hover:bg-[rgba(255,255,255,0.10)] hover:text-[var(--text-primary)]">
                 {item.label}
               </Link>
             ))}
@@ -62,7 +62,7 @@ export function ServerHomeClient({ data, signedIn }: { data: HomeViewData | null
           {data.projects.length ? data.projects.map((project) => (
             <GlassPanel key={project.id} blur="lg" className="rounded-[var(--radius-lg)] p-4">
               <Link href={`/projects/${project.id}`}>
-                <div className="flex items-center justify-between gap-3"><h3 className="text-sm font-semibold text-[var(--text-primary)]">{project.name}</h3><span className="rounded-full border border-[var(--border-default)] bg-[rgba(255,255,255,0.05)] px-3 py-1 text-xs text-[var(--text-muted)]">{project.noteCount} 条</span></div>
+                <div className="flex items-center justify-between gap-3"><h3 className="text-sm font-semibold text-[var(--text-primary)]">{project.name}</h3><span className="rounded-full border border-[var(--border-default)] bg-[var(--interactive-active)] px-3 py-1 text-xs text-[var(--text-muted)]">{project.noteCount} 条</span></div>
                 <p className="mt-3 text-sm leading-7 text-[var(--text-muted)]">{project.description || "继续推进这个项目的记录与沉淀。"}</p>
                 <div className="mt-4 text-xs text-[var(--text-muted)]">最近活跃：{new Date(project.updatedAt).toLocaleString("zh-CN")}</div>
               </Link>
@@ -87,7 +87,7 @@ export function ServerHomeClient({ data, signedIn }: { data: HomeViewData | null
           <div className="inline-flex items-center gap-2 text-sm text-[var(--text-primary)]"><BrainCircuit className="h-4 w-4 text-[var(--ai-accent)]" /> 常用标签 / Memory cues</div>
           <div className="mt-4 flex flex-wrap gap-2">
             {(data.tags.length ? data.tags : ["暂无标签"]).map((tag, index) => (
-              <Link key={tag} href={tag === "暂无标签" ? "/notes" : `/notes?tag=${encodeURIComponent(tag)}`} className={`rounded-full px-4 py-2 text-sm ${index === 0 ? "bg-[var(--primary)] text-[var(--text-primary)]" : "border border-[var(--border-default)] bg-[rgba(255,255,255,0.06)] text-[var(--text-secondary)]"}`}>
+              <Link key={tag} href={tag === "暂无标签" ? "/notes" : `/notes?tag=${encodeURIComponent(tag)}`} className={`rounded-full px-4 py-2 text-sm ${index === 0 ? "bg-[var(--primary)] text-[var(--text-primary)]" : "border border-[var(--border-default)] bg-[var(--interactive-active)] text-[var(--text-secondary)]"}`}>
                 {tag}
               </Link>
             ))}

@@ -227,7 +227,7 @@ export function TodayPage({ data, signedIn }: TodayPageProps) {
               <Link
                 key={proj.id}
                 href={`/projects/${proj.id}`}
-                className="flex items-center justify-between gap-4 px-3.5 py-3 transition-colors hover:bg-[rgba(255,255,255,0.03)]"
+                className="flex items-center justify-between gap-4 px-3.5 py-3 transition-colors hover:bg-[var(--interactive-hover)]"
               >
                 <div className="flex items-center gap-2.5 min-w-0">
                   <FolderKanban size={14} className="text-[var(--text-muted)] shrink-0" />

@@ -49,7 +49,7 @@ export function LoginForm() {
           {loading ? "处理中" : mode === "login" ? "登录" : "注册"}
         </Button>
       </div>
-      <p className="mt-4 rounded-[var(--radius-sm)] border border-[var(--border-default)] bg-[rgba(255,255,255,0.05)] px-3 py-3 text-center text-xs text-[var(--text-muted)]">{message}</p>
+      <p className="mt-4 rounded-[var(--radius-sm)] border border-[var(--border-default)] bg-[var(--interactive-active)] px-3 py-3 text-center text-xs text-[var(--text-muted)]">{message}</p>
     </GlassPanel>
   );
 }

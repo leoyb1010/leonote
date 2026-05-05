@@ -77,15 +77,15 @@ export function ServerSearchView() {
           <input aria-label="搜索笔记" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="搜索标题、正文、摘要、标签或项目" className="w-full bg-transparent text-sm text-[var(--text-primary)] outline-none placeholder:text-[var(--text-placeholder)]" />
         </div>
         <div className="flex flex-wrap gap-2">
-          <label className="flex items-center gap-2 rounded-[var(--radius-sm)] border border-[var(--border-default)] bg-[rgba(255,255,255,0.04)] px-3 py-2 text-sm text-[var(--text-secondary)]">
+          <label className="flex items-center gap-2 rounded-[var(--radius-sm)] border border-[var(--border-default)] bg-[var(--interactive-hover)] px-3 py-2 text-sm text-[var(--text-secondary)]">
             <Filter size={14} className="text-[var(--text-muted)]" />
             <select value={projectId} onChange={(e) => setProjectId(e.target.value)} className="bg-transparent outline-none text-[var(--text-secondary)]">
               <option value="">全部项目</option>
               {projects.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
             </select>
           </label>
-          <button type="button" onClick={() => setFavoriteOnly((v) => !v)} className={`rounded-[var(--radius-sm)] px-3 py-2 text-sm transition-colors ${favoriteOnly ? "bg-[var(--primary)] text-white" : "border border-[var(--border-default)] bg-[rgba(255,255,255,0.04)] text-[var(--text-secondary)]"}`}>仅看收藏</button>
-          <button type="button" onClick={() => setArchivedOnly((v) => !v)} className={`rounded-[var(--radius-sm)] px-3 py-2 text-sm transition-colors ${archivedOnly ? "bg-[var(--primary)] text-white" : "border border-[var(--border-default)] bg-[rgba(255,255,255,0.04)] text-[var(--text-secondary)]"}`}>仅看归档</button>
+          <button type="button" onClick={() => setFavoriteOnly((v) => !v)} className={`rounded-[var(--radius-sm)] px-3 py-2 text-sm transition-colors ${favoriteOnly ? "bg-[var(--primary)] text-white" : "border border-[var(--border-default)] bg-[var(--interactive-hover)] text-[var(--text-secondary)]"}`}>仅看收藏</button>
+          <button type="button" onClick={() => setArchivedOnly((v) => !v)} className={`rounded-[var(--radius-sm)] px-3 py-2 text-sm transition-colors ${archivedOnly ? "bg-[var(--primary)] text-white" : "border border-[var(--border-default)] bg-[var(--interactive-hover)] text-[var(--text-secondary)]"}`}>仅看归档</button>
         </div>
       </div>
 

@@ -68,7 +68,7 @@ export function MemoryFactsPanel() {
                   "rounded-[var(--radius-pill)] border px-3 py-2 text-xs transition",
                   active
                     ? "border-[var(--ai-soft)] bg-[var(--ai-soft)] text-[var(--ai-accent)]"
-                    : "border-[var(--border-default)] bg-[rgba(255,255,255,0.06)] text-[var(--text-muted)] hover:bg-[rgba(255,255,255,0.08)] hover:text-[var(--text-primary)]"
+                    : "border-[var(--border-default)] bg-[var(--interactive-active)] text-[var(--text-muted)] hover:bg-[rgba(255,255,255,0.08)] hover:text-[var(--text-primary)]"
                 )}
               >
                 {type}
@@ -100,7 +100,7 @@ export function MemoryFactsPanel() {
             </AnimatePresence>
           </motion.div>
         ) : (
-          <div className="rounded-[var(--radius-md)] border border-[var(--border-default)] bg-[rgba(255,255,255,0.04)] px-4 py-4 text-sm text-[var(--text-muted)]">
+          <div className="rounded-[var(--radius-md)] border border-[var(--border-default)] bg-[var(--interactive-hover)] px-4 py-4 text-sm text-[var(--text-muted)]">
             {message}
           </div>
         )}
