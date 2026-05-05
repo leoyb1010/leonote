@@ -12,6 +12,7 @@ interface ButtonProps extends Omit<HTMLMotionProps<"button">, "children"> {
   size?: ButtonSize;
   loading?: boolean;
   icon?: React.ReactNode;
+  asChild?: boolean;
   children: React.ReactNode;
 }
 
@@ -34,26 +35,39 @@ const sizeStyles: Record<ButtonSize, string> = {
   lg: "h-10 px-5 text-sm rounded-md gap-2",
 };
 
+export function buttonClass(variant: ButtonVariant, size: ButtonSize, className?: string) {
+  return cn(
+    "inline-flex items-center justify-center font-medium transition-[background-color,border-color,color,opacity] duration-[var(--duration-quick)] cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed",
+    variantStyles[variant],
+    sizeStyles[size],
+    className
+  );
+}
+
 export function Button({
   variant = "primary",
   size = "md",
   loading = false,
   icon,
+  asChild = false,
   children,
   className,
   disabled,
   ...props
 }: ButtonProps) {
+  const classes = buttonClass(variant, size, className);
+
+  if (asChild && React.isValidElement(children)) {
+    return React.cloneElement(children as React.ReactElement<{ className?: string }>, {
+      className: cn(classes, (children.props as { className?: string }).className),
+    });
+  }
+
   return (
     <motion.button
       whileTap={disabled || loading ? undefined : { scale: 0.97 }}
       transition={{ duration: 0.1, ease: [0.2, 0, 0, 1] }}
-      className={cn(
-        "inline-flex items-center justify-center font-medium transition-[background-color,border-color,color,opacity] duration-[var(--duration-quick)] cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed",
-        variantStyles[variant],
-        sizeStyles[size],
-        className
-      )}
+      className={classes}
       disabled={disabled || loading}
       {...props}
     >

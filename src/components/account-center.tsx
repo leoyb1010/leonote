@@ -4,6 +4,7 @@ import Link from "next/link";
 import { LogOut, Shield, User2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { GlassPanel } from "@/components/ui/GlassPanel";
+import { Button, buttonClass } from "@/components/base/Button";
 
 type User = {
   id: string;
@@ -79,14 +80,14 @@ export function AccountCenter() {
               <div>模式：单人模式 · 中文界面 · Web First</div>
             </div>
             <div className="mt-4 flex gap-3">
-              <Link href="/profile" className="rounded-[var(--radius-md)] border border-[var(--border-default)] bg-[rgba(255,255,255,0.06)] px-4 py-2.5 text-sm text-[var(--text-secondary)] transition hover:bg-[rgba(255,255,255,0.08)]">管理资料</Link>
-              <button type="button" onClick={() => void logout()} disabled={loading} className="inline-flex items-center gap-2 rounded-[var(--radius-md)] bg-[var(--primary)] text-[var(--text-primary)] px-4 py-2.5 text-sm font-medium transition hover:bg-[var(--primary-hover)] disabled:opacity-60"><LogOut className="h-4 w-4" />{loading ? "退出中" : "退出登录"}</button>
+              <Link href="/profile" className={buttonClass("secondary", "lg")}>管理资料</Link>
+              <Button size="lg" onClick={() => void logout()} loading={loading} icon={<LogOut className="h-4 w-4" />}>{loading ? "退出中" : "退出登录"}</Button>
             </div>
           </>
         ) : (
           <div className="mt-3 rounded-[var(--radius-md)] border border-[var(--border-default)] bg-[rgba(255,255,255,0.05)] px-4 py-4 text-sm text-[var(--text-muted)]">
             <div>{message}</div>
-            {needLogin ? <Link href="/login" className="mt-3 inline-flex rounded-[var(--radius-md)] bg-[var(--primary)] text-[var(--text-primary)] px-4 py-2 text-sm font-medium transition hover:bg-[var(--primary-hover)]">去登录</Link> : null}
+            {needLogin ? <Link href="/login" className={buttonClass("primary", "lg", "mt-3")}>去登录</Link> : null}
           </div>
         )}
       </GlassPanel>

@@ -2,6 +2,7 @@
 
 import React from "react";
 import { cn } from "@/lib/utils";
+import { Button, buttonClass } from "@/components/base/Button";
 
 interface EmptyStateProps {
   icon?: React.ReactNode;
@@ -42,23 +43,11 @@ export function EmptyState({
         {description}
       </p>
       {action && (
-        <>
-          {action.href ? (
-            <a
-              href={action.href}
-              className="inline-flex items-center px-4 py-2 text-sm font-medium rounded-md bg-[var(--primary)] text-[var(--text-primary)] hover:bg-[var(--primary-hover)] transition-colors"
-            >
-              {action.label}
-            </a>
-          ) : (
-            <button
-              onClick={action.onClick}
-              className="inline-flex items-center px-4 py-2 text-sm font-medium rounded-md bg-[var(--primary)] text-[var(--text-primary)] hover:bg-[var(--primary-hover)] transition-colors"
-            >
-              {action.label}
-            </button>
-          )}
-        </>
+        action.href ? (
+          <a href={action.href} className={buttonClass("primary", "md")}>{action.label}</a>
+        ) : (
+          <Button size="md" onClick={action.onClick}>{action.label}</Button>
+        )
       )}
     </div>
   );

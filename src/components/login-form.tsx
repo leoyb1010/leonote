@@ -4,6 +4,7 @@ import { LogIn, UserPlus } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { GlassPanel } from "@/components/ui/GlassPanel";
+import { Button } from "@/components/base/Button";
 
 export function LoginForm() {
   const router = useRouter();
@@ -41,13 +42,12 @@ export function LoginForm() {
         <input value={password} onChange={(e) => setPassword(e.target.value)} type="password" placeholder="输入密码（至少 8 位）" className="w-full rounded-[var(--radius-md)] border border-[var(--border-default)] bg-[var(--surface-base)] px-4 py-4 text-sm text-[var(--text-primary)] outline-none placeholder:text-[var(--text-placeholder)] focus:border-[var(--border-focus)]" />
       </div>
       <div className="mt-5 flex gap-3">
-        <button onClick={() => setMode(mode === "login" ? "register" : "login")} disabled={loading} className="flex-1 rounded-[var(--radius-md)] border border-[var(--border-default)] bg-[rgba(255,255,255,0.06)] px-4 py-3 text-sm text-[var(--text-secondary)] transition hover:bg-[rgba(255,255,255,0.08)]" type="button">
+        <Button variant="secondary" size="lg" className="flex-1" onClick={() => setMode(mode === "login" ? "register" : "login")} disabled={loading}>
           {mode === "login" ? "创建账号" : "返回登录"}
-        </button>
-        <button onClick={submit} disabled={loading} className="flex-1 inline-flex items-center justify-center gap-2 rounded-[var(--radius-md)] bg-[var(--primary)] text-[var(--text-primary)] px-4 py-3 text-sm font-medium transition hover:bg-[var(--primary-hover)] disabled:opacity-60" type="button">
-          {mode === "login" ? <LogIn className="h-4 w-4" /> : <UserPlus className="h-4 w-4" />}
+        </Button>
+        <Button size="lg" className="flex-1" onClick={submit} loading={loading} icon={mode === "login" ? <LogIn className="h-4 w-4" /> : <UserPlus className="h-4 w-4" />}>
           {loading ? "处理中" : mode === "login" ? "登录" : "注册"}
-        </button>
+        </Button>
       </div>
       <p className="mt-4 rounded-[var(--radius-sm)] border border-[var(--border-default)] bg-[rgba(255,255,255,0.05)] px-3 py-3 text-center text-xs text-[var(--text-muted)]">{message}</p>
     </GlassPanel>

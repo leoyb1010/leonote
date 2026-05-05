@@ -6,7 +6,7 @@ import { useMemo, useState } from "react";
 import { FolderKanban, MoveRight, Plus } from "lucide-react";
 import { GlassPanel } from "@/components/ui/GlassPanel";
 import { NoteCard } from "@/components/notes/NoteCard";
-import { Button } from "@/components/base/Button";
+import { Button, buttonClass } from "@/components/base/Button";
 import { staggerContainer, staggerItem } from "@/lib/animations";
 
 type PreviewNote = { id: string; title: string; excerpt: string; tags: string[]; favorite?: boolean; pinned?: boolean; archived?: boolean; updatedAt?: string };
@@ -145,7 +145,7 @@ export function ProjectBoard({ initialProjects, signedIn }: { initialProjects: P
                       {project.updatedAt && <div className="mt-4 text-xs text-[var(--text-muted)]">最近活跃：{new Date(project.updatedAt).toLocaleString("zh-CN")}</div>}
                     </div>
                     <div className="mt-5 flex flex-wrap gap-2">
-                      <Link href={`/projects/${project.id}`} className="inline-flex items-center gap-2 rounded-[var(--radius-md)] border border-[var(--border-default)] bg-[rgba(255,255,255,0.06)] px-3 py-2 text-xs text-[var(--text-secondary)] transition hover:bg-[rgba(255,255,255,0.1)]"><MoveRight size={14} />看板详情</Link>
+                      <Link href={`/projects/${project.id}`} className={buttonClass("secondary", "sm")}><MoveRight size={14} />看板详情</Link>
                       <Button variant="ghost" size="sm" onClick={() => startEdit(project)}>编辑项目</Button>
                       <Button variant="danger" size="sm" onClick={() => void removeProject(project)}>删除项目</Button>
                     </div>

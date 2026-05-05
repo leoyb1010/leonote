@@ -1,5 +1,6 @@
 import { Database, Download } from "lucide-react";
 import { GlassPanel } from "@/components/ui/GlassPanel";
+import { Button } from "@/components/base/Button";
 
 export function DataBackupCard() {
   const handleExport = async () => {
@@ -32,14 +33,7 @@ export function DataBackupCard() {
       <p className="mt-2 text-sm text-[var(--text-muted)] leading-relaxed">
         数据库文件路径：<code className="text-xs bg-[var(--surface-raised)] px-1.5 py-0.5 rounded">./data/leonote.db</code>
       </p>
-      <button
-        type="button"
-        onClick={() => void handleExport()}
-        className="mt-4 inline-flex items-center gap-2 rounded-full bg-[var(--primary)] px-4 py-2 text-sm font-medium text-white transition hover:bg-[var(--primary-hover)]"
-      >
-        <Download className="h-4 w-4" />
-        导出全部笔记 (JSON)
-      </button>
+      <Button size="md" className="mt-4 rounded-full" onClick={() => void handleExport()} icon={<Download className="h-4 w-4" />}>导出全部笔记 (JSON)</Button>
     </GlassPanel>
   );
 }
