@@ -25,7 +25,17 @@ interface TodayPageProps {
   signedIn: boolean;
 }
 
-function QuickCapture() {
+interface QuickCaptureNote {
+  id: string;
+  title: string;
+  excerpt: string;
+  tags: string[];
+  updatedAt: string;
+  favorite?: boolean;
+  pinned?: boolean;
+}
+
+function QuickCapture({ onCreated }: { onCreated?: (note: QuickCaptureNote) => void }) {
   const [value, setValue] = useState("");
   const [saving, setSaving] = useState(false);
   const [lastNoteId, setLastNoteId] = useState("");
@@ -52,6 +62,7 @@ function QuickCapture() {
       setLastNoteId(data.note.id);
       setToast("已保存");
       setTimeout(() => setToast(""), 2500);
+      if (onCreated) onCreated(data.note);
     }
   }
 
@@ -95,6 +106,9 @@ const starterTemplates = [
 ];
 
 export function TodayPage({ data, signedIn }: TodayPageProps) {
+  const [recent, setRecent] = useState(data?.recent ?? []);
+  const [counts, setCounts] = useState(data?.counts ?? { total: 0, favorite: 0, pinned: 0 });
+
   const today = new Date();
   const dateStr = today.toLocaleDateString("zh-CN", {
     year: "numeric",
@@ -128,7 +142,12 @@ export function TodayPage({ data, signedIn }: TodayPageProps) {
     );
   }
 
-  const { recent, tags, counts, projects } = data;
+  const { tags, projects } = data;
+
+  const handleNoteCreated = (note: QuickCaptureNote) => {
+    setRecent((prev) => [note, ...prev].slice(0, 5));
+    setCounts((prev) => ({ ...prev, total: prev.total + 1 }));
+  };
 
   return (
     <div className="space-y-8">
@@ -149,7 +168,7 @@ export function TodayPage({ data, signedIn }: TodayPageProps) {
       </header>
 
       {/* QuickCapture */}
-      <QuickCapture />
+      <QuickCapture onCreated={handleNoteCreated} />
 
       {/* New Note ghost button */}
       <div className="flex justify-end">

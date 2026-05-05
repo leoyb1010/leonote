@@ -55,7 +55,7 @@ export function AISettingsPanel() {
   };
 
   return (
-    <GlassPanel blur="xl" className="space-y-4 rounded-[var(--radius-lg)] p-5">
+    <GlassPanel blur="xl" contentClassName="space-y-4" className="rounded-[var(--radius-lg)] p-5">
       <div>
         <div className="text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider">AI Settings</div>
         <h2 className="mt-2 text-base font-medium text-[var(--text-primary)] inline-flex items-center gap-2">
@@ -89,7 +89,7 @@ export function AISettingsPanel() {
         </label>
       </div>
 
-      <label className="flex items-center gap-3 rounded-[var(--radius-md)] border border-[var(--border-default)] bg-[rgba(255,255,255,0.06)] h-10 px-4 text-sm text-[var(--text-secondary)] cursor-pointer">
+      <label className="flex items-center gap-3 rounded-[var(--radius-md)] border border-[var(--border-default)] bg-[rgba(255,255,255,0.06)] px-4 py-2.5 text-sm text-[var(--text-secondary)] cursor-pointer">
         <input type="checkbox" checked={enableAutoOrganize} onChange={(e) => setEnableAutoOrganize(e.target.checked)} />
         导入笔记 / 链接时自动调用 AI 做整理、摘要、标签、项目建议
       </label>
