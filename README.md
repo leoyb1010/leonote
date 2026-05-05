@@ -122,7 +122,7 @@ AI_FALLBACK_MODEL="deepseek-v4-pro"
 - AUTH_SECRET 强制验证
 
 ### 设计
-- 深色 / 浅色主题（v1.2 Design Token 体系）
+- 深色 / 浅色自适应主题（v1.3 Design Token 体系，支持 Light/Dark/System 三态）
 - 响应式布局（桌面侧栏 / 移动端底部 TabBar）
 - 全局命令面板（Cmd+K）
 - 移动端 safe-area 适配
@@ -197,6 +197,7 @@ npm run ci           # 全链路：lint → typecheck → test → build
 
 | 版本 | 日期 | 更新内容 |
 |---|---|---|
+| **v1.3.0** | 2026-05-05 | 双主题自适应升级：Light/Dark/System 三态模型 + FOUC 防闪烁；语义交互 Token 体系（--interactive-hover/active/selected、--surface-*-glass、--overlay-scrim）；16 个组件硬编码暗色残留清理；ThemeProvider + ThemeSegmentedControl；Tailwind darkMode selector 改造；全面测试验证 |
 | **v1.2.1** | 2026-05-05 | 补丁修复：全局按钮对齐（Button 组件 + buttonClass() 统一）；表单输入框高度标准化（h-10 对齐 Button lg）；快速记录后列表即时刷新；AI 设置面板布局重叠修复（space-y-4 挂载层级修正）；数据库迁移补全（Note.source / Note.lastViewedAt / NoteRevision） |
 | **v1.2.0** | 2026-05-05 | 悄然专业工作台：FTS5 全文搜索 + trigram 分词；NoteRevision 版本历史（查看/恢复/GC）；Apple 风格编辑器重写（760px）；今日页重构（QuickCapture/NoteRow/模版）；Design Token 体系 v1.2；PageContainer 居中布局；动画减少（移除 hover scale/shadow）；离线回退页暗色匹配；AUTH_SECRET 强制校验；限流 GC |
 | **v1.1.0** | 2026-05-05 | 修复 requireSessionUserId 语义（null → throw）；新增 offline.html 离线回退页；SW 离线缓存策略完善；环境变量注册开关默认打开 |
