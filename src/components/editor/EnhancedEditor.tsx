@@ -1,7 +1,7 @@
 "use client";
 
 import { AnimatePresence, motion } from "framer-motion";
-import { Check, Wand2, Sparkles, Eye, PenLine, Columns2, MoreHorizontal } from "lucide-react";
+import { Check, Wand2, Sparkles, Eye, PenLine, Columns2, MoreHorizontal, Focus } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
@@ -27,6 +27,9 @@ type SummaryState = {
 
 const AUTOSAVE_KEY = "leonote.autosave.enabled";
 
+// v1.4: quiet save messages
+const saveMessages = { manual: "已安静保存。", auto: "正在安放…" };
+
 export function EnhancedEditor({ initialNote }: { initialNote?: NoteShape }) {
   const router = useRouter();
   const [noteId, setNoteId] = useState(initialNote?.id ?? "");
@@ -41,9 +44,10 @@ export function EnhancedEditor({ initialNote }: { initialNote?: NoteShape }) {
   const [showMore, setShowMore] = useState(false);
   const [summary, setSummary] = useState<SummaryState>({ status: "idle", text: "" });
   const [saveToast, setSaveToast] = useState(false);
+  const [focusMode, setFocusMode] = useState(false);
   const [autoSaveEnabled, setAutoSaveEnabled] = useState(() => {
-    if (typeof window === "undefined") return true;
-    return window.localStorage.getItem(AUTOSAVE_KEY) !== "0";
+    if (typeof window === "undefined") return false;
+    return window.localStorage.getItem(AUTOSAVE_KEY) === "1";
   });
 
   const initialized = useRef(false);
@@ -81,7 +85,7 @@ export function EnhancedEditor({ initialNote }: { initialNote?: NoteShape }) {
   const showToast = useCallback(() => {
     setSaveToast(true);
     if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
-    toastTimerRef.current = setTimeout(() => setSaveToast(false), 1800);
+    toastTimerRef.current = setTimeout(() => setSaveToast(false), 1600);
   }, []);
 
   const saveDraft = useCallback(
@@ -105,7 +109,7 @@ export function EnhancedEditor({ initialNote }: { initialNote?: NoteShape }) {
         const data = await res.json();
         if (!res.ok) {
           setSaveState("error");
-          setMessage(data.message || "保存失败");
+          setMessage(data.message || "这次没有保存成功，请先复制内容");
           return;
         }
         const id = data.note.id as string;
@@ -115,7 +119,7 @@ export function EnhancedEditor({ initialNote }: { initialNote?: NoteShape }) {
         }
         setSaveState("saved");
         showToast();
-        setMessage(manual ? "已保存" : "已自动保存");
+        setMessage(manual ? saveMessages.manual : saveMessages.auto);
         router.refresh();
       } finally {
         savingRef.current = false;
@@ -227,50 +231,57 @@ export function EnhancedEditor({ initialNote }: { initialNote?: NoteShape }) {
   const insertSummary = async () => {
     if (!summary.text.trim()) return;
     setSummary((state) => ({ ...state, status: "inserting" }));
-    const text = `\n\n## AI 总结\n${summary.text}\n`;
+    const text = `\n\n## AI 整理\n${summary.text}\n`;
     setContent((value) => `${value}${text}`);
     setSummary((state) => ({ ...state, status: "ready" }));
   };
 
   return (
-    <div className="relative mx-auto w-full max-w-[760px]">
-      {/* Save Toast */}
+    <div
+      className={cn(
+        "relative mx-auto w-full transition-all duration-[var(--duration-slow)]",
+        focusMode ? "max-w-[820px]" : "max-w-[760px]",
+        focusMode && "px-4"
+      )}
+    >
+      {/* v1.4 Save Toast */}
       <AnimatePresence>
         {saveToast && (
           <motion.div
-            initial={{ opacity: 0, y: 4 }}
+            initial={{ opacity: 0, y: 6 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 4 }}
-            transition={{ duration: 0.16, ease: [0.2, 0, 0, 1] }}
-            className="fixed top-4 left-1/2 -translate-x-1/2 z-50 rounded-full border border-[var(--border-subtle)] bg-[var(--surface-overlay)] px-3 py-1.5 text-xs text-[var(--text-secondary)] backdrop-blur-2xl"
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.18, ease: [0.2, 0, 0, 1] }}
+            className="fixed top-4 left-1/2 -translate-x-1/2 z-50 rounded-full border border-[var(--hairline)] bg-[var(--material-elevated)] px-4 py-1.5 text-xs text-[var(--text-secondary)] shadow-[var(--shadow-sm)]"
           >
             <span className="inline-flex items-center gap-1.5">
-              <Check className="h-3 w-3" /> 已保存
+              <Check className="h-3 w-3 text-[var(--success)]" /> 已安静保存
             </span>
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* AI Summary Panel */}
+      {/* v1.4 AI Summary Panel */}
       <AnimatePresence>
         {(summary.status === "ready" || summary.status === "inserting") && summary.text ? (
           <motion.section
+            layout
             initial={{ opacity: 0, y: -8 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -8 }}
-            transition={{ duration: 0.18, ease: [0.2, 0, 0, 1] }}
-            className="mb-6 rounded-[var(--radius-lg)] border border-[var(--border-subtle)] bg-[var(--surface-1)] p-4"
+            transition={{ duration: 0.22, ease: [0.2, 0, 0, 1] }}
+            className="mb-6 rounded-[var(--radius-xl)] border border-[var(--hairline)] bg-[var(--material-elevated)] p-5 shadow-[var(--shadow-sm)]"
           >
             <div className="flex items-start justify-between gap-4">
               <div>
-                <div className="text-xs font-medium text-[var(--ai-accent)]">AI 总结</div>
-                <h3 className="mt-1 text-sm font-medium text-[var(--text-primary)]">已生成笔记总结</h3>
+                <div className="text-xs font-medium text-[var(--ai-accent)]">静读</div>
+                <h3 className="mt-1 text-sm font-medium text-[var(--text-primary)]">我整理出了一版脉络。</h3>
               </div>
               <button
                 type="button"
                 onClick={() => void insertSummary()}
                 disabled={summary.status === "inserting"}
-                className="inline-flex items-center gap-2 rounded-full border border-[var(--border-default)] px-3 py-1.5 text-xs text-[var(--text-primary)] transition hover:bg-[var(--interactive-hover)] disabled:opacity-60"
+                className="inline-flex items-center gap-2 rounded-full border border-[var(--hairline)] px-3 py-1.5 text-xs text-[var(--text-primary)] transition hover:bg-[var(--interactive-hover)] disabled:opacity-60"
               >
                 <Sparkles className="h-3 w-3" />
                 {summary.status === "inserting" ? "插入中" : "插入"}
@@ -283,7 +294,7 @@ export function EnhancedEditor({ initialNote }: { initialNote?: NoteShape }) {
         ) : null}
       </AnimatePresence>
 
-      {/* Toolbar */}
+      {/* v1.4 Toolbar */}
       <div className="mb-6 flex items-center justify-between gap-3 text-xs text-[var(--text-muted)]">
         <div className="flex items-center gap-2">
           <span
@@ -302,14 +313,28 @@ export function EnhancedEditor({ initialNote }: { initialNote?: NoteShape }) {
               saveState === "idle" && "bg-[var(--text-faint)]",
               saveState === "dirty" && "bg-[var(--text-faint)]",
             )} />
-            {saveState === "saved" ? "已保存" : saveState === "saving" ? "保存中" : saveState === "error" ? "保存失败" : saveState === "dirty" ? "有更改" : ""}
+            {saveState === "saved" ? "已安静保存" : saveState === "saving" ? "正在安放…" : saveState === "error" ? "未保存" : saveState === "dirty" ? "有更改" : ""}
           </span>
           {stats.chars > 0 && <span>{stats.chars} 字</span>}
         </div>
 
         <div className="flex items-center gap-1">
+          {/* Focus Mode toggle */}
+          <button
+            onClick={() => setFocusMode(!focusMode)}
+            className={cn(
+              "p-1.5 rounded-md transition-colors mr-1",
+              focusMode
+                ? "bg-[var(--interactive-active)] text-[var(--text-primary)]"
+                : "text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--interactive-hover)]"
+            )}
+            title={focusMode ? "退出安静写作" : "安静写作"}
+          >
+            <Focus size={14} />
+          </button>
+
           {/* View mode toggle */}
-          <div className="flex items-center rounded-md border border-[var(--border-default)] mr-2">
+          <div className="flex items-center rounded-md border border-[var(--hairline)] mr-2">
             <button
               onClick={() => setViewMode("write")}
               className={cn("p-1.5 transition-colors rounded-l-md", viewMode === "write" ? "bg-[var(--interactive-active)] text-[var(--text-primary)]" : "text-[var(--text-muted)] hover:text-[var(--text-primary)]")}
@@ -334,7 +359,7 @@ export function EnhancedEditor({ initialNote }: { initialNote?: NoteShape }) {
           </div>
 
           <Button variant="ghost" size="sm" loading={summary.status === "loading"} icon={summary.status !== "loading" ? <Wand2 size={14} /> : undefined} onClick={() => void requestSummary()}>
-            总结
+            <span className="hidden 2xl:inline">提炼要点</span>
           </Button>
 
           <Button variant="secondary" size="sm" onClick={() => void saveDraft(true)}>
@@ -352,7 +377,7 @@ export function EnhancedEditor({ initialNote }: { initialNote?: NoteShape }) {
             {showMore && (
               <>
                 <div className="fixed inset-0 z-10" onClick={() => setShowMore(false)} />
-                <div className="absolute right-0 top-full mt-1 z-20 w-48 rounded-lg border border-[var(--border-strong)] bg-[var(--surface-2)] py-1 shadow-[var(--shadow-md)]">
+                <div className="absolute right-0 top-full mt-1 z-20 w-48 rounded-lg border border-[var(--hairline)] bg-[var(--material-elevated)] py-1 shadow-[var(--shadow-md)]">
                   <button
                     onClick={() => { toggleAutoSave(); setShowMore(false); }}
                     className="w-full px-3 py-2 text-left text-xs text-[var(--text-secondary)] hover:bg-[var(--interactive-hover)] transition-colors"
@@ -366,8 +391,12 @@ export function EnhancedEditor({ initialNote }: { initialNote?: NoteShape }) {
         </div>
       </div>
 
-      {/* Editor body */}
-      <div className={cn(viewMode === "split" ? "grid gap-6 lg:grid-cols-[minmax(0,1fr)_1px_minmax(280px,1fr)]" : "")}>
+      {/* v1.4 Editor body */}
+      <motion.div
+        layout
+        transition={{ duration: 0.22, ease: [0.2, 0, 0, 1] }}
+        className={cn(viewMode === "split" ? "grid gap-6 lg:grid-cols-[minmax(0,1fr)_1px_minmax(280px,1fr)]" : "")}
+      >
         <div className={cn(viewMode === "preview" && "hidden")}>
           {/* Title */}
           <input
@@ -389,7 +418,7 @@ export function EnhancedEditor({ initialNote }: { initialNote?: NoteShape }) {
               onCompositionEnd={handleCompositionEnd}
               onChange={(event) => setProjectName(event.target.value)}
               placeholder="所属项目"
-              className="h-9 w-full rounded-md bg-[var(--surface-1)] px-3 text-sm text-[var(--text-secondary)] outline-none ring-1 ring-[var(--border-default)] focus:ring-2 focus:ring-[var(--border-focus)] placeholder:text-[var(--text-placeholder)] transition-[box-shadow]"
+              className="h-9 w-full rounded-md bg-[var(--material-inset)] px-3 text-sm text-[var(--text-secondary)] outline-none ring-1 ring-[var(--hairline)] focus:ring-2 focus:ring-[var(--border-focus)] placeholder:text-[var(--text-placeholder)] transition-[box-shadow]"
             />
             <input
               aria-label="笔记标签"
@@ -398,11 +427,11 @@ export function EnhancedEditor({ initialNote }: { initialNote?: NoteShape }) {
               onCompositionEnd={handleCompositionEnd}
               onChange={(event) => setTagsInput(event.target.value)}
               placeholder="标签，空格分隔"
-              className="h-9 w-full rounded-md bg-[var(--surface-1)] px-3 text-sm text-[var(--text-secondary)] outline-none ring-1 ring-[var(--border-default)] focus:ring-2 focus:ring-[var(--border-focus)] placeholder:text-[var(--text-placeholder)] transition-[box-shadow]"
+              className="h-9 w-full rounded-md bg-[var(--material-inset)] px-3 text-sm text-[var(--text-secondary)] outline-none ring-1 ring-[var(--hairline)] focus:ring-2 focus:ring-[var(--border-focus)] placeholder:text-[var(--text-placeholder)] transition-[box-shadow]"
             />
           </div>
 
-          {/* Content */}
+          {/* Content textarea */}
           <textarea
             aria-label="笔记内容"
             value={content}
@@ -410,13 +439,13 @@ export function EnhancedEditor({ initialNote }: { initialNote?: NoteShape }) {
             onCompositionEnd={handleCompositionEnd}
             onChange={(event) => setContent(event.target.value)}
             placeholder="开始写点什么……"
-            className="mt-6 min-h-[60vh] w-full resize-none bg-transparent py-2 text-[16px] leading-[1.75] text-[var(--text-primary)] outline-none placeholder:text-[var(--text-placeholder)]"
+            className="leonote-editor-textarea mt-6 min-h-[60vh] w-full resize-none bg-transparent py-2 outline-none placeholder:text-[var(--text-placeholder)]"
           />
         </div>
 
         {/* Split divider */}
         {viewMode === "split" && (
-          <div className="hidden lg:block w-px bg-[var(--border-subtle)]" />
+          <div className="hidden lg:block w-px bg-[var(--hairline)]" />
         )}
 
         {/* Preview */}
@@ -426,11 +455,11 @@ export function EnhancedEditor({ initialNote }: { initialNote?: NoteShape }) {
             <MarkdownPreview content={content} />
           </div>
         )}
-      </div>
+      </motion.div>
 
       {/* Message */}
       {message && (
-        <div className="mt-5 rounded-lg border border-[var(--border-subtle)] bg-[var(--surface-1)] px-3 py-2 text-xs text-[var(--text-secondary)]">
+        <div className="mt-5 rounded-lg border border-[var(--hairline)] bg-[var(--material-inset)] px-3 py-2 text-xs text-[var(--text-secondary)]">
           {message}
         </div>
       )}

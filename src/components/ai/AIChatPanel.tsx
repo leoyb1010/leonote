@@ -1,9 +1,8 @@
 "use client";
 
 import { motion, useReducedMotion } from "framer-motion";
-import { BrainCircuit, SendHorizonal, Sparkles, Wand2 } from "lucide-react";
+import { BrainCircuit, SendHorizonal, Sparkles, BookOpen } from "lucide-react";
 import { useEffect, useState } from "react";
-import { GlassPanel } from "@/components/ui/GlassPanel";
 import { Button } from "@/components/base/Button";
 import { staggerContainer, staggerItem } from "@/lib/animations";
 import { cn } from "@/lib/utils";
@@ -12,18 +11,37 @@ type MemoryItem = { id: string; type?: string; label: string; content?: string; 
 type MemoryRef = { id: string; label: string; reason?: string };
 type ChatMessage = { id: string; role: "user" | "assistant"; text: string; memoryRefs?: MemoryRef[] };
 
+const thinkingLines = [
+  "正在静读这篇笔记…",
+  "正在寻找其中的脉络…",
+  "正在和你的长期记忆对齐…",
+];
+
+function ThinkingLine() {
+  const [line, setLine] = useState(0);
+  useEffect(() => {
+    const t = setInterval(() => setLine((p) => (p + 1) % thinkingLines.length), 1200);
+    return () => clearInterval(t);
+  }, []);
+  return (
+    <div className="flex items-center gap-2 text-xs text-[var(--text-muted)]">
+      <span className="w-1.5 h-1.5 rounded-full bg-[var(--text-muted)]/40 animate-pulse" />
+      {thinkingLines[line]}
+    </div>
+  );
+}
+
 export function AIChatPanel({ noteId, linkedMemories = [] }: { noteId: string; linkedMemories?: Array<{ id: string; label: string; content?: string }> }) {
   const reduceMotion = useReducedMotion();
   const [question, setQuestion] = useState("");
   const [loading, setLoading] = useState<"summary" | "ask" | "memory" | "">("");
-  const [message, setMessage] = useState("可以直接总结当前笔记，或者围绕这篇笔记提问。\n如果命中了长期记忆，我会把关联事实高亮出来。");
+  const [message, setMessage] = useState("我可以帮你看见这篇笔记里的脉络。");
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [highlightedIds, setHighlightedIds] = useState<string[]>([]);
   const [summaryCard, setSummaryCard] = useState("");
   const [memories, setMemories] = useState<MemoryItem[]>(
     linkedMemories.map((item) => ({ id: item.id, label: item.label, content: item.content })),
   );
-
 
   useEffect(() => {
     if (linkedMemories.length) return;
@@ -65,10 +83,10 @@ export function AIChatPanel({ noteId, linkedMemories = [] }: { noteId: string; l
 
   const runSummary = async () => {
     setLoading("summary");
+    setMessage("");
     try {
       const data = await callAi("summarize");
       setSummaryCard(data.summary || data.content || "未返回总结");
-      setMessage("总结已生成");
     } catch (e: unknown) { setMessage((e as Error).message); }
     setLoading("");
   };
@@ -93,67 +111,107 @@ export function AIChatPanel({ noteId, linkedMemories = [] }: { noteId: string; l
 
   const extractMemory = async () => {
     setLoading("memory");
-    try { await callAi("memory"); setMessage("长期记忆已提取"); }
-    catch (e: unknown) { setMessage((e as Error).message); }
+    setMessage("");
+    try {
+      await callAi("memory");
+      setMessage("这条记忆已经被放入长期脉络。");
+    } catch (e: unknown) { setMessage((e as Error).message); }
     setLoading("");
   };
 
   return (
     <div className="space-y-4">
+      {/* v1.4 Summary Card */}
       {summaryCard && (
-        <GlassPanel blur="lg" className="rounded-[var(--radius-lg)] p-5">
-          <div className="text-xs text-[var(--ai-accent)] font-medium uppercase mb-2">AI Summary</div>
-          <p className="text-sm text-[var(--text-secondary)] leading-relaxed whitespace-pre-wrap">{summaryCard}</p>
-        </GlassPanel>
+        <section className="rounded-[28px] border border-[var(--hairline)] bg-[var(--material-elevated)] p-5 shadow-[var(--shadow-sm)]">
+          <div className="flex items-center gap-2 mb-3">
+            <BookOpen size={16} className="text-[var(--ai-accent)]" />
+            <span className="text-xs font-medium text-[var(--text-muted)]">静读</span>
+          </div>
+          <div className="space-y-4 text-sm leading-relaxed">
+            <section>
+              <div className="text-xs text-[var(--text-muted)] mb-1">核心</div>
+              <p className="text-[var(--text-secondary)] whitespace-pre-wrap">{summaryCard}</p>
+            </section>
+          </div>
+        </section>
       )}
 
-      <GlassPanel blur="xl" className="relative overflow-hidden rounded-[var(--radius-xl)] p-5">
-        <div className="relative z-10 space-y-4">
-          <div className="flex items-start justify-between gap-3">
-            <div>
-              <div className="text-xs uppercase tracking-wider text-[var(--text-muted)]">AI Drawer</div>
-              <h3 className="mt-2 text-lg font-semibold text-[var(--text-primary)]">围绕当前笔记思考</h3>
-            </div>
+      {/* v1.4 Main AI Panel */}
+      <section className="rounded-[28px] border border-[var(--hairline)] bg-[var(--material-elevated)] p-5 shadow-[var(--shadow-sm)]">
+        <div className="space-y-4">
+          <div>
+            <div className="text-xs text-[var(--text-muted)]">静读助手</div>
+            <h3 className="mt-2 text-lg font-medium tracking-[-0.02em] text-[var(--text-primary)]">我可以帮你看见这篇笔记里的脉络。</h3>
           </div>
 
           <div className="flex flex-wrap gap-2">
-            <Button variant="primary" size="sm" loading={loading === "summary"} icon={<Wand2 size={14} />} onClick={() => void runSummary()}>总结这篇笔记</Button>
-            <Button variant="secondary" size="sm" loading={loading === "memory"} icon={<BrainCircuit size={14} />} onClick={() => void extractMemory()}>提取长期记忆</Button>
+            <Button variant="primary" size="sm" loading={loading === "summary"} icon={<BookOpen size={14} />} onClick={() => void runSummary()}>
+              提炼要点
+            </Button>
+            <Button variant="secondary" size="sm" loading={loading === "memory"} icon={<BrainCircuit size={14} />} onClick={() => void extractMemory()}>
+              整理成长期记忆
+            </Button>
           </div>
 
+          {/* v1.4 Memories */}
           {memories.length > 0 && (
             <div className="columns-1 gap-3 md:columns-2">
               {memories.map((mem) => (
-                <GlassPanel key={mem.id} blur="lg" className={cn("rounded-[var(--radius-md)] p-4 mb-3 break-inside-avoid", highlightedIds.includes(mem.id) && "ring-1 ring-[var(--ai-accent)]/40")}>
-                  <div className="flex items-center justify-between gap-2 text-xs uppercase tracking-wider text-[var(--text-muted)]">
-                    <span>{mem.type || "Memory"}</span>
+                <div
+                  key={mem.id}
+                  className={cn(
+                    "rounded-[var(--radius-md)] border border-[var(--hairline)] bg-[var(--material-inset)] p-4 mb-3 break-inside-avoid",
+                    highlightedIds.includes(mem.id) && "ring-1 ring-[var(--ai-accent)]/40"
+                  )}
+                >
+                  <div className="flex items-center justify-between gap-2 text-xs text-[var(--text-muted)]">
+                    <span>{mem.type || "长期记忆"}</span>
                     <BrainCircuit size={14} className="text-[var(--ai-accent)]" />
                   </div>
                   <h4 className="mt-2 text-sm font-medium text-[var(--text-primary)]">{mem.label}</h4>
                   {mem.content && <p className="mt-1 text-sm text-[var(--text-secondary)] leading-relaxed">{mem.content}</p>}
-                </GlassPanel>
+                </div>
               ))}
             </div>
           )}
 
+          {/* v1.4 Thinking State */}
+          {loading && (
+            <div className="rounded-[var(--radius-md)] border border-[var(--hairline)] bg-[var(--material-inset)] px-4 py-4">
+              <ThinkingLine />
+            </div>
+          )}
+
+          {/* v1.4 Chat Messages */}
           <motion.div variants={staggerContainer} initial="initial" animate="animate" className="space-y-3">
-            {messages.length === 0 ? (
-              <div className="rounded-[var(--radius-md)] border border-[var(--border-default)] bg-[var(--interactive-hover)] px-4 py-4 text-sm text-[var(--text-muted)] leading-relaxed">
-                可以直接问：这篇笔记的核心决策是什么？它和我过往哪些长期记忆冲突或一致？
+            {messages.length === 0 && !loading ? (
+              <div className="rounded-[var(--radius-md)] border border-[var(--hairline)] bg-[var(--material-inset)] px-4 py-4 text-sm text-[var(--text-muted)] leading-relaxed">
+                可以直接问：这篇笔记的核心决策是什么？它和我过往哪些长期记忆有关？
               </div>
             ) : (
               messages.map((chat) => (
-                <motion.div key={chat.id} variants={staggerItem} className={cn("rounded-[var(--radius-md)] border p-4 text-sm leading-relaxed",
-                  chat.role === "assistant" ? "border-[var(--ai-soft)] bg-[var(--surface-raised)] text-[var(--text-primary)]" : "border-[var(--border-default)] bg-[var(--interactive-hover)] text-[var(--text-secondary)]")}>
-                  <div className="mb-2 flex items-center gap-2 text-xs uppercase tracking-wider text-[var(--text-muted)]">
+                <motion.div
+                  key={chat.id}
+                  variants={staggerItem}
+                  className={cn(
+                    "rounded-[var(--radius-md)] border p-4 text-sm leading-relaxed",
+                    chat.role === "assistant"
+                      ? "border-[var(--hairline)] bg-[var(--material-inset)] text-[var(--text-primary)]"
+                      : "border-[var(--hairline)] bg-[var(--interactive-hover)] text-[var(--text-secondary)]"
+                  )}
+                >
+                  <div className="mb-2 flex items-center gap-2 text-xs text-[var(--text-muted)]">
                     {chat.role === "assistant" ? <Sparkles size={14} className="text-[var(--ai-accent)]" /> : null}
-                    {chat.role === "assistant" ? "Leonote AI" : "You"}
+                    {chat.role === "assistant" ? "静读" : "你"}
                   </div>
-                  <p className="whitespace-pre-wrap">{chat.text || (chat.role === "assistant" ? "思考中…" : "")}</p>
+                  <p className="whitespace-pre-wrap">{chat.text || ""}</p>
                   {chat.memoryRefs?.length ? (
                     <div className="mt-3 flex flex-wrap gap-2">
                       {chat.memoryRefs.map((ref) => (
-                        <span key={ref.id} className="rounded-[var(--radius-pill)] border border-[var(--ai-soft)] bg-[var(--ai-soft)] px-2.5 py-1 text-xs text-[var(--ai-accent)]">关联记忆 · {ref.label}</span>
+                        <span key={ref.id} className="rounded-[var(--radius-pill)] border border-[var(--hairline)] bg-[var(--accent-calm-soft)] px-2.5 py-1 text-xs text-[var(--accent-calm)]">
+                          关联记忆 · {ref.label}
+                        </span>
                       ))}
                     </div>
                   ) : null}
@@ -162,19 +220,28 @@ export function AIChatPanel({ noteId, linkedMemories = [] }: { noteId: string; l
             )}
           </motion.div>
 
-          <div className="rounded-[var(--radius-md)] border border-[var(--border-default)] bg-[var(--surface-base)] p-2">
-            <textarea value={question} onChange={(e) => setQuestion(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); void ask(); } }} placeholder="围绕当前笔记继续追问…" className="min-h-[96px] w-full resize-none bg-transparent px-2 py-2 text-sm text-[var(--text-primary)] leading-relaxed outline-none placeholder:text-[var(--text-placeholder)]" />
+          {/* v1.4 Question Input */}
+          <div className="rounded-[var(--radius-md)] border border-[var(--hairline)] bg-[var(--material-inset)] p-2">
+            <textarea
+              value={question}
+              onChange={(e) => setQuestion(e.target.value)}
+              onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); void ask(); } }}
+              placeholder="围绕当前笔记继续思考…"
+              className="min-h-[96px] w-full resize-none bg-transparent px-2 py-2 text-sm text-[var(--text-primary)] leading-relaxed outline-none placeholder:text-[var(--text-placeholder)]"
+            />
             <div className="flex items-center justify-between gap-3 px-2 pt-2">
-              <span className="text-xs text-[var(--text-muted)]">按 Enter 发送，Shift+Enter 换行</span>
-              <Button variant="primary" size="sm" loading={loading === "ask"} icon={<SendHorizonal size={14} />} onClick={() => void ask()}>提问</Button>
+              <span className="text-xs text-[var(--text-muted)]">Enter 发送 · Shift+Enter 换行</span>
+              <Button variant="primary" size="sm" loading={loading === "ask"} icon={<SendHorizonal size={14} />} onClick={() => void ask()}>
+                提问
+              </Button>
             </div>
           </div>
 
           {message && (
-            <div className="rounded-[var(--radius-md)] border border-[var(--border-default)] bg-[var(--interactive-hover)] px-4 py-3 text-sm whitespace-pre-wrap text-[var(--text-muted)]">{message}</div>
+            <div className="rounded-[var(--radius-md)] border border-[var(--hairline)] bg-[var(--material-inset)] px-4 py-3 text-sm whitespace-pre-wrap text-[var(--text-muted)]">{message}</div>
           )}
         </div>
-      </GlassPanel>
+      </section>
     </div>
   );
 }

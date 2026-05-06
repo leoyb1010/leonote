@@ -1,6 +1,6 @@
 # Leonote
 
-> 安静、可信、理性的个人知识工作台 — 中文笔记 + 轻知识库。
+> 把想法安放成时间里的智慧 — 安静保存、温柔唤回的个人知识居所。
 > 自托管 Web 优先，PWA 支持，桌面端 WebView 壳。
 
 ---
@@ -88,17 +88,30 @@ AI_FALLBACK_MODEL="deepseek-v4-pro"
 
 ## 功能总览
 
+### 数字居所 (v1.4)
+- 首页 Hero 区：时间问候语 + "安放了X篇" 统计 + 开始书写
+- QuickCapture Dock：仪式感安放入口
+- 记忆闪回：21天前笔记轻提醒
+- 本周沉淀：新增/编辑/回看/长期记忆统计
+- 2xl 大屏右栏布局（主内容+320px侧栏）
+
+### 写作体验 (v1.4)
+- Focus Mode 安静写作：编辑器降噪、内容居中
+- Apple 风格编辑器 — 760px 固定宽度，17px 字体，1.78 行高（大屏 18px）
+- 保存仪式感："已安静保存" / "正在安放…"，1.6s 淡出
+- layout 动画预览/分栏切换
+
 ### 笔记核心
 - Markdown 编辑 + 实时安全预览（支持 GFM 表格、任务列表、代码块）
-- Apple 风格编辑器 — 760px 固定宽度，28px 标题，沉浸式书写体验
-- 自动保存（默认开启，停笔 2.6 秒后触发）
+- 自动保存（默认关闭，可在编辑器更多菜单手动开启）
 - 手动保存 / Cmd+S 快捷键
 - 版本历史（NoteRevision）— 保存时自动快照、查看、恢复历史版本
 - 标签系统、项目归属、收藏、置顶、归档、回收站
 - 快速记录（QuickCapture）— 今日页面直接输入，回车保存
 
-### AI 助手
-- 笔记总结、围绕笔记问答、长期记忆提取
+### 静读助手 (v1.4 AI)
+- 提炼要点、整理长期记忆
+- ThinkingLine 思考态动画
 - 全局 AI 对话
 - 导入时 AI 自动整理
 - DeepSeek / OpenAI 兼容接口
@@ -121,14 +134,16 @@ AI_FALLBACK_MODEL="deepseek-v4-pro"
 - 注册开关控制（首个用户后默认关闭）
 - AUTH_SECRET 强制验证
 
-### 设计
-- 深色 / 浅色自适应主题（v1.3 Design Token 体系，支持 Light/Dark/System 三态）
+### 设计 (v1.4 Quiet Material)
+- Quiet Material 设计语言：material-canvas/elevated/inset + hairline border
+- 深色 / 浅色自适应主题（Design Token 体系，支持 Light/Dark/System 三态）
+- 大屏响应式布局：侧边栏 264px (2xl: 288px)、导航项 44px hit-target
+- 全局环境背景（极淡径向渐变）
 - 响应式布局（桌面侧栏 / 移动端底部 TabBar）
 - 全局命令面板（Cmd+K）
 - 移动端 safe-area 适配
 - 中文字体栈优化（PingFang SC / Microsoft YaHei / Noto Sans SC）
-- PageContainer 页面居中布局（6 种宽度变体）
-- 列表默认视图（NoteRow），降低动画，Apple 风格克制设计
+- PageContainer 6 种宽度变体（dashboard/reader/workbench/ai 2xl 放大）
 
 ---
 
@@ -197,6 +212,7 @@ npm run ci           # 全链路：lint → typecheck → test → build
 
 | 版本 | 日期 | 更新内容 |
 |---|---|---|
+| **v1.4.0** | 2026-05-06 | 情绪价值与高级感升级：Quiet Material 设计语言（--material-*、--hairline）；首页重构为数字居所（Hero + Capture Dock + 记忆闪回 + 本周沉淀 + 右栏）；大屏侧边栏 264/288px + 导航 44px hit-target；Button 尺寸 h-8/10/12 + Apple 风格系统按钮；编辑器 Focus Mode + 17px typography + 保存仪式感；AI 静读助手（ThinkingLine + 提炼要点/整理记忆）；全局微文案情绪化升级（删除/空状态/加载/版本）；PageContainer dashboard/reader 2xl 宽度策略 |
 | **v1.3.0** | 2026-05-05 | 双主题自适应升级：Light/Dark/System 三态模型 + FOUC 防闪烁；语义交互 Token 体系（--interactive-hover/active/selected、--surface-*-glass、--overlay-scrim）；16 个组件硬编码暗色残留清理；ThemeProvider + ThemeSegmentedControl；Tailwind darkMode selector 改造；全面测试验证 |
 | **v1.2.1** | 2026-05-05 | 补丁修复：全局按钮对齐（Button 组件 + buttonClass() 统一）；表单输入框高度标准化（h-10 对齐 Button lg）；快速记录后列表即时刷新；AI 设置面板布局重叠修复（space-y-4 挂载层级修正）；数据库迁移补全（Note.source / Note.lastViewedAt / NoteRevision） |
 | **v1.2.0** | 2026-05-05 | 悄然专业工作台：FTS5 全文搜索 + trigram 分词；NoteRevision 版本历史（查看/恢复/GC）；Apple 风格编辑器重写（760px）；今日页重构（QuickCapture/NoteRow/模版）；Design Token 体系 v1.2；PageContainer 居中布局；动画减少（移除 hover scale/shadow）；离线回退页暗色匹配；AUTH_SECRET 强制校验；限流 GC |

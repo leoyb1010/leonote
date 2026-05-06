@@ -66,7 +66,7 @@ export function ProjectBoard({ initialProjects, signedIn }: { initialProjects: P
     if (!res.ok) { setMessage("删除失败"); return; }
     if (editingId === project.id) setEditingId(null);
     setItems((cur) => cur.filter((item) => item.id !== project.id));
-    setMessage("项目已删除。");
+    setMessage("项目已移入回收站，仍可恢复。");
   };
 
   const moveNoteToProject = async (noteId: string, targetProjectId: string) => {

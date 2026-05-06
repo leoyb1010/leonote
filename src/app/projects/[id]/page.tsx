@@ -73,8 +73,8 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
         {notes.length === 0 ? (
           <EmptyState
             icon={<FolderKanban size={40} />}
-            title="还没有项目笔记"
-            description="创建第一条项目记录，开始整理你的知识。"
+            title="这个项目还很安静"
+            description="写下第一条项目笔记，它会成为这个项目的起点。"
             action={{ label: "新建笔记", href: "/notes/new" }}
           />
         ) : (

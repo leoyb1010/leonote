@@ -32,6 +32,20 @@ body {
   background: transparent;
   color: var(--text-primary);
   line-height: var(--leading-normal);
+  padding-top: constant(safe-area-inset-top);
+  padding-top: env(safe-area-inset-top);
+}
+
+/* ===== v1.4 Ambient Background ===== */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 50% -10%, rgba(255,255,255,0.045), transparent 36%),
+    linear-gradient(to bottom, var(--bg-app), var(--material-canvas));
+  z-index: -1;
 }
 
 a {
@@ -82,6 +96,23 @@ select {
   background: var(--text-muted);
 }
 
+/* ===== v1.4 Editor Typography ===== */
+.leonote-editor-textarea {
+  font-family: var(--font-reading);
+  font-size: 17px;
+  line-height: 1.78;
+  letter-spacing: -0.01em;
+  caret-color: var(--text-primary);
+  color: var(--text-primary);
+}
+
+@media (min-width: 1600px) {
+  .leonote-editor-textarea {
+    font-size: 18px;
+    line-height: 1.82;
+  }
+}
+
 /* ===== Utility: Glass Surface (restrained) ===== */
 .glass-surface {
   background: var(--surface-glass);
@@ -96,6 +127,17 @@ select {
   border: 1px solid var(--border-subtle);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
+}
+
+/* ===== v1.4 Quiet Material Surfaces ===== */
+.quiet-elevated {
+  background: var(--material-elevated);
+  border: 1px solid var(--hairline);
+}
+
+.quiet-inset {
+  background: var(--material-inset);
+  border: 1px solid var(--hairline);
 }
 
 /* ===== View Transitions ===== */

@@ -49,7 +49,7 @@ export function NoteRow({ note, href, selected = false, className }: NoteRowProp
           </div>
 
           <p className="mt-1 line-clamp-2 text-sm leading-6 text-[var(--text-muted)]">
-            {note.excerpt || "暂无预览"}
+            {note.excerpt || ""}
           </p>
 
           <div className="mt-2 flex min-w-0 items-center gap-2 text-xs text-[var(--text-faint)]">

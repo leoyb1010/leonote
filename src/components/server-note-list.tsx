@@ -39,7 +39,7 @@ export function ServerNoteList() {
         setItems([]);
       } else {
         setItems(data.notes || []);
-        setMessage(data.notes?.length ? "" : "当前还没有笔记");
+        setMessage(data.notes?.length ? "" : "这里还很安静，写下第一条想法。");
       }
       setLoading(false);
     }, 280);
@@ -78,9 +78,9 @@ export function ServerNoteList() {
       ) : items.length === 0 && !loading ? (
         <EmptyState
           icon={<Search size={40} />}
-          title="还没有笔记"
-          description="记录一个想法，整理一段资料，开始构建你的第二大脑。"
-          action={{ label: "新建笔记", href: "/notes/new" }}
+          title="这里还很安静"
+          description="写下第一条想法，它会成为你的起点。"
+          action={{ label: "开始书写", href: "/notes/new" }}
         />
       ) : (
         <div className="divide-y divide-[var(--border-subtle)] rounded-[var(--radius-lg)] border border-[var(--border-subtle)] bg-[var(--surface-1)] p-1">

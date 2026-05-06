@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { Sun, FolderKanban, Plus, ArrowRight } from "lucide-react";
+import { Sun, Sparkles, History, ArrowRight } from "lucide-react";
 import Link from "next/link";
 import { NoteRow } from "@/components/notes/NoteRow";
 import { Button } from "@/components/base/Button";
@@ -15,12 +15,36 @@ interface ProjectPreview {
   updatedAt: string;
 }
 
+interface MemoryFlashback {
+  id: string;
+  title: string;
+  excerpt: string;
+  updatedAt: string;
+}
+
+interface WeeklySettling {
+  created: number;
+  edited: number;
+  reviewed: number;
+  memories: number;
+}
+
+interface RecentlyViewedItem {
+  id: string;
+  title: string;
+  excerpt: string;
+  lastViewedAt: string;
+}
+
 interface TodayPageProps {
   data: {
     counts: { total: number; favorite: number; pinned: number };
     recent: Array<{ id: string; title: string; excerpt: string; tags: string[]; updatedAt: string }>;
     tags: string[];
     projects: ProjectPreview[];
+    memoryFlashback: MemoryFlashback | null;
+    weeklySettling: WeeklySettling;
+    recentlyViewed: RecentlyViewedItem[];
   } | null;
   signedIn: boolean;
 }
@@ -35,10 +59,24 @@ interface QuickCaptureNote {
   pinned?: boolean;
 }
 
+function getGreeting(): { emoji: string; line: string } {
+  const hour = new Date().getHours();
+  if (hour >= 5 && hour < 11) return { emoji: "🌅", line: "早上好，今天先留下一点清醒。" };
+  if (hour >= 11 && hour < 14) return { emoji: "☀️", line: "中午好，把正在发生的想法安放下来。" };
+  if (hour >= 14 && hour < 18) return { emoji: "🌤", line: "下午好，把正在发生的想法安放下来。" };
+  if (hour >= 18 && hour < 23) return { emoji: "🌙", line: "晚上好，今天留下些什么就很好。" };
+  return { emoji: "✨", line: "夜深了，轻轻记下，不必整理完。" };
+}
+
+const saveMessages = [
+  "已安放。",
+  "这个想法已经留下。",
+  "已保存，稍后可以再慢慢整理。",
+];
+
 function QuickCapture({ onCreated }: { onCreated?: (note: QuickCaptureNote) => void }) {
   const [value, setValue] = useState("");
   const [saving, setSaving] = useState(false);
-  const [lastNoteId, setLastNoteId] = useState("");
   const [toast, setToast] = useState("");
 
   async function submit() {
@@ -49,7 +87,7 @@ function QuickCapture({ onCreated }: { onCreated?: (note: QuickCaptureNote) => v
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        title: text.split("\n")[0].slice(0, 80) || "快速记录",
+        title: text.split("\n")[0].slice(0, 80) || "安放的想法",
         content: text,
         excerpt: text.slice(0, 120),
         tags: [],
@@ -59,64 +97,57 @@ function QuickCapture({ onCreated }: { onCreated?: (note: QuickCaptureNote) => v
     setSaving(false);
     if (res.ok) {
       setValue("");
-      setLastNoteId(data.note.id);
-      setToast("已保存");
-      setTimeout(() => setToast(""), 2500);
+      const msg = saveMessages[Math.floor(Math.random() * saveMessages.length)];
+      setToast(msg);
+      setTimeout(() => setToast(""), 2600);
       if (onCreated) onCreated(data.note);
     }
   }
 
   return (
     <div className="relative">
-      <div className="rounded-[var(--radius-xl)] border border-[var(--border-subtle)] bg-[var(--surface-1)] px-4 py-3">
-        <div className="flex items-center gap-2">
-          <input
-            value={value}
-            onChange={(event) => setValue(event.target.value)}
-            onKeyDown={(event) => {
-              if (event.key === "Enter" && !event.shiftKey) {
-                event.preventDefault();
-                void submit();
-              }
-            }}
-            placeholder="快速记录一个想法……"
-            className="h-9 flex-1 bg-transparent text-[15px] text-[var(--text-primary)] outline-none placeholder:text-[var(--text-placeholder)]"
-          />
-          <kbd className="text-[10px] text-[var(--text-muted)] font-mono">⌘N</kbd>
+      <div className="rounded-[28px] border border-[var(--hairline)] bg-[var(--material-elevated)] p-2 shadow-[var(--shadow-sm)]">
+        <textarea
+          value={value}
+          onChange={(event) => setValue(event.target.value)}
+          onKeyDown={(event) => {
+            if (event.key === "Enter" && !event.shiftKey) {
+              event.preventDefault();
+              void submit();
+            }
+          }}
+          placeholder="有什么想法，先放在这里。"
+          className="min-h-[56px] w-full resize-none bg-transparent px-4 py-3 text-[15px] leading-relaxed outline-none placeholder:text-[var(--text-placeholder)]"
+          rows={1}
+        />
+        <div className="flex items-center justify-between px-2 pb-1">
+          <span className="text-xs text-[var(--text-muted)]">Enter 保存 · Shift + Enter 换行</span>
+          <Button size="md" onClick={submit} loading={saving} variant="primary">
+            安放
+          </Button>
         </div>
       </div>
-      {toast && lastNoteId && (
-        <div className="mt-2 text-xs">
-          <span className="text-[var(--text-muted)]">{toast}</span>
-          {" · "}
-          <Link href={`/notes/${lastNoteId}`} className="text-[var(--primary)] hover:underline">
-            查看
-          </Link>
-        </div>
+      {toast && (
+        <p className="mt-2.5 text-xs text-[var(--text-muted)] text-center">{toast}</p>
       )}
     </div>
   );
 }
 
-const starterTemplates = [
-  { icon: "📝", label: "今日记录", prompt: "今天的想法……" },
-  { icon: "📚", label: "读书笔记", prompt: "这本书的核心观点是……" },
-  { icon: "📋", label: "项目计划", prompt: "目标、里程碑和下一步……" },
-  { icon: "💡", label: "灵感收集", prompt: "忽然想到一个点子……" },
-];
-
 export function TodayPage({ data, signedIn }: TodayPageProps) {
   const [recent, setRecent] = useState(data?.recent ?? []);
   const [counts, setCounts] = useState(data?.counts ?? { total: 0, favorite: 0, pinned: 0 });
 
-  const today = new Date();
-  const dateStr = today.toLocaleDateString("zh-CN", {
+  const dateStr = new Date().toLocaleDateString("zh-CN", {
     year: "numeric",
     month: "long",
     day: "numeric",
     weekday: "long",
   });
 
+  const greeting = getGreeting();
+
+  // Signed out
   if (!signedIn) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] text-center px-4">
@@ -125,87 +156,75 @@ export function TodayPage({ data, signedIn }: TodayPageProps) {
         </div>
         <h1 className="text-2xl font-bold text-[var(--text-primary)] mb-3">Leonote</h1>
         <p className="text-base text-[var(--text-secondary)] max-w-sm mb-8 leading-relaxed">
-          安静、可信、理性的个人知识工作台
+          把想法安放成时间里的智慧。
         </p>
         <Link href="/login">
-          <Button>登录或注册</Button>
+          <Button size="lg">进入 Leonote</Button>
         </Link>
       </div>
     );
   }
 
+  // Loading
   if (!data) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh]">
-        <p className="text-sm text-[var(--text-muted)]">正在获取你的知识库数据...</p>
+      <div className="flex flex-col items-center justify-center min-h-[60vh] gap-3">
+        <p className="text-sm text-[var(--text-muted)]">正在轻轻打开你的知识库…</p>
+        <div className="w-4 h-4 rounded-full border-2 border-[var(--text-muted)]/20 border-t-[var(--text-muted)]/60 animate-spin" />
       </div>
     );
   }
 
-  const { tags, projects } = data;
+  const { tags, projects, memoryFlashback, weeklySettling, recentlyViewed } = data;
 
   const handleNoteCreated = (note: QuickCaptureNote) => {
     setRecent((prev) => [note, ...prev].slice(0, 5));
     setCounts((prev) => ({ ...prev, total: prev.total + 1 }));
   };
 
-  return (
-    <div className="space-y-8">
-      {/* Header */}
-      <header className="flex items-end justify-between gap-4 border-b border-[var(--border-subtle)] pb-5">
+  const showRightRail = memoryFlashback || weeklySettling.created > 0 || recentlyViewed.length > 0;
+
+  const heroSection = (
+    <section className="leonote-hero pb-6 border-b border-[var(--hairline)]">
+      <div className="flex items-end justify-between gap-4">
         <div>
-          <h1 className="text-[1.375rem] font-semibold tracking-[-0.03em] text-[var(--text-primary)]">
-            今天
+          <p className="text-xs text-[var(--text-muted)] tracking-wide">{dateStr}</p>
+          <h1 className="mt-2 text-[1.375rem] font-semibold tracking-[-0.03em] text-[var(--text-primary)]">
+            {greeting.line}
           </h1>
           {counts.total > 0 && (
-            <p className="mt-1 text-sm text-[var(--text-secondary)]">
-              {counts.total} 篇笔记 · {counts.pinned} 个置顶
-              {projects.length > 0 && ` · ${projects.length} 个进行中项目`}
+            <p className="mt-2 text-sm text-[var(--text-secondary)]">
+              你已经安放了 {counts.total} 篇笔记。最近的思考，正在慢慢形成脉络。
             </p>
           )}
         </div>
-        <time className="shrink-0 text-sm text-[var(--text-muted)]">{dateStr}</time>
-      </header>
+        <Link href="/notes/new" className="shrink-0">
+          <Button size="lg">开始书写</Button>
+        </Link>
+      </div>
+    </section>
+  );
+
+  const mainContent = (
+    <div className="space-y-8">
+      {heroSection}
 
       {/* QuickCapture */}
       <QuickCapture onCreated={handleNoteCreated} />
-
-      {/* New Note ghost button */}
-      <div className="flex justify-end">
-        <Link href="/notes/new">
-          <Button variant="ghost" size="sm" icon={<Plus size={14} />}>新建笔记</Button>
-        </Link>
-      </div>
-
-      {/* Starter templates - only when no notes */}
-      {counts.total === 0 && (
-        <section className="grid gap-3 sm:grid-cols-2">
-          {starterTemplates.map((template) => (
-            <Link
-              key={template.label}
-              href={`/notes/new?title=${encodeURIComponent(template.label)}`}
-              className="rounded-[var(--radius-lg)] border border-[var(--border-subtle)] bg-[var(--surface-1)] px-4 py-3.5 transition-colors hover:border-[var(--border-strong)] hover:bg-[var(--surface-2)]"
-            >
-              <div className="flex items-center gap-2">
-                <span className="text-base">{template.icon}</span>
-                <span className="text-sm font-medium text-[var(--text-primary)]">{template.label}</span>
-              </div>
-              <p className="mt-1 text-xs text-[var(--text-muted)]">{template.prompt}</p>
-            </Link>
-          ))}
-        </section>
-      )}
 
       {/* Recent Notes */}
       {recent.length > 0 && (
         <section>
           <div className="flex items-center justify-between mb-3">
             <h2 className="text-sm font-medium text-[var(--text-secondary)]">最近编辑</h2>
-            <Link href="/notes" className="text-xs text-[var(--primary)] hover:underline inline-flex items-center gap-1">
+            <Link
+              href="/notes"
+              className="text-xs text-[var(--primary)] hover:underline inline-flex items-center gap-1"
+            >
               查看全部 <ArrowRight size={12} />
             </Link>
           </div>
-          <div className="divide-y divide-[var(--border-subtle)] rounded-[var(--radius-lg)] border border-[var(--border-subtle)] bg-[var(--surface-1)] p-1">
+          <div className="divide-y divide-[var(--hairline)] rounded-[var(--radius-xl)] border border-[var(--hairline)] bg-[var(--material-elevated)] p-1">
             {recent.slice(0, 5).map((note) => (
               <NoteRow key={note.id} note={note} />
             ))}
@@ -218,25 +237,22 @@ export function TodayPage({ data, signedIn }: TodayPageProps) {
         <section>
           <div className="flex items-center justify-between mb-3">
             <h2 className="text-sm font-medium text-[var(--text-secondary)]">进行中的项目</h2>
-            <Link href="/projects" className="text-xs text-[var(--primary)] hover:underline inline-flex items-center gap-1">
+            <Link
+              href="/projects"
+              className="text-xs text-[var(--primary)] hover:underline inline-flex items-center gap-1"
+            >
               查看全部 <ArrowRight size={12} />
             </Link>
           </div>
-          <div className="divide-y divide-[var(--border-subtle)] rounded-[var(--radius-lg)] border border-[var(--border-subtle)] bg-[var(--surface-1)] p-1">
+          <div className="divide-y divide-[var(--hairline)] rounded-[var(--radius-xl)] border border-[var(--hairline)] bg-[var(--material-elevated)] p-1">
             {projects.slice(0, 4).map((proj) => (
               <Link
                 key={proj.id}
                 href={`/projects/${proj.id}`}
-                className="flex items-center justify-between gap-4 px-3.5 py-3 transition-colors hover:bg-[var(--interactive-hover)]"
+                className="flex items-center justify-between gap-4 px-4 py-3 transition-colors hover:bg-[var(--interactive-hover)] rounded-lg"
               >
-                <div className="flex items-center gap-2.5 min-w-0">
-                  <FolderKanban size={14} className="text-[var(--text-muted)] shrink-0" />
-                  <span className="truncate text-sm text-[var(--text-primary)]">{proj.name}</span>
-                </div>
-                <div className="flex items-center gap-3 shrink-0">
-                  <span className="text-xs text-[var(--text-muted)]">{proj.noteCount} 篇</span>
-                  <span className="text-xs text-[var(--text-faint)]">{formatRelativeTime(proj.updatedAt)}</span>
-                </div>
+                <span className="truncate text-sm text-[var(--text-primary)]">{proj.name}</span>
+                <span className="text-xs text-[var(--text-muted)] shrink-0">{proj.noteCount} 篇</span>
               </Link>
             ))}
           </div>
@@ -260,6 +276,86 @@ export function TodayPage({ data, signedIn }: TodayPageProps) {
           </div>
         </section>
       )}
+    </div>
+  );
+
+  const rightRail = showRightRail ? (
+    <aside className="space-y-4">
+      {/* Weekly Settling */}
+      {weeklySettling.created > 0 && (
+        <div className="rounded-2xl border border-[var(--hairline)] bg-[var(--material-inset)] px-4 py-4">
+          <div className="flex items-center gap-2 mb-3">
+            <Sparkles size={16} className="text-[var(--text-muted)]" />
+            <span className="text-xs font-medium text-[var(--text-muted)]">本周沉淀</span>
+          </div>
+          <div className="space-y-1.5 text-sm text-[var(--text-secondary)]">
+            <p>新增 {weeklySettling.created} 篇笔记</p>
+            <p>编辑 {weeklySettling.edited} 次</p>
+            {weeklySettling.reviewed > 0 && <p>回看 {weeklySettling.reviewed} 篇旧笔记</p>}
+            {weeklySettling.memories > 0 && <p>形成 {weeklySettling.memories} 条长期记忆</p>}
+          </div>
+        </div>
+      )}
+
+      {/* Memory Flashback */}
+      {memoryFlashback && (
+        <div className="rounded-2xl border border-[var(--hairline)] bg-[var(--material-inset)] px-4 py-4">
+          <div className="flex items-center gap-2 mb-3">
+            <History size={16} className="text-[var(--text-muted)]" />
+            <span className="text-xs font-medium text-[var(--text-muted)]">记忆闪回</span>
+          </div>
+          <p className="text-xs text-[var(--text-muted)] mb-2">
+            你在 {formatRelativeTime(memoryFlashback.updatedAt)}前写过：
+          </p>
+          <Link
+            href={`/notes/${memoryFlashback.id}`}
+            className="block text-sm text-[var(--text-primary)] leading-relaxed hover:text-[var(--primary)] transition-colors"
+          >
+            &ldquo;{memoryFlashback.excerpt || memoryFlashback.title}&rdquo;
+          </Link>
+          <p className="mt-2 text-xs text-[var(--text-muted)]">也许今天可以重新看一眼。</p>
+        </div>
+      )}
+
+      {/* Recently Viewed */}
+      {recentlyViewed.length > 0 && (
+        <div className="rounded-2xl border border-[var(--hairline)] bg-[var(--material-inset)] px-4 py-4">
+          <span className="text-xs font-medium text-[var(--text-muted)]">最近回看</span>
+          <div className="mt-3 space-y-2">
+            {recentlyViewed.map((item) => (
+              <Link
+                key={item.id}
+                href={`/notes/${item.id}`}
+                className="block text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors truncate"
+              >
+                {item.title}
+              </Link>
+            ))}
+          </div>
+        </div>
+      )}
+    </aside>
+  ) : null;
+
+  // Empty state
+  if (counts.total === 0) {
+    return (
+      <div className="space-y-8">
+        {heroSection}
+        <QuickCapture onCreated={handleNoteCreated} />
+        <div className="text-center py-12">
+          <p className="text-sm text-[var(--text-muted)]">
+            这里还很安静。写下第一条想法，它会成为你的起点。
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="grid gap-8 2xl:grid-cols-[minmax(0,1fr)_320px]">
+      <main>{mainContent}</main>
+      {rightRail}
     </div>
   );
 }

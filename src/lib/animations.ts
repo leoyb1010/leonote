@@ -126,6 +126,20 @@ export const pageTransition: Variants = {
   whileTap: {},
 };
 
+/** v1.4 quiet reveal — 更轻的渐现 */
+export const quietReveal: Variants = {
+  initial: { opacity: 0, y: 6 },
+  animate: { opacity: 1, y: 0, transition: { duration: 0.24, ease: easings.standard } },
+  exit: { opacity: 0, y: 4, transition: { duration: 0.14, ease: easings.softExit } },
+  whileHover: {},
+  whileTap: {},
+};
+
+/** v1.4 quiet press — 轻微的按下反馈 */
+export const quietPress = {
+  whileTap: { scale: 0.985, transition: { duration: 0.1, ease: easings.sharp } },
+};
+
 /** 侧边栏展开 / 折叠 */
 export const sidebarCollapse: Variants = {
   initial: { width: 88, opacity: 0.96 },

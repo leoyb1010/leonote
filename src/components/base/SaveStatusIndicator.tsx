@@ -12,9 +12,9 @@ interface SaveStatusIndicatorProps {
 }
 
 const statusConfig: Record<SaveStatus, { label: string; color: string; dot: string }> = {
-  saved: { label: "已保存", color: "text-[var(--success)]", dot: "bg-[var(--success)]" },
-  saving: { label: "保存中", color: "text-[var(--text-muted)]", dot: "bg-[var(--text-muted)]" },
-  offline: { label: "离线", color: "text-[var(--warning)]", dot: "bg-[var(--warning)]" },
+  saved: { label: "已安静保存", color: "text-[var(--success)]", dot: "bg-[var(--success)]" },
+  saving: { label: "正在安放…", color: "text-[var(--text-muted)]", dot: "bg-[var(--text-muted)]" },
+  offline: { label: "离线中，会在恢复后继续保存", color: "text-[var(--warning)]", dot: "bg-[var(--warning)]" },
   idle: { label: "", color: "text-[var(--text-muted)]", dot: "bg-transparent" },
 };
 

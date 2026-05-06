@@ -67,14 +67,14 @@ export function ServerHomeClient({ data, signedIn }: { data: HomeViewData | null
                 <div className="mt-4 text-xs text-[var(--text-muted)]">最近活跃：{new Date(project.updatedAt).toLocaleString("zh-CN")}</div>
               </Link>
             </GlassPanel>
-          )) : <GlassPanel blur="lg" className="rounded-[var(--radius-lg)] p-4 text-sm text-[var(--text-muted)]">还没有项目，去项目页创建第一个项目。</GlassPanel>}
+          )) : <GlassPanel blur="lg" className="rounded-[var(--radius-lg)] p-4 text-sm text-[var(--text-muted)]">这里还很安静，去项目页创建第一个项目。</GlassPanel>}
         </div>
       </section>
 
       <section className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_320px]">
         <div>
           <div className="mb-3 flex items-center justify-between"><h2 className="inline-flex items-center gap-2 text-lg font-medium text-[var(--text-primary)]"><Sparkles className="h-4 w-4 text-[var(--ai-accent)]" /> Recent</h2><Link className="text-sm text-[var(--text-muted)]" href="/notes">查看全部</Link></div>
-          {data.recent.length === 0 ? <GlassPanel blur="lg" className="rounded-[var(--radius-lg)] p-5 text-sm leading-7 text-[var(--text-muted)]">还没有笔记，先创建第一条记录。</GlassPanel> : null}
+          {data.recent.length === 0 ? <GlassPanel blur="lg" className="rounded-[var(--radius-lg)] p-5 text-sm leading-7 text-[var(--text-muted)]">这里还很安静，写下第一条想法。</GlassPanel> : null}
           <motion.div variants={staggerContainer} initial="initial" animate="animate" className="grid gap-4 xl:grid-cols-2">
             {data.recent.map((note) => (
               <motion.div key={note.id} variants={staggerItem}>

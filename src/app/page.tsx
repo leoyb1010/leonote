@@ -8,7 +8,7 @@ export default async function HomePage() {
   const data = userId ? await getHomeViewData(userId) : null;
 
   return (
-    <PageContainer width="default">
+    <PageContainer width="dashboard">
       <TodayPage data={data} signedIn={Boolean(userId)} />
     </PageContainer>
   );

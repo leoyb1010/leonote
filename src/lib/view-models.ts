@@ -10,6 +10,49 @@ export async function getHomeViewData(userId: string) {
     include: { _count: { select: { notes: true } } },
   });
 
+  // v1.4: Memory flashback — find a note from ~21 days ago
+  const twentyOneDaysAgo = new Date(Date.now() - 1000 * 60 * 60 * 24 * 21);
+  const flashbackWindowStart = new Date(twentyOneDaysAgo.getTime() - 1000 * 60 * 60 * 24 * 3);
+  const flashbackWindowEnd = new Date(twentyOneDaysAgo.getTime() + 1000 * 60 * 60 * 24 * 3);
+  const memoryFlashback = await prisma.note.findFirst({
+    where: {
+      userId,
+      deletedAt: null,
+      isArchived: false,
+      updatedAt: { gte: flashbackWindowStart, lte: flashbackWindowEnd },
+    },
+    orderBy: { updatedAt: "desc" },
+    select: { id: true, title: true, excerpt: true, updatedAt: true },
+  });
+
+  // v1.4: Weekly settling stats
+  const weekStart = new Date();
+  weekStart.setDate(weekStart.getDate() - weekStart.getDay());
+  weekStart.setHours(0, 0, 0, 0);
+
+  const [weeklyCreated, weeklyEdited, weeklyReviewed, weeklyMemories] = await Promise.all([
+    prisma.note.count({
+      where: { userId, deletedAt: null, isArchived: false, createdAt: { gte: weekStart } },
+    }),
+    prisma.note.count({
+      where: { userId, deletedAt: null, isArchived: false, updatedAt: { gte: weekStart } },
+    }),
+    prisma.note.count({
+      where: { userId, deletedAt: null, lastViewedAt: { gte: weekStart } },
+    }),
+    prisma.memoryFact.count({
+      where: { userId, createdAt: { gte: weekStart } },
+    }),
+  ]);
+
+  // v1.4: Recently viewed notes
+  const recentlyViewed = await prisma.note.findMany({
+    where: { userId, deletedAt: null, isArchived: false, lastViewedAt: { not: null } },
+    orderBy: { lastViewedAt: "desc" },
+    take: 3,
+    select: { id: true, title: true, excerpt: true, lastViewedAt: true },
+  });
+
   return {
     notes,
     recent: notes.slice(0, 5).map((note) => ({
@@ -31,6 +74,27 @@ export async function getHomeViewData(userId: string) {
       description: item.description,
       noteCount: item._count.notes,
       updatedAt: item.updatedAt.toISOString(),
+    })),
+    // v1.4 additions
+    memoryFlashback: memoryFlashback
+      ? {
+          id: memoryFlashback.id,
+          title: memoryFlashback.title,
+          excerpt: memoryFlashback.excerpt,
+          updatedAt: memoryFlashback.updatedAt.toISOString(),
+        }
+      : null,
+    weeklySettling: {
+      created: weeklyCreated,
+      edited: weeklyEdited,
+      reviewed: weeklyReviewed,
+      memories: weeklyMemories,
+    },
+    recentlyViewed: recentlyViewed.map((n) => ({
+      id: n.id,
+      title: n.title,
+      excerpt: n.excerpt,
+      lastViewedAt: n.lastViewedAt!.toISOString(),
     })),
   };
 }

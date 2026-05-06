@@ -61,7 +61,7 @@ export function ServerNoteDetailClient({ id }: { id: string }) {
     if (res.ok) await reload();
   };
   const moveToTrash = async () => {
-    if (!window.confirm("确认将这条笔记移入回收站？")) return;
+    if (!window.confirm("要把它移入回收站吗？之后仍可恢复。")) return;
     const res = await fetch(`/api/notes/${id}/trash`, { method: "POST" });
     if (res.ok) router.push("/trash");
   };
@@ -70,7 +70,7 @@ export function ServerNoteDetailClient({ id }: { id: string }) {
     if (res.ok) await reload();
   };
   const removeForever = async () => {
-    if (!window.confirm("确认彻底删除？删除后不可恢复。")) return;
+    if (!window.confirm("这一步不可恢复。请确认你真的不再需要它。")) return;
     const res = await fetch(`/api/notes/${id}`, { method: "DELETE" });
     if (res.ok) router.push("/trash");
   };

@@ -65,7 +65,7 @@ export function ServerFilterView({ type }: { type: "favorite" | "archived" | "de
     if (res.ok) await refreshList();
   };
   const remove = async (id: string) => {
-    if (!window.confirm("确认彻底删除？")) return;
+    if (!window.confirm("这一步不可恢复。请确认你真的不再需要它。")) return;
     const res = await fetch(`/api/notes/${id}`, { method: "DELETE" });
     if (res.ok) await refreshList();
   };

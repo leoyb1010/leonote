@@ -18,26 +18,26 @@ interface ButtonProps extends Omit<HTMLMotionProps<"button">, "children"> {
 
 const variantStyles: Record<ButtonVariant, string> = {
   primary:
-    "bg-[var(--primary)] text-white hover:bg-[var(--primary-hover)] active:bg-[var(--primary)]",
+    "bg-[var(--text-primary)] text-[var(--bg-app)] hover:opacity-90 active:opacity-80",
   secondary:
-    "bg-transparent text-[var(--text-secondary)] border border-[var(--border-default)] hover:border-[var(--border-strong)] hover:text-[var(--text-primary)] active:bg-[var(--interactive-hover)]",
+    "bg-transparent text-[var(--text-secondary)] border border-[var(--hairline)] hover:border-[var(--border-strong)] hover:text-[var(--text-primary)] active:bg-[var(--interactive-hover)]",
   ghost:
     "bg-transparent text-[var(--text-secondary)] hover:bg-[var(--interactive-hover)] hover:text-[var(--text-primary)] active:bg-[var(--interactive-active)]",
   danger:
     "bg-transparent text-[var(--danger)] hover:bg-[var(--danger-soft)] active:bg-[rgba(242,109,109,0.16)]",
   outline:
-    "bg-transparent text-[var(--text-secondary)] border border-[var(--border-default)] hover:border-[var(--border-strong)] hover:text-[var(--text-primary)] active:bg-[var(--interactive-hover)]",
+    "bg-transparent text-[var(--text-secondary)] border border-[var(--hairline)] hover:border-[var(--border-strong)] hover:text-[var(--text-primary)] active:bg-[var(--interactive-hover)]",
 };
 
 const sizeStyles: Record<ButtonSize, string> = {
-  sm: "h-7 px-3 text-xs rounded-md gap-1.5",
-  md: "h-8 px-4 text-sm rounded-md gap-1.5",
-  lg: "h-10 px-5 text-sm rounded-md gap-2",
+  sm: "h-8 px-3.5 text-[13px] rounded-lg gap-1.5 min-w-[32px]",
+  md: "h-10 px-4 text-sm rounded-xl gap-2 min-w-[40px]",
+  lg: "h-12 px-5 text-[15px] rounded-2xl gap-2 min-w-[48px]",
 };
 
 export function buttonClass(variant: ButtonVariant, size: ButtonSize, className?: string) {
   return cn(
-    "inline-flex items-center justify-center font-medium transition-[background-color,border-color,color,opacity] duration-[var(--duration-quick)] cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed",
+    "inline-flex items-center justify-center font-medium transition-[background-color,border-color,color,opacity] duration-[var(--duration-quick)] cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed xl:min-h-[40px] 2xl:min-h-[44px]",
     variantStyles[variant],
     sizeStyles[size],
     className
