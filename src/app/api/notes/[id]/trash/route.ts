@@ -2,10 +2,13 @@ import { NextResponse } from "next/server";
 import { getSessionUserId } from "@/lib/session";
 import { prisma } from "@/lib/prisma";
 import { requireOwnedNote, toNoteDTO } from "@/lib/server-notes";
+import { guardUserWriteRequest } from "@/lib/request-guard";
 
-export async function POST(_request: Request, context: { params: Promise<{ id: string }> }) {
+export async function POST(request: Request, context: { params: Promise<{ id: string }> }) {
   const userId = await getSessionUserId();
   if (!userId) return NextResponse.json({ ok: false, message: "未登录" }, { status: 401 });
+  const guarded = guardUserWriteRequest(request, userId, "notes");
+  if (guarded) return guarded;
 
   const { id } = await context.params;
   const existing = await requireOwnedNote(id, userId);

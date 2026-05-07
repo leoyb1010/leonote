@@ -9,6 +9,7 @@ import { formatMoney } from "@/lib/format-money";
 import { ExpenseQuickCapture } from "@/components/ledger/ExpenseQuickCapture";
 import { ExpenseRow } from "@/components/ledger/ExpenseRow";
 import { CategoryDistribution } from "@/components/ledger/CategoryDistribution";
+import { LedgerDashboard } from "@/components/ledger/LedgerDashboard";
 import type { ExpenseCategoryDTO, ExpenseDTO, ExpenseSummaryDTO } from "@/components/ledger/types";
 
 type Props = {
@@ -27,6 +28,42 @@ function buildHeroLine(summary: ExpenseSummaryDTO | null) {
   return `这个月，你为${top.name}投入了 ${formatMoney(top.total)}，为${second.name}留了 ${formatMoney(second.total)}。`;
 }
 
+function isSameMonth(value: string, now = new Date()) {
+  const date = new Date(value);
+  return date.getFullYear() === now.getFullYear() && date.getMonth() === now.getMonth();
+}
+
+function isSameWeek(value: string, now = new Date()) {
+  const date = new Date(value);
+  const start = new Date(now);
+  start.setDate(start.getDate() - start.getDay());
+  start.setHours(0, 0, 0, 0);
+  return date >= start && date <= now;
+}
+
+function recalculatePace(summary: ExpenseSummaryDTO, totalAmount: number) {
+  const now = new Date();
+  const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+  const averageDaily = Math.round(totalAmount / Math.max(1, now.getDate()));
+  const previous = summary.monthOverMonth.previous;
+  return {
+    averageDaily,
+    forecastMonth: Math.round(averageDaily * daysInMonth),
+    monthOverMonth: {
+      ...summary.monthOverMonth,
+      current: totalAmount,
+      deltaPct: previous > 0 ? ((totalAmount - previous) / previous) * 100 : null,
+    },
+  };
+}
+
+function updateDaily(daily: ExpenseSummaryDTO["daily"], dateValue: string, delta: number) {
+  const key = dateValue.slice(0, 10);
+  return daily.map((item) =>
+    item.date === key ? { ...item, total: Math.max(0, item.total + delta) } : item,
+  );
+}
+
 export function LedgerPage({ signedIn, categories, summary }: Props) {
   const [recent, setRecent] = useState<ExpenseDTO[]>(summary?.recent ?? []);
   const [localSummary, setLocalSummary] = useState(summary);
@@ -35,11 +72,50 @@ export function LedgerPage({ signedIn, categories, summary }: Props) {
     setRecent((prev) => [expense, ...prev].slice(0, 10));
     setLocalSummary((prev) => {
       if (!prev) return prev;
+      const inMonth = isSameMonth(expense.occurredAt);
+      const nextTotal = inMonth ? prev.totalAmount + expense.amount : prev.totalAmount;
       return {
         ...prev,
-        totalAmount: prev.totalAmount + expense.amount,
+        totalAmount: nextTotal,
         weeklyTotal: prev.weeklyTotal + expense.amount,
         recent: [expense, ...prev.recent].slice(0, 10),
+        daily: inMonth ? updateDaily(prev.daily, expense.occurredAt, expense.amount) : prev.daily,
+        topExpense: !prev.topExpense || expense.amount > prev.topExpense.amount ? expense : prev.topExpense,
+        ...recalculatePace(prev, nextTotal),
+      };
+    });
+  }
+
+  function handleDeleted(expense: ExpenseDTO) {
+    setRecent((prev) => prev.filter((item) => item.id !== expense.id));
+    setLocalSummary((prev) => {
+      if (!prev) return prev;
+      const inMonth = isSameMonth(expense.occurredAt);
+      const inWeek = isSameWeek(expense.occurredAt);
+      const nextTotal = inMonth ? Math.max(0, prev.totalAmount - expense.amount) : prev.totalAmount;
+      const byCategory = inMonth
+        ? prev.byCategory
+            .map((item) => {
+              const sameCategory = item.categoryId === expense.categoryId;
+              if (!sameCategory) return item;
+              return {
+                ...item,
+                total: Math.max(0, item.total - expense.amount),
+                count: Math.max(0, item.count - 1),
+              };
+            })
+            .filter((item) => item.count > 0 && item.total > 0)
+        : prev.byCategory;
+
+      return {
+        ...prev,
+        totalAmount: nextTotal,
+        weeklyTotal: inWeek ? Math.max(0, prev.weeklyTotal - expense.amount) : prev.weeklyTotal,
+        byCategory,
+        recent: prev.recent.filter((item) => item.id !== expense.id),
+        daily: inMonth ? updateDaily(prev.daily, expense.occurredAt, -expense.amount) : prev.daily,
+        topExpense: prev.topExpense?.id === expense.id ? null : prev.topExpense,
+        ...recalculatePace(prev, nextTotal),
       };
     });
   }
@@ -79,6 +155,7 @@ export function LedgerPage({ signedIn, categories, summary }: Props) {
         </div>
       ) : null}
 
+      {localSummary ? <LedgerDashboard summary={{ ...localSummary, recent }} /> : null}
       {localSummary ? <CategoryDistribution summary={{ ...localSummary, recent }} /> : null}
 
       <section>
@@ -94,7 +171,7 @@ export function LedgerPage({ signedIn, categories, summary }: Props) {
           />
         ) : (
           <div className="divide-y divide-[var(--hairline)] rounded-[var(--radius-xl)] border border-[var(--hairline)] bg-[var(--material-elevated)] p-1">
-            {recent.map((expense) => <ExpenseRow key={expense.id} expense={expense} />)}
+            {recent.map((expense) => <ExpenseRow key={expense.id} expense={expense} onDeleted={handleDeleted} />)}
           </div>
         )}
       </section>

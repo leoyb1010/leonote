@@ -3,6 +3,7 @@ import { z } from "zod";
 import { getSessionUserId } from "@/lib/session";
 import { prisma } from "@/lib/prisma";
 import { EXPENSE_COLOR_OPTIONS, listExpenseCategories, toExpenseCategoryDTO } from "@/lib/expense";
+import { guardUserWriteRequest } from "@/lib/request-guard";
 
 const categoryCreateSchema = z.object({
   name: z.string().trim().min(1).max(20),
@@ -24,6 +25,8 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   const userId = await getSessionUserId();
   if (!userId) return NextResponse.json({ ok: false, message: "未登录" }, { status: 401 });
+  const guarded = guardUserWriteRequest(request, userId, "expense-categories");
+  if (guarded) return guarded;
 
   const body = await request.json();
   const parsed = categoryCreateSchema.safeParse(body);

@@ -8,6 +8,7 @@ import {
   verifyPassword,
 } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { guardUserWriteRequest } from "@/lib/request-guard";
 
 const schema = z.object({
   currentPassword: z.string().min(1, "请输入当前密码"),
@@ -35,6 +36,8 @@ export async function POST(request: Request) {
       { ok: false, message: "未登录或账号不存在" },
       { status: 401 },
     );
+  const guarded = guardUserWriteRequest(request, user.id, "password", { limit: 10 });
+  if (guarded) return guarded;
 
   const body = await request.json();
   const parsed = schema.safeParse(body);

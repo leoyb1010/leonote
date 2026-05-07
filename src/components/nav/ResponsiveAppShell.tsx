@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import { DesktopSidebar } from "./DesktopSidebar";
 import { BottomNav } from "./BottomNav";
@@ -14,13 +14,20 @@ export function ResponsiveAppShell({ children, header }: ResponsiveAppShellProps
   const pathname = usePathname();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
+  useEffect(() => {
+    const syncSidebarMode = () => setSidebarCollapsed(window.innerWidth < 1280);
+    syncSidebarMode();
+    window.addEventListener("resize", syncSidebarMode);
+    return () => window.removeEventListener("resize", syncSidebarMode);
+  }, []);
+
   if (pathname === "/login") {
     return <>{children}</>;
   }
 
   return (
     <div className="flex min-h-screen min-h-[100dvh] bg-[var(--bg-app)]">
-      {/* Sidebar: fixed on left, hidden below xl (1280px), collapsible */}
+      {/* Sidebar: full on desktop, icon rail on tablet. */}
       <DesktopSidebar
         currentPath={pathname}
         collapsed={sidebarCollapsed}
@@ -31,12 +38,12 @@ export function ResponsiveAppShell({ children, header }: ResponsiveAppShellProps
       <div className="flex-1 flex flex-col min-w-0">
         {header}
 
-        <main className="flex-1 pb-[88px] xl:pb-0">
+        <main className="flex-1 pb-[88px] md:pb-0">
           {children}
         </main>
       </div>
 
-      {/* Bottom Nav: shown below xl */}
+      {/* Bottom Nav: only phone-size layouts. */}
       <BottomNav currentPath={pathname} />
     </div>
   );

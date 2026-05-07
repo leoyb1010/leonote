@@ -1,9 +1,9 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
-import { Sun, FileText, FolderKanban, Sparkles, Plus } from "lucide-react";
+import { FilePlus2, FileText, FolderPlus, Plus, Sparkles, Sun, WalletCards } from "lucide-react";
 
 interface BottomNavProps {
   currentPath: string;
@@ -13,11 +13,18 @@ const navItems = [
   { id: "today", label: "Today", icon: Sun, href: "/" },
   { id: "notes", label: "Notes", icon: FileText, href: "/notes" },
   { id: "new", label: "", icon: Plus, href: "/notes/new", isAction: true },
-  { id: "projects", label: "项目", icon: FolderKanban, href: "/projects" },
+  { id: "ledger", label: "记账", icon: WalletCards, href: "/ledger" },
   { id: "ai", label: "AI", icon: Sparkles, href: "/ai" },
 ];
 
+const createItems = [
+  { label: "新笔记", href: "/notes/new", icon: FilePlus2 },
+  { label: "记一笔", href: "/ledger", icon: WalletCards },
+  { label: "新项目", href: "/projects", icon: FolderPlus },
+];
+
 export function BottomNav({ currentPath }: BottomNavProps) {
+  const [sheetOpen, setSheetOpen] = useState(false);
   const isActive = (href: string) => {
     if (href === "/") return currentPath === "/";
     if (href === "/notes/new") return currentPath === "/notes/new";
@@ -25,7 +32,7 @@ export function BottomNav({ currentPath }: BottomNavProps) {
   };
 
   return (
-    <nav className="xl:hidden fixed bottom-0 left-0 right-0 z-50 bg-[var(--surface-overlay)] border-t border-[var(--border-default)] backdrop-blur-[12px] safe-area-bottom">
+    <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-[var(--surface-overlay)] border-t border-[var(--border-default)] backdrop-blur-[12px] safe-area-bottom">
       <div className="flex items-center justify-around h-14 px-2 max-w-lg mx-auto">
         {navItems.map((item) => {
           const active = isActive(item.href);
@@ -33,9 +40,10 @@ export function BottomNav({ currentPath }: BottomNavProps) {
 
           if (item.isAction) {
             return (
-              <Link
+              <button
                 key={item.id}
-                href={item.href}
+                type="button"
+                onClick={() => setSheetOpen(true)}
                 className={cn(
                   "flex items-center justify-center w-10 h-10 rounded-xl transition-all",
                   active
@@ -44,7 +52,7 @@ export function BottomNav({ currentPath }: BottomNavProps) {
                 )}
               >
                 <Icon size={20} />
-              </Link>
+              </button>
             );
           }
 
@@ -65,6 +73,30 @@ export function BottomNav({ currentPath }: BottomNavProps) {
           );
         })}
       </div>
+
+      {sheetOpen ? (
+        <div className="fixed inset-0 z-[60] bg-[var(--overlay-scrim)]" onClick={() => setSheetOpen(false)}>
+          <div
+            className="absolute inset-x-3 bottom-[calc(4rem+env(safe-area-inset-bottom))] mx-auto max-w-sm rounded-[var(--radius-2xl)] border border-[var(--hairline)] bg-[var(--material-elevated)] p-2 shadow-[var(--shadow-md)]"
+            onClick={(event) => event.stopPropagation()}
+          >
+            {createItems.map((item) => {
+              const Icon = item.icon;
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  onClick={() => setSheetOpen(false)}
+                  className="flex min-h-[48px] items-center gap-3 rounded-2xl px-4 text-sm text-[var(--text-secondary)] hover:bg-[var(--interactive-hover)] hover:text-[var(--text-primary)]"
+                >
+                  <Icon size={17} />
+                  {item.label}
+                </Link>
+              );
+            })}
+          </div>
+        </div>
+      ) : null}
     </nav>
   );
 }

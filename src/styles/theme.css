@@ -44,12 +44,13 @@
 
   /* ---------- Brand / Primary ---------- */
   --primary: #7b84f6;
+  --primary-quiet: #6f78d8;
   --primary-hover: #8a95ff;
   --primary-soft: rgba(123, 132, 246, 0.10);
   --primary-pressed: rgba(123, 132, 246, 0.16);
 
   /* ---------- Calm Accent (v1.4) ---------- */
-  --accent-calm: #7b84f6;
+  --accent-calm: var(--primary-quiet);
   --accent-calm-soft: rgba(123, 132, 246, 0.10);
 
   /* ---------- AI Accent ---------- */
@@ -75,8 +76,15 @@
   --surface-strong-glass: rgba(21, 25, 37, 0.88);
 
   /* ---------- Shadow ---------- */
-  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.28);
-  --shadow-md: 0 10px 32px rgba(0, 0, 0, 0.36);
+  --shadow-sm:
+    0 0.5px 0 0 rgba(255, 255, 255, 0.04) inset,
+    0 1px 2px rgba(0, 0, 0, 0.40),
+    0 0 0 0.5px rgba(255, 255, 255, 0.04);
+  --shadow-md:
+    0 0.5px 0 0 rgba(255, 255, 255, 0.05) inset,
+    0 8px 24px rgba(0, 0, 0, 0.36),
+    0 2px 6px rgba(0, 0, 0, 0.24),
+    0 0 0 0.5px rgba(255, 255, 255, 0.05);
 
   /* deprecated: mapped to new shadows */
   --shadow-lg: var(--shadow-md);
@@ -223,11 +231,12 @@
   --text-placeholder: rgba(23, 23, 26, 0.28);
 
   --primary: #4f63ff;
+  --primary-quiet: #4456cc;
   --primary-hover: #3f52df;
   --primary-soft: rgba(79, 99, 255, 0.09);
   --primary-pressed: rgba(79, 99, 255, 0.15);
 
-  --accent-calm: #4f63ff;
+  --accent-calm: var(--primary-quiet);
   --accent-calm-soft: rgba(79, 99, 255, 0.09);
 
   --ai-accent: #6b4fff;
@@ -249,8 +258,15 @@
   --surface-subtle-glass: rgba(255, 255, 255, 0.68);
   --surface-strong-glass: rgba(255, 255, 255, 0.82);
 
-  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.06);
-  --shadow-md: 0 10px 32px rgba(0, 0, 0, 0.10);
+  --shadow-sm:
+    0 0.5px 0 0 rgba(255, 255, 255, 0.8) inset,
+    0 1px 2px rgba(15, 23, 42, 0.06),
+    0 0 0 0.5px rgba(15, 23, 42, 0.04);
+  --shadow-md:
+    0 0.5px 0 0 rgba(255, 255, 255, 0.9) inset,
+    0 12px 28px rgba(15, 23, 42, 0.08),
+    0 2px 6px rgba(15, 23, 42, 0.04),
+    0 0 0 0.5px rgba(15, 23, 42, 0.05);
   --shadow-lg: var(--shadow-md);
   --shadow-glow: none;
 }

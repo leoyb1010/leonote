@@ -3,6 +3,7 @@ import { z } from "zod";
 import { getSessionUserId } from "@/lib/session";
 import { prisma } from "@/lib/prisma";
 import { requireOwnedCategory, requireOwnedExpense, toExpenseDTO } from "@/lib/expense";
+import { guardUserWriteRequest } from "@/lib/request-guard";
 
 const expensePatchSchema = z.object({
   amount: z.number().int().positive().max(99999900).optional(),
@@ -26,6 +27,8 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
 export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const userId = await getSessionUserId();
   if (!userId) return NextResponse.json({ ok: false, message: "未登录" }, { status: 401 });
+  const guarded = guardUserWriteRequest(request, userId, "expenses");
+  if (guarded) return guarded;
 
   const { id } = await params;
   const existing = await requireOwnedExpense(id, userId);
@@ -56,9 +59,11 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
   return NextResponse.json({ ok: true, expense: toExpenseDTO(updated) });
 }
 
-export async function DELETE(_request: Request, { params }: { params: Promise<{ id: string }> }) {
+export async function DELETE(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const userId = await getSessionUserId();
   if (!userId) return NextResponse.json({ ok: false, message: "未登录" }, { status: 401 });
+  const guarded = guardUserWriteRequest(request, userId, "expenses");
+  if (guarded) return guarded;
 
   const { id } = await params;
   const existing = await requireOwnedExpense(id, userId);

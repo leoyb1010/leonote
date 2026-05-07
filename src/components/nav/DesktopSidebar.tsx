@@ -55,7 +55,7 @@ export function DesktopSidebar({
     <motion.aside
       animate={{ width: collapsed ? 72 : 264 }}
       transition={{ duration: 0.22, ease: [0.2, 0, 0, 1] }}
-      className="hidden xl:flex 2xl:[--sidebar-width:288px] 2xl:!w-[288px] flex-col shrink-0 h-screen sticky top-0 border-r border-[var(--hairline)] bg-[var(--bg-app)]/95"
+      className="hidden md:flex 2xl:[--sidebar-width:288px] 2xl:!w-[288px] flex-col shrink-0 h-screen sticky top-0 border-r border-[var(--hairline)] bg-[var(--bg-app)]/95"
     >
       {/* Header: Logo + subtitle */}
       <div

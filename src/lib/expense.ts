@@ -112,6 +112,25 @@ export function getMonthRange(now = new Date()) {
   return { start, end: now };
 }
 
+function getPreviousMonthComparableRange(now = new Date()) {
+  const start = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+  start.setHours(0, 0, 0, 0);
+
+  const lastDay = new Date(now.getFullYear(), now.getMonth(), 0).getDate();
+  const endDay = Math.min(now.getDate(), lastDay);
+  const end = new Date(now.getFullYear(), now.getMonth() - 1, endDay);
+  end.setHours(now.getHours(), now.getMinutes(), now.getSeconds(), now.getMilliseconds());
+
+  return { start, end };
+}
+
+function formatDateKey(date: Date) {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, "0");
+  const d = String(date.getDate()).padStart(2, "0");
+  return `${y}-${m}-${d}`;
+}
+
 export function getWeekRange(now = new Date()) {
   const start = new Date(now);
   start.setDate(start.getDate() - start.getDay());
@@ -122,8 +141,11 @@ export function getWeekRange(now = new Date()) {
 export async function getExpenseSummary(userId: string, now = new Date()) {
   const month = getMonthRange(now);
   const week = getWeekRange(now);
+  const previousMonth = getPreviousMonthComparableRange(now);
+  const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+  monthEnd.setHours(23, 59, 59, 999);
 
-  const [monthlyGroups, weeklyTotal, recent, categories] = await Promise.all([
+  const [monthlyGroups, weeklyTotal, previousTotal, recent, categories, topExpense, dailyRows] = await Promise.all([
     prisma.expense.groupBy({
       by: ["categoryId"],
       where: {
@@ -142,6 +164,14 @@ export async function getExpenseSummary(userId: string, now = new Date()) {
       },
       _sum: { amount: true },
     }),
+    prisma.expense.aggregate({
+      where: {
+        userId,
+        deletedAt: null,
+        occurredAt: { gte: previousMonth.start, lte: previousMonth.end },
+      },
+      _sum: { amount: true },
+    }),
     prisma.expense.findMany({
       where: { userId, deletedAt: null },
       include: { category: true },
@@ -149,6 +179,24 @@ export async function getExpenseSummary(userId: string, now = new Date()) {
       take: 10,
     }),
     prisma.expenseCategory.findMany({ where: { userId } }),
+    prisma.expense.findFirst({
+      where: {
+        userId,
+        deletedAt: null,
+        occurredAt: { gte: month.start, lte: month.end },
+      },
+      include: { category: true },
+      orderBy: [{ amount: "desc" }, { occurredAt: "desc" }],
+    }),
+    prisma.$queryRaw<Array<{ d: string; total: number | bigint | null }>>`
+      SELECT date(occurredAt) as d, SUM(amount) as total
+      FROM Expense
+      WHERE userId = ${userId}
+        AND deletedAt IS NULL
+        AND occurredAt >= ${month.start}
+        AND occurredAt <= ${monthEnd}
+      GROUP BY date(occurredAt)
+    `,
   ]);
 
   const categoryMap = new Map(categories.map((c) => [c.id, c]));
@@ -168,11 +216,32 @@ export async function getExpenseSummary(userId: string, now = new Date()) {
     .sort((a, b) => b.total - a.total);
 
   const totalAmount = byCategory.reduce((sum, item) => sum + item.total, 0);
+  const dailyMap = new Map(dailyRows.map((row) => [row.d, Number(row.total ?? 0)]));
+  const daysInMonth = monthEnd.getDate();
+  const elapsedDays = Math.max(1, now.getDate());
+  const daily = Array.from({ length: daysInMonth }, (_, index) => {
+    const date = new Date(now.getFullYear(), now.getMonth(), index + 1);
+    const key = formatDateKey(date);
+    return { date: key, total: dailyMap.get(key) ?? 0 };
+  });
+  const previous = previousTotal._sum.amount ?? 0;
+  const deltaPct = previous > 0 ? ((totalAmount - previous) / previous) * 100 : null;
+  const averageDaily = Math.round(totalAmount / elapsedDays);
+  const forecastMonth = Math.round(averageDaily * daysInMonth);
 
   return {
     totalAmount,
     weeklyTotal: weeklyTotal._sum.amount ?? 0,
     byCategory,
     recent: recent.map(toExpenseDTO),
+    daily,
+    monthOverMonth: {
+      current: totalAmount,
+      previous,
+      deltaPct,
+    },
+    topExpense: topExpense ? toExpenseDTO(topExpense) : null,
+    averageDaily,
+    forecastMonth,
   };
 }

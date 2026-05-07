@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import Link from "next/link";
 import { Card } from "@/components/base/Card";
 import { Button } from "@/components/base/Button";
 import { EmptyState } from "@/components/base/EmptyState";
@@ -12,6 +13,7 @@ import { PageHeader } from "@/components/layout/PageHeader";
 interface Message {
   role: "user" | "assistant";
   content: string;
+  notesUsed?: Array<{ id: string; title: string; excerpt?: string }>;
 }
 
 export default function AIPage() {
@@ -36,7 +38,14 @@ export default function AIPage() {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || "AI 请求失败");
-      setMessages((prev) => [...prev, { role: "assistant", content: data.answer || "AI 暂未返回内容" }]);
+      setMessages((prev) => [
+        ...prev,
+        {
+          role: "assistant",
+          content: data.answer || "AI 暂未返回内容",
+          notesUsed: Array.isArray(data.notesUsed) ? data.notesUsed : [],
+        },
+      ]);
     } catch (e: unknown) {
       const err = e as { message?: string };
       setError(err.message || "请求失败");
@@ -84,6 +93,19 @@ export default function AIPage() {
                 <p className="text-sm text-[var(--text-secondary)] whitespace-pre-wrap leading-relaxed">
                   {msg.content}
                 </p>
+                {msg.role === "assistant" && msg.notesUsed && msg.notesUsed.length > 0 ? (
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    {msg.notesUsed.slice(0, 6).map((note) => (
+                      <Link
+                        key={note.id}
+                        href={`/notes/${note.id}`}
+                        className="max-w-full truncate rounded-full border border-[var(--hairline)] bg-[var(--interactive-hover)] px-3 py-1 text-xs text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
+                      >
+                        引用：{note.title || "未命名笔记"}
+                      </Link>
+                    ))}
+                  </div>
+                ) : null}
               </Card>
             </motion.div>
           ))}

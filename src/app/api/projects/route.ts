@@ -3,6 +3,7 @@ import { z } from "zod";
 import { getSessionUserId } from "@/lib/session";
 import { prisma } from "@/lib/prisma";
 import { slugifyProjectName } from "@/lib/server-notes";
+import { guardUserWriteRequest } from "@/lib/request-guard";
 
 const schema = z.object({
   name: z.string().min(1),
@@ -25,6 +26,8 @@ export async function GET() {
 export async function POST(request: Request) {
   const userId = await getSessionUserId();
   if (!userId) return NextResponse.json({ ok: false, message: "未登录" }, { status: 401 });
+  const guarded = guardUserWriteRequest(request, userId, "projects");
+  if (guarded) return guarded;
 
   const body = await request.json();
   const parsed = schema.safeParse(body);

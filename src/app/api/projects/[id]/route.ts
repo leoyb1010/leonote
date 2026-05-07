@@ -3,6 +3,7 @@ import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { slugifyProjectName } from "@/lib/server-notes";
 import { getSessionUserId } from "@/lib/session";
+import { guardUserWriteRequest } from "@/lib/request-guard";
 
 const schema = z.object({
   name: z.string().trim().min(1, "项目名称不能为空"),
@@ -18,6 +19,8 @@ async function getOwnedProject(userId: string, id: string) {
 export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const userId = await getSessionUserId();
   if (!userId) return NextResponse.json({ ok: false, message: "未登录" }, { status: 401 });
+  const guarded = guardUserWriteRequest(request, userId, "projects");
+  if (guarded) return guarded;
 
   const { id } = await params;
   const project = await getOwnedProject(userId, id);
@@ -54,9 +57,11 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
   return NextResponse.json({ ok: true, project: updated });
 }
 
-export async function DELETE(_request: Request, { params }: { params: Promise<{ id: string }> }) {
+export async function DELETE(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const userId = await getSessionUserId();
   if (!userId) return NextResponse.json({ ok: false, message: "未登录" }, { status: 401 });
+  const guarded = guardUserWriteRequest(request, userId, "projects");
+  if (guarded) return guarded;
 
   const { id } = await params;
   const project = await getOwnedProject(userId, id);

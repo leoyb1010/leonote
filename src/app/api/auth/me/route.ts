@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { getSessionUserId } from "@/lib/session";
 import { prisma } from "@/lib/prisma";
+import { guardUserWriteRequest } from "@/lib/request-guard";
 
 const profileSchema = z.object({
   name: z.string().min(1, "昵称不能为空").max(50, "昵称过长"),
@@ -39,6 +40,8 @@ export async function PATCH(request: Request) {
       { ok: false, message: "未登录或账号不存在" },
       { status: 401 },
     );
+  const guarded = guardUserWriteRequest(request, user.id, "profile", { limit: 20 });
+  if (guarded) return guarded;
 
   const body = await request.json();
   const parsed = profileSchema.safeParse(body);

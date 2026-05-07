@@ -9,6 +9,14 @@ const DEFAULT_BASE_URL =
 const DEFAULT_API_KEY = process.env.AI_API_KEY || process.env.OPENAI_API_KEY || "";
 const DEFAULT_MODEL = process.env.AI_MODEL || "deepseek-v4-flash";
 const FALLBACK_MODEL = process.env.AI_FALLBACK_MODEL || "deepseek-v4-pro";
+const DEFAULT_ALLOWED_AI_HOSTS = [
+  "api.deepseek.com",
+  "api.openai.com",
+  "api.anthropic.com",
+  "api.moonshot.cn",
+  "dashscope.aliyuncs.com",
+  "open.bigmodel.cn",
+];
 
 export type AIResolvedSettings = {
   baseUrl: string;
@@ -36,7 +44,49 @@ export async function requireAISettings(userId: string) {
   if (!settings.baseUrl || !settings.apiKey || !settings.model) {
     throw new Error("AI 配置不完整，请先在设置页完成配置");
   }
+  assertSafeAIBaseUrl(settings.baseUrl);
   return settings;
+}
+
+function allowedAIHosts() {
+  const hosts = new Set(DEFAULT_ALLOWED_AI_HOSTS);
+  for (const value of (process.env.AI_ALLOWED_HOSTS ?? "").split(",")) {
+    const host = value.trim().toLowerCase();
+    if (host) hosts.add(host);
+  }
+
+  for (const raw of [DEFAULT_BASE_URL, process.env.OPENAI_BASE_URL]) {
+    if (!raw) continue;
+    try {
+      const url = new URL(raw);
+      if (url.protocol === "https:") hosts.add(url.host.toLowerCase());
+    } catch {
+      // Startup env validation happens when the setting is used.
+    }
+  }
+
+  return hosts;
+}
+
+export function assertSafeAIBaseUrl(raw: string) {
+  let url: URL;
+  try {
+    url = new URL(raw);
+  } catch {
+    throw new Error("AI baseUrl 不合法");
+  }
+
+  if (url.protocol !== "https:") {
+    throw new Error("AI baseUrl 必须使用 https");
+  }
+
+  if (!allowedAIHosts().has(url.host.toLowerCase())) {
+    throw new Error("AI baseUrl 不在允许列表内");
+  }
+
+  url.search = "";
+  url.hash = "";
+  return url.toString().replace(/\/$/, "");
 }
 
 export async function saveAISettings(
@@ -46,12 +96,13 @@ export async function saveAISettings(
   const current = await getAISettings(userId);
   const apiKey = input.apiKey ?? current.apiKey;
   const encryptedKey = apiKey ? encryptSecret(apiKey) : "";
+  const baseUrl = assertSafeAIBaseUrl(input.baseUrl ?? current.baseUrl);
 
   return prisma.aISetting.upsert({
     where: { userId },
     create: {
       userId,
-      baseUrl: input.baseUrl ?? current.baseUrl,
+      baseUrl,
       apiKey: encryptedKey,
       model: input.model ?? current.model,
       fallbackModel: input.fallbackModel ?? current.fallbackModel,
@@ -59,7 +110,7 @@ export async function saveAISettings(
         input.enableAutoOrganize ?? current.enableAutoOrganize,
     },
     update: {
-      baseUrl: input.baseUrl ?? current.baseUrl,
+      baseUrl,
       apiKey: encryptedKey,
       model: input.model ?? current.model,
       fallbackModel: input.fallbackModel ?? current.fallbackModel,
@@ -101,8 +152,9 @@ export async function callChatJSON<T>({
 }): Promise<T> {
   await assertAIRateLimit("json", userId, 20);
   const settings = await requireAISettings(userId);
+  const baseUrl = assertSafeAIBaseUrl(settings.baseUrl);
   const res = await fetch(
-    `${settings.baseUrl.replace(/\/$/, "")}/chat/completions`,
+    `${baseUrl}/chat/completions`,
     {
       method: "POST",
       headers: {
@@ -148,8 +200,9 @@ export async function callChatText({
 }) {
   await assertAIRateLimit("text", userId, 20);
   const settings = await requireAISettings(userId);
+  const baseUrl = assertSafeAIBaseUrl(settings.baseUrl);
   const res = await fetch(
-    `${settings.baseUrl.replace(/\/$/, "")}/chat/completions`,
+    `${baseUrl}/chat/completions`,
     {
       method: "POST",
       headers: {

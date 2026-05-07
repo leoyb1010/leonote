@@ -32,4 +32,13 @@ export type ExpenseSummaryDTO = {
     count: number;
   }>;
   recent: ExpenseDTO[];
+  daily: Array<{ date: string; total: number }>;
+  monthOverMonth: {
+    current: number;
+    previous: number;
+    deltaPct: number | null;
+  };
+  topExpense: ExpenseDTO | null;
+  averageDaily: number;
+  forecastMonth: number;
 };

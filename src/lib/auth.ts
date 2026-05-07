@@ -21,6 +21,12 @@ function sign(payload: string) {
     .digest("base64url");
 }
 
+function signaturesMatch(expected: string, actual: string) {
+  const a = Buffer.from(expected);
+  const b = Buffer.from(actual);
+  return a.length === b.length && crypto.timingSafeEqual(a, b);
+}
+
 export async function hashPassword(password: string) {
   return bcrypt.hash(password, 10);
 }
@@ -45,7 +51,7 @@ export function readSessionValue(raw?: string) {
   if (parts.length < 4) return null;
 
   const payload = parts.slice(0, 3).join(".");
-  if (sign(payload) !== signature) return null;
+  if (!signaturesMatch(sign(payload), signature)) return null;
 
   const exp = Number(expRaw);
   if (!Number.isFinite(exp) || Date.now() > exp) return null;

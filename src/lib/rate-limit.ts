@@ -1,6 +1,9 @@
 type Bucket = { count: number; resetAt: number };
 const buckets = new Map<string, Bucket>();
 
+// This is an in-process fixed window limiter. It protects single-instance
+// self-hosting, but multi-process deployments must replace it with shared
+// storage such as Redis or a database-backed limiter.
 export function checkRateLimit(
   key: string,
   limit: number,

@@ -4,6 +4,7 @@ import { getSessionUserId } from "@/lib/session";
 import { prisma } from "@/lib/prisma";
 import { ensureProject, requireOwnedNote, toNoteDTO } from "@/lib/server-notes";
 import { updateNoteWithRevision } from "@/lib/note-mutations";
+import { guardUserWriteRequest } from "@/lib/request-guard";
 
 const schema = z.object({
   title: z.string().optional(),
@@ -43,6 +44,8 @@ export async function GET(_request: Request, context: { params: Promise<{ id: st
 export async function PATCH(request: Request, context: { params: Promise<{ id: string }> }) {
   const userId = await getSessionUserId();
   if (!userId) return NextResponse.json({ ok: false, message: "未登录" }, { status: 401 });
+  const guarded = guardUserWriteRequest(request, userId, "notes");
+  if (guarded) return guarded;
 
   const { id } = await context.params;
   const body = await request.json();
@@ -79,9 +82,11 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
   return NextResponse.json({ ok: true, note: toNoteDTO(updated) });
 }
 
-export async function DELETE(_request: Request, context: { params: Promise<{ id: string }> }) {
+export async function DELETE(request: Request, context: { params: Promise<{ id: string }> }) {
   const userId = await getSessionUserId();
   if (!userId) return NextResponse.json({ ok: false, message: "未登录" }, { status: 401 });
+  const guarded = guardUserWriteRequest(request, userId, "notes");
+  if (guarded) return guarded;
 
   const { id } = await context.params;
   const existing = await requireOwnedNote(id, userId);
