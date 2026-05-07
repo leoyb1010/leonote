@@ -25,11 +25,14 @@ const nextConfig: NextConfig = {
             key: "Content-Security-Policy",
             value: [
               "default-src 'self'",
+              // unsafe-inline 为 Next.js webpack 运行时和主题初始化脚本所需。
+              // 未来计划：通过 middleware nonce 机制移除此豁免。
               "script-src 'self' 'unsafe-inline'",
               "style-src 'self' 'unsafe-inline'",
               "img-src 'self' data: blob:",
               "media-src 'self' blob:",
               "connect-src 'self' https:",
+              "object-src 'none'",
               "frame-ancestors 'none'",
               "base-uri 'self'",
               "form-action 'self'",

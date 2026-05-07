@@ -9,6 +9,7 @@ const DEFAULT_BASE_URL =
 const DEFAULT_API_KEY = process.env.AI_API_KEY || process.env.OPENAI_API_KEY || "";
 const DEFAULT_MODEL = process.env.AI_MODEL || "deepseek-v4-flash";
 const FALLBACK_MODEL = process.env.AI_FALLBACK_MODEL || "deepseek-v4-pro";
+const EFFORT = process.env.AI_EFFORT_LEVEL || undefined;
 const DEFAULT_ALLOWED_AI_HOSTS = [
   "api.deepseek.com",
   "api.openai.com",
@@ -143,35 +144,37 @@ export async function callChatJSON<T>({
   prompt,
   model,
   temperature = 0.2,
+  effort,
 }: {
   userId: string;
   system: string;
   prompt: string;
   model?: string;
   temperature?: number;
+  effort?: string;
 }): Promise<T> {
   await assertAIRateLimit("json", userId, 20);
   const settings = await requireAISettings(userId);
   const baseUrl = assertSafeAIBaseUrl(settings.baseUrl);
-  const res = await fetch(
-    `${baseUrl}/chat/completions`,
-    {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${settings.apiKey}`,
-      },
-      body: JSON.stringify({
-        model: model || settings.model,
-        temperature,
-        response_format: { type: "json_object" },
-        messages: [
-          { role: "system", content: system },
-          { role: "user", content: prompt },
-        ],
-      }),
+  const reasoning = effort || EFFORT;
+  const body: Record<string, unknown> = {
+    model: model || settings.model,
+    temperature,
+    response_format: { type: "json_object" },
+    messages: [
+      { role: "system", content: system },
+      { role: "user", content: prompt },
+    ],
+  };
+  if (reasoning) body.reasoning_effort = reasoning;
+  const res = await fetch(`${baseUrl}/chat/completions`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${settings.apiKey}`,
     },
-  );
+    body: JSON.stringify(body),
+  });
 
   if (!res.ok) {
     throw new Error(`AI 请求失败：${res.status}`);
@@ -191,34 +194,36 @@ export async function callChatText({
   prompt,
   model,
   temperature = 0.2,
+  effort,
 }: {
   userId: string;
   system: string;
   prompt: string;
   model?: string;
   temperature?: number;
+  effort?: string;
 }) {
   await assertAIRateLimit("text", userId, 20);
   const settings = await requireAISettings(userId);
   const baseUrl = assertSafeAIBaseUrl(settings.baseUrl);
-  const res = await fetch(
-    `${baseUrl}/chat/completions`,
-    {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${settings.apiKey}`,
-      },
-      body: JSON.stringify({
-        model: model || settings.model,
-        temperature,
-        messages: [
-          { role: "system", content: system },
-          { role: "user", content: prompt },
-        ],
-      }),
+  const reasoning = effort || EFFORT;
+  const body: Record<string, unknown> = {
+    model: model || settings.model,
+    temperature,
+    messages: [
+      { role: "system", content: system },
+      { role: "user", content: prompt },
+    ],
+  };
+  if (reasoning) body.reasoning_effort = reasoning;
+  const res = await fetch(`${baseUrl}/chat/completions`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${settings.apiKey}`,
     },
-  );
+    body: JSON.stringify(body),
+  });
 
   if (!res.ok) {
     throw new Error(`AI 请求失败：${res.status}`);

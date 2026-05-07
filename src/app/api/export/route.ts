@@ -4,6 +4,8 @@ import { listNotes, requireOwnedNote, toNoteDTO } from "@/lib/server-notes";
 import { prisma } from "@/lib/prisma";
 import { callChatText } from "@/lib/ai";
 
+// 注：GET 方法支持 ?ai=1 触发 AI 整理，有副作用（消耗 AI token）。
+// 语义上非幂等，但为兼容现有客户端保持 GET。未来版本可考虑拆分为 POST。
 export async function GET(request: Request) {
   const userId = await getSessionUserId();
   if (!userId) return NextResponse.json({ ok: false, message: "未登录" }, { status: 401 });

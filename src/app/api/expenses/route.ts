@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { listExpenses, requireOwnedCategory, toExpenseDTO } from "@/lib/expense";
 import { guardUserWriteRequest } from "@/lib/request-guard";
 
+// amount 单位为"分"（整数），前端需将元转分后传入。最大值 999999.00 元。
 const expenseCreateSchema = z.object({
   amount: z.number().int().positive().max(99999900),
   categoryId: z.string().nullable().optional(),

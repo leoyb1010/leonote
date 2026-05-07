@@ -39,7 +39,15 @@ async function createImportedNote(tx: Prisma.TransactionClient, userId: string, 
 }
 
 function isBlockedIp(ip: string) {
-  if (net.isIP(ip) === 4) return ip.startsWith("10.") || ip.startsWith("127.") || ip.startsWith("169.254.") || ip.startsWith("172.") || ip.startsWith("192.168.");
+  if (net.isIP(ip) === 4) {
+    return (
+      ip.startsWith("10.") ||
+      ip.startsWith("127.") ||
+      ip.startsWith("169.254.") ||
+      /^172\.(1[6-9]|2\d|3[01])\./.test(ip) || // 172.16.0.0/12
+      ip.startsWith("192.168.")
+    );
+  }
   if (net.isIP(ip) === 6) {
     const lower = ip.toLowerCase();
     return lower === "::1" || lower.startsWith("fc") || lower.startsWith("fd") || lower.startsWith("fe80");
