@@ -1,11 +1,12 @@
 "use client";
 
 import React, { useState } from "react";
-import { Sun, Sparkles, History, ArrowRight } from "lucide-react";
+import { Sun, Sparkles, History, ArrowRight, WalletCards } from "lucide-react";
 import Link from "next/link";
 import { NoteRow } from "@/components/notes/NoteRow";
 import { Button } from "@/components/base/Button";
 import { formatRelativeTime } from "@/lib/date";
+import { formatMoney } from "@/lib/format-money";
 
 interface ProjectPreview {
   id: string;
@@ -36,6 +37,19 @@ interface RecentlyViewedItem {
   lastViewedAt: string;
 }
 
+interface WeeklyExpense {
+  total: number;
+  monthTotal: number;
+  topCategories: Array<{
+    categoryId: string | null;
+    name: string;
+    emoji: string;
+    color: string;
+    total: number;
+    count: number;
+  }>;
+}
+
 interface TodayPageProps {
   data: {
     counts: { total: number; favorite: number; pinned: number };
@@ -45,6 +59,7 @@ interface TodayPageProps {
     memoryFlashback: MemoryFlashback | null;
     weeklySettling: WeeklySettling;
     recentlyViewed: RecentlyViewedItem[];
+    weeklyExpense: WeeklyExpense;
   } | null;
   signedIn: boolean;
 }
@@ -175,14 +190,14 @@ export function TodayPage({ data, signedIn }: TodayPageProps) {
     );
   }
 
-  const { tags, projects, memoryFlashback, weeklySettling, recentlyViewed } = data;
+  const { tags, projects, memoryFlashback, weeklySettling, weeklyExpense, recentlyViewed } = data;
 
   const handleNoteCreated = (note: QuickCaptureNote) => {
     setRecent((prev) => [note, ...prev].slice(0, 5));
     setCounts((prev) => ({ ...prev, total: prev.total + 1 }));
   };
 
-  const showRightRail = memoryFlashback || weeklySettling.created > 0 || recentlyViewed.length > 0;
+  const showRightRail = memoryFlashback || weeklySettling.created > 0 || weeklyExpense.total > 0 || recentlyViewed.length > 0;
 
   const heroSection = (
     <section className="leonote-hero pb-6 border-b border-[var(--hairline)]">
@@ -294,6 +309,29 @@ export function TodayPage({ data, signedIn }: TodayPageProps) {
             {weeklySettling.reviewed > 0 && <p>回看 {weeklySettling.reviewed} 篇旧笔记</p>}
             {weeklySettling.memories > 0 && <p>形成 {weeklySettling.memories} 条长期记忆</p>}
           </div>
+        </div>
+      )}
+
+      {/* v1.5 Weekly Expense */}
+      {weeklyExpense.total > 0 && (
+        <div className="rounded-2xl border border-[var(--hairline)] bg-[var(--material-inset)] px-4 py-4">
+          <div className="mb-3 flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2">
+              <WalletCards size={16} className="text-[var(--text-muted)]" />
+              <span className="text-xs font-medium text-[var(--text-muted)]">本周开销</span>
+            </div>
+            <Link href="/ledger" className="text-xs text-[var(--primary)] hover:underline">
+              看一眼
+            </Link>
+          </div>
+          <p className="text-sm text-[var(--text-secondary)] [font-variant-numeric:tabular-nums]">
+            这周记下 {formatMoney(weeklyExpense.total)}
+          </p>
+          {weeklyExpense.topCategories.length > 0 ? (
+            <p className="mt-2 text-xs leading-5 text-[var(--text-muted)]">
+              主要花在 {weeklyExpense.topCategories.map((item) => `${item.emoji} ${item.name}`).join("、")}。
+            </p>
+          ) : null}
         </div>
       )}
 

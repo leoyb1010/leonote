@@ -95,6 +95,14 @@ AI_FALLBACK_MODEL="deepseek-v4-pro"
 - 本周沉淀：新增/编辑/回看/长期记忆统计
 - 2xl 大屏右栏布局（主内容+320px侧栏）
 
+### 轻记账 (v1.5)
+- 5秒记账：输入"拿铁 35"自动识别金额 + 类型
+- 自定义类型：name / emoji / color（快速模板：AI订阅/咖啡/书/健身）
+- 月度合计 + 本周合计 + 类型分布条 + 最近记录
+- 首页「今天」本周开销轻卡片
+- 设置页「记账类型」入口
+- 完全软删除 + 删除类型后历史账单保留
+
 ### 写作体验 (v1.4)
 - Focus Mode 安静写作：编辑器降噪、内容居中
 - Apple 风格编辑器 — 760px 固定宽度，17px 字体，1.78 行高（大屏 18px）
@@ -212,6 +220,7 @@ npm run ci           # 全链路：lint → typecheck → test → build
 
 | 版本 | 日期 | 更新内容 |
 |---|---|---|
+| **v1.5.0** | 2026-05-07 | 轻记账模块：ExpenseCategory + Expense 模型；format-money 金额格式化（分存储，¥展示）；5秒记账 QuickCapture（输入"拿铁 35"自动识别）；月度/本周合计 + 类型分布条；首页本周开销轻卡片；设置页记账类型入口；setNull 删除类型保留历史；全 API Zod 校验 + 软删除 |
 | **v1.4.0** | 2026-05-06 | 情绪价值与高级感升级：Quiet Material 设计语言（--material-*、--hairline）；首页重构为数字居所（Hero + Capture Dock + 记忆闪回 + 本周沉淀 + 右栏）；大屏侧边栏 264/288px + 导航 44px hit-target；Button 尺寸 h-8/10/12 + Apple 风格系统按钮；编辑器 Focus Mode + 17px typography + 保存仪式感；AI 静读助手（ThinkingLine + 提炼要点/整理记忆）；全局微文案情绪化升级（删除/空状态/加载/版本）；PageContainer dashboard/reader 2xl 宽度策略 |
 | **v1.3.0** | 2026-05-05 | 双主题自适应升级：Light/Dark/System 三态模型 + FOUC 防闪烁；语义交互 Token 体系（--interactive-hover/active/selected、--surface-*-glass、--overlay-scrim）；16 个组件硬编码暗色残留清理；ThemeProvider + ThemeSegmentedControl；Tailwind darkMode selector 改造；全面测试验证 |
 | **v1.2.1** | 2026-05-05 | 补丁修复：全局按钮对齐（Button 组件 + buttonClass() 统一）；表单输入框高度标准化（h-10 对齐 Button lg）；快速记录后列表即时刷新；AI 设置面板布局重叠修复（space-y-4 挂载层级修正）；数据库迁移补全（Note.source / Note.lastViewedAt / NoteRevision） |

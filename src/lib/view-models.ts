@@ -1,5 +1,6 @@
 import { listNotes, toNoteDTO } from "@/lib/server-notes";
 import { prisma } from "@/lib/prisma";
+import { getExpenseSummary } from "@/lib/expense";
 
 export async function getHomeViewData(userId: string) {
   const notes = (await listNotes(userId, { status: "active" })).map(toNoteDTO);
@@ -53,6 +54,9 @@ export async function getHomeViewData(userId: string) {
     select: { id: true, title: true, excerpt: true, lastViewedAt: true },
   });
 
+  // v1.5: Expense summary for home page
+  const expenseSummary = await getExpenseSummary(userId);
+
   return {
     notes,
     recent: notes.slice(0, 5).map((note) => ({
@@ -96,6 +100,12 @@ export async function getHomeViewData(userId: string) {
       excerpt: n.excerpt,
       lastViewedAt: n.lastViewedAt!.toISOString(),
     })),
+    // v1.5 ledger
+    weeklyExpense: {
+      total: expenseSummary.weeklyTotal,
+      monthTotal: expenseSummary.totalAmount,
+      topCategories: expenseSummary.byCategory.slice(0, 2),
+    },
   };
 }
 
