@@ -57,7 +57,7 @@ function hasRecentIntent(question: string) {
 }
 
 function hasBrowseAllIntent(question: string) {
-  return /全部|所有|每一篇|全览|总体|整体|全局|所有笔记/.test(question);
+  return /全部|所有|每一篇|全览|总体|整体|全局|总结|汇总|概况|梳理|回顾/.test(question);
 }
 
 function trimForContext(content: string, max = 3000) {
