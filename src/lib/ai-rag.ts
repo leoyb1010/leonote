@@ -56,7 +56,11 @@ function hasRecentIntent(question: string) {
   return /最近|本周|这周|一周|这几天|今天|昨天|近期/.test(question);
 }
 
-function trimForContext(content: string, max = 720) {
+function hasBrowseAllIntent(question: string) {
+  return /全部|所有|每一篇|全览|总体|整体|全局|所有笔记/.test(question);
+}
+
+function trimForContext(content: string, max = 3000) {
   const clean = content.replace(/\s+/g, " ").trim();
   return clean.length > max ? `${clean.slice(0, max)}...` : clean;
 }
@@ -81,8 +85,11 @@ function noteBlock(note: {
 
 export async function buildGlobalContext(userId: string, question: string) {
   const terms = extractSearchTerms(question);
+  const isBrowseAll = hasBrowseAllIntent(question);
+  const isRecent = hasRecentIntent(question);
+
   const noteWhere =
-    terms.length > 0
+    terms.length > 0 && !isBrowseAll
       ? {
           userId,
           deletedAt: null,
@@ -101,19 +108,21 @@ export async function buildGlobalContext(userId: string, question: string) {
           isArchived: false,
         };
 
+  const noteLimit = isBrowseAll ? 50 : 20;
+
   const [matchedNotes, recentNotes, memories] = await Promise.all([
     prisma.note.findMany({
       where: noteWhere,
       include: { project: true, tags: { include: { tag: true } } },
       orderBy: [{ isPinned: "desc" }, { updatedAt: "desc" }],
-      take: 20,
+      take: noteLimit,
     }),
-    hasRecentIntent(question)
+    isRecent || isBrowseAll
       ? prisma.note.findMany({
           where: { userId, deletedAt: null, isArchived: false },
           include: { project: true, tags: { include: { tag: true } } },
           orderBy: [{ updatedAt: "desc" }],
-          take: 12,
+          take: 50,
         })
       : Promise.resolve([]),
     prisma.memoryFact.findMany({
@@ -126,7 +135,7 @@ export async function buildGlobalContext(userId: string, question: string) {
 
   const noteMap = new Map<string, (typeof matchedNotes)[number]>();
   for (const note of [...matchedNotes, ...recentNotes]) noteMap.set(note.id, note);
-  const notes = [...noteMap.values()].slice(0, 20);
+  const notes = [...noteMap.values()].slice(0, isBrowseAll ? 50 : 20);
 
   const promptContext = [
     "用户笔记上下文：",
