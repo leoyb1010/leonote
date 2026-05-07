@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
+import Markdown from "react-markdown";
 import { Card } from "@/components/base/Card";
 import { Button } from "@/components/base/Button";
 import { EmptyState } from "@/components/base/EmptyState";
@@ -90,9 +91,9 @@ export default function AIPage() {
                     </span>
                   )}
                 </div>
-                <p className="text-sm text-[var(--text-secondary)] whitespace-pre-wrap leading-relaxed">
-                  {msg.content}
-                </p>
+                <div className="text-sm text-[var(--text-secondary)] leading-relaxed prose-a:text-[var(--primary)] prose-strong:text-[var(--text-primary)] [&_h2]:text-[15px] [&_h2]:font-semibold [&_h2]:text-[var(--text-primary)] [&_h2]:mt-4 [&_h2]:mb-2 [&_h3]:text-[14px] [&_h3]:font-medium [&_h3]:text-[var(--text-secondary)] [&_h3]:mt-3 [&_h3]:mb-1.5 [&_ul]:pl-4 [&_ul]:space-y-1 [&_li]:leading-relaxed [&_p]:mb-2 [&_hr]:border-[var(--hairline)] [&_hr]:my-3">
+                  <Markdown>{msg.content}</Markdown>
+                </div>
                 {msg.role === "assistant" && msg.notesUsed && msg.notesUsed.length > 0 ? (
                   <div className="mt-3 flex flex-wrap gap-2">
                     {msg.notesUsed.slice(0, 6).map((note) => (

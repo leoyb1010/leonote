@@ -4,6 +4,7 @@ import { motion, useReducedMotion } from "framer-motion";
 import { BrainCircuit, SendHorizonal, Sparkles, BookOpen } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/base/Button";
+import Markdown from "react-markdown";
 import { staggerContainer, staggerItem } from "@/lib/animations";
 import { cn } from "@/lib/utils";
 
@@ -205,7 +206,9 @@ export function AIChatPanel({ noteId, linkedMemories = [] }: { noteId: string; l
                     {chat.role === "assistant" ? <Sparkles size={14} className="text-[var(--ai-accent)]" /> : null}
                     {chat.role === "assistant" ? "静读" : "你"}
                   </div>
-                  <p className="whitespace-pre-wrap">{chat.text || ""}</p>
+                  <div className="text-sm leading-relaxed prose-a:text-[var(--primary)] prose-strong:text-[var(--text-primary)] [&_h2]:text-[15px] [&_h2]:font-semibold [&_h2]:mt-3 [&_h2]:mb-1.5 [&_ul]:pl-4 [&_ul]:space-y-0.5 [&_li]:leading-relaxed [&_p]:mb-2">
+                    <Markdown>{chat.text || ""}</Markdown>
+                  </div>
                   {chat.memoryRefs?.length ? (
                     <div className="mt-3 flex flex-wrap gap-2">
                       {chat.memoryRefs.map((ref) => (
