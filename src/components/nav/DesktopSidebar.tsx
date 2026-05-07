@@ -13,6 +13,7 @@ import {
   ChevronLeft,
   ChevronRight,
   User,
+  WalletCards,
 } from "lucide-react";
 
 export interface NavItem {
@@ -26,6 +27,7 @@ const navItems: NavItem[] = [
   { id: "today", label: "今天", icon: <Sun size={20} />, href: "/" },
   { id: "notes", label: "笔记", icon: <FileText size={20} />, href: "/notes" },
   { id: "projects", label: "项目", icon: <FolderKanban size={20} />, href: "/projects" },
+  { id: "ledger", label: "记账", icon: <WalletCards size={20} />, href: "/ledger" },
   { id: "ai", label: "AI", icon: <Sparkles size={20} />, href: "/ai" },
 ];
 
