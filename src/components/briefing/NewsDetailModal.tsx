@@ -1,10 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowUpRight, Bookmark, FilePlus2, X } from "lucide-react";
 import { Button } from "@/components/base/Button";
-import { proxyImageUrl } from "@/lib/briefing/utils";
+import { categoryLabel } from "@/lib/briefing/display";
 import type { NewsItemDTO } from "@/lib/briefing/types";
 
 interface Props {
@@ -20,20 +20,46 @@ function formatTime(input: string) {
   });
 }
 
+function cleanContent(input: string) {
+  return input
+    .replace(/<script[\s\S]*?<\/script>/gi, "")
+    .replace(/<style[\s\S]*?<\/style>/gi, "")
+    .replace(/<[^>]+>/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
 export function NewsDetailModal({ item, onClose, onPatchItem }: Props) {
   const [saving, setSaving] = useState(false);
+  const content = useMemo(() => cleanContent(item.content || item.excerpt || ""), [item.content, item.excerpt]);
+
+  useEffect(() => {
+    const originalOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    const handleKey = (event: KeyboardEvent) => {
+      if (event.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", handleKey);
+    return () => {
+      document.body.style.overflow = originalOverflow;
+      window.removeEventListener("keydown", handleKey);
+    };
+  }, [onClose]);
 
   async function importNote() {
     if (saving || item.isImported) return;
     setSaving(true);
-    const res = await fetch("/api/briefing/import", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ type: "item", itemId: item.id }),
-    });
-    const json = await res.json();
-    setSaving(false);
-    if (json.ok) onPatchItem(item.id, { isImported: true, importedNoteId: json.noteId, isRead: true });
+    try {
+      const res = await fetch("/api/briefing/import", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ type: "item", itemId: item.id }),
+      });
+      const json = await res.json();
+      if (json.ok) onPatchItem(item.id, { isImported: true, importedNoteId: json.noteId, isRead: true });
+    } finally {
+      setSaving(false);
+    }
   }
 
   async function toggleFavorite() {
@@ -46,99 +72,89 @@ export function NewsDetailModal({ item, onClose, onPatchItem }: Props) {
     });
   }
 
-  const categoryLabel = item.category === "world" ? "世界" : item.category === "finance" ? "金融" : "AI 科技";
+  const label = categoryLabel(item.category);
 
   return (
     <AnimatePresence>
       <motion.div
-        className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6"
+        className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         onClick={onClose}
       >
-        {/* Backdrop */}
         <motion.div
-          className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+          className="absolute inset-0 bg-black/60 backdrop-blur-md"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
         />
 
-        {/* Card */}
         <motion.div
-          className="relative z-10 w-full max-w-2xl max-h-[85vh] overflow-y-auto card-premium p-6 sm:p-8"
+          className="card-premium relative z-10 flex max-h-[88dvh] w-full max-w-3xl flex-col overflow-hidden"
           initial={{ opacity: 0, scale: 0.94, y: 24 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.94, y: 24 }}
-          transition={{ type: "spring", stiffness: 380, damping: 28 }}
+          transition={{ type: "spring", stiffness: 340, damping: 30 }}
           onClick={(e) => e.stopPropagation()}
         >
-          {/* Close button */}
-          <button onClick={onClose} className="absolute right-4 top-4 rounded-full border border-[var(--hairline)] p-1.5 text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--interactive-hover)] transition-colors">
-            <X size={16} />
-          </button>
-
-          {/* Image */}
-          <div className="-mx-6 -mt-6 sm:-mx-8 sm:-mt-8 mb-5 aspect-[16/9] overflow-hidden bg-[var(--material-inset)]">
-            <img
-              src={proxyImageUrl(item.imageUrl) ?? ""}
-              alt=""
-              className="h-full w-full object-cover"
-              onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
-            />
-          </div>
-
-          {/* Category badge */}
-          <span className="inline-block rounded-[var(--radius-pill)] border border-[var(--hairline)] bg-[var(--material-inset)] px-2.5 py-0.5 text-[11px] text-[var(--text-muted)]">
-            {categoryLabel}
-          </span>
-
-          {/* Title */}
-          <h2 className="mt-3 text-xl font-semibold leading-snug tracking-[-0.035em] text-[var(--text-primary)] sm:text-2xl">
-            {item.title}
-          </h2>
-
-          {/* Meta */}
-          <p className="mt-2 numeric-display text-xs text-[var(--text-muted)]">
-            {item.sourceName} · {formatTime(item.publishedAt)}
-          </p>
-
-          {/* Summary */}
-          <div className="mt-5 rounded-[var(--radius-lg)] border border-[var(--hairline)] bg-[var(--material-inset)] p-4">
-            <p className="text-[11px] uppercase tracking-[0.12em] text-[var(--ai-accent)] font-medium mb-1">AI 摘要</p>
-            <p className="text-sm leading-relaxed text-[var(--text-secondary)]">
-              {item.aiSummary || item.excerpt || "暂无摘要"}
-            </p>
-          </div>
-
-          {/* Key points */}
-          {item.aiKeyPoints.length > 0 && (
-            <div className="mt-4">
-              <p className="text-xs font-medium text-[var(--text-secondary)] mb-2">要点</p>
-              <ul className="space-y-1.5">
-                {item.aiKeyPoints.map((point, i) => (
-                  <li key={i} className="flex gap-2 text-sm text-[var(--text-secondary)]">
-                    <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-[var(--primary)] opacity-60" />
-                    <span>{point}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
-
-          {/* Content */}
-          {item.content && item.content.length > 20 && (
-            <div className="mt-5">
-              <p className="text-xs font-medium text-[var(--text-secondary)] mb-2">内容</p>
-              <p className="text-sm leading-relaxed text-[var(--text-secondary)] line-clamp-12 whitespace-pre-line">
-                {item.content.replace(/<[^>]+>/g, "").slice(0, 2000)}
+          <div className="flex shrink-0 items-center justify-between gap-3 border-b border-[var(--hairline)] bg-[var(--material-elevated)] px-4 py-3 sm:px-5">
+            <div className="min-w-0">
+              <p className="truncate text-xs text-[var(--text-muted)]">
+                {label} · {item.sourceName} · {formatTime(item.publishedAt)}
               </p>
             </div>
-          )}
+            <button
+              type="button"
+              aria-label="关闭"
+              onClick={onClose}
+              className="rounded-full border border-[var(--hairline)] p-2 text-[var(--text-muted)] transition-colors hover:bg-[var(--interactive-hover)] hover:text-[var(--text-primary)]"
+            >
+              <X size={16} />
+            </button>
+          </div>
 
-          {/* Actions */}
-          <div className="mt-6 flex flex-wrap items-center gap-3 border-t border-[var(--hairline)] pt-4">
+          <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4 sm:px-6 sm:py-5">
+            <span className="inline-block rounded-[var(--radius-pill)] border border-[var(--hairline)] bg-[var(--material-inset)] px-2.5 py-1 text-[11px] text-[var(--text-muted)]">
+              {label}
+            </span>
+
+            <h2 className="mt-3 text-xl font-semibold leading-snug text-[var(--text-primary)] sm:text-2xl">
+              {item.title}
+            </h2>
+
+            <div className="mt-5 rounded-[var(--radius-lg)] border border-[var(--hairline)] bg-[var(--material-inset)] p-4">
+              <p className="mb-1 text-[11px] font-medium text-[var(--ai-accent)]">智能摘要</p>
+              <p className="text-sm leading-relaxed text-[var(--text-secondary)]">
+                {item.aiSummary || item.excerpt || "暂无摘要"}
+              </p>
+            </div>
+
+            {item.aiKeyPoints.length > 0 && (
+              <div className="mt-5">
+                <p className="mb-2 text-xs font-medium text-[var(--text-secondary)]">要点</p>
+                <ul className="space-y-2">
+                  {item.aiKeyPoints.map((point, i) => (
+                    <li key={i} className="flex gap-2 text-sm leading-relaxed text-[var(--text-secondary)]">
+                      <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-[var(--primary)] opacity-60" />
+                      <span>{point}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            {content.length > 20 && (
+              <div className="mt-5">
+                <p className="mb-2 text-xs font-medium text-[var(--text-secondary)]">正文摘录</p>
+                <p className="whitespace-pre-line text-sm leading-relaxed text-[var(--text-secondary)]">
+                  {content.slice(0, 2600)}
+                </p>
+              </div>
+            )}
+          </div>
+
+          <div className="flex shrink-0 flex-wrap items-center gap-3 border-t border-[var(--hairline)] bg-[var(--material-elevated)] px-4 py-3 sm:px-5">
             <Button size="sm" onClick={importNote} disabled={saving || item.isImported} className="gap-1.5">
               <FilePlus2 size={14} />
               {item.isImported ? "已存入笔记" : saving ? "保存中…" : "存为笔记"}

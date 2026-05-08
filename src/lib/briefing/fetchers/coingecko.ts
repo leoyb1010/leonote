@@ -8,8 +8,8 @@ interface CoinData {
 }
 
 const COINS = [
-  { id: "bitcoin", symbol: "BTC-USD", name: "BTC", category: "crypto" },
-  { id: "ethereum", symbol: "ETH-USD", name: "ETH", category: "crypto" },
+  { id: "bitcoin", symbol: "BTC-USD", name: "比特币", category: "crypto" },
+  { id: "ethereum", symbol: "ETH-USD", name: "以太坊", category: "crypto" },
 ];
 
 const proxyUrl = process.env.HTTPS_PROXY || process.env.HTTP_PROXY;

@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { categoryLabel, sourceDisplayName } from "./display";
 
 function formatDateTime(input: Date) {
   return input.toLocaleString("zh-CN", {
@@ -29,24 +30,23 @@ export async function importNewsItemToNote(userId: string, itemId: string) {
   if (!item) throw new Error("news-item-not-found");
 
   const keyPoints = safeJsonArray(item.aiKeyPoints);
-  const categoryLabel = item.category === "world" ? "世界" : item.category === "finance" ? "金融" : "AI科技";
+  const label = item.category === "world" || item.category === "finance" || item.category === "ai_tech" ? categoryLabel(item.category) : "资讯";
+  const sourceName = sourceDisplayName(item.source.name, item.category);
 
   const content = [
     `# ${item.title}`,
     "",
-    item.aiSummary ? `> AI 摘要：${item.aiSummary}` : item.excerpt ? `> 摘要：${item.excerpt}` : "",
-    "",
-    item.imageUrl ? `![封面](${item.imageUrl})` : "",
+    item.aiSummary ? `> 智能摘要：${item.aiSummary}` : item.excerpt ? `> 摘要：${item.excerpt}` : "",
     "",
     keyPoints.length > 0 ? "**要点**" : "",
     ...keyPoints.map((point) => `- ${point}`),
     "",
-    `**来源**：[${item.source.name}](${item.url})  `,
-    `**分类**：${categoryLabel}  `,
+    `**来源**：[${sourceName}](${item.url})  `,
+    `**分类**：${label}  `,
     `**发布**：${formatDateTime(item.publishedAt)}  `,
     `**导入**：${formatDateTime(new Date())}`,
     "",
-    `#briefing #${item.category}`,
+    `#简报 #${label}`,
   ]
     .filter((line) => line !== "")
     .join("\n");
@@ -111,7 +111,7 @@ export async function importTodayDigestToNote(userId: string) {
     "",
     `导入时间：${formatDateTime(new Date())}`,
     "",
-    "#briefing #daily-briefing",
+    "#简报 #今日简报",
   ].join("\n");
 
   return prisma.note.create({

@@ -7,24 +7,30 @@ interface Props {
   title: string;
   eyebrow: string;
   items: NewsItemDTO[];
+  limit?: number;
   onPatchItem: (itemId: string, patch: Partial<NewsItemDTO>) => void;
   onClick: (item: NewsItemDTO) => void;
 }
 
-export function NewsColumn({ title, eyebrow, items, onPatchItem, onClick }: Props) {
+export function NewsColumn({ title, eyebrow, items, limit = 10, onPatchItem, onClick }: Props) {
+  const visible = items.slice(0, limit);
+
   return (
-    <motion.div variants={listItemFloat} className="card-premium p-4">
-      <div className="mb-1 flex items-end justify-between">
+    <motion.div variants={listItemFloat} className="card-premium p-4 sm:p-5">
+      <div className="mb-2 flex items-end justify-between gap-3">
         <div>
-          <p className="text-[10px] uppercase tracking-[0.18em] text-[var(--text-muted)]">{eyebrow}</p>
-          <h2 className="text-[15px] font-semibold tracking-[-0.03em] text-[var(--text-primary)]">{title}</h2>
+          <p className="text-[11px] text-[var(--text-muted)]">{eyebrow}</p>
+          <h2 className="text-base font-semibold text-[var(--text-primary)]">{title}</h2>
         </div>
+        <span className="rounded-[var(--radius-pill)] border border-[var(--hairline)] bg-[var(--material-inset)] px-2.5 py-1 text-xs text-[var(--text-muted)]">
+          {items.length} 条
+        </span>
       </div>
       <div className="divide-y divide-[var(--hairline)]">
-        {items.length === 0 ? (
-          <p className="py-10 text-center text-sm text-[var(--text-muted)]">暂无资讯</p>
+        {visible.length === 0 ? (
+          <p className="py-12 text-center text-sm text-[var(--text-muted)]">暂无中文资讯</p>
         ) : (
-          items.map((item) => <NewsCard key={item.id} item={item} onPatchItem={onPatchItem} onClick={onClick} />)
+          visible.map((item) => <NewsCard key={item.id} item={item} onPatchItem={onPatchItem} onClick={onClick} />)
         )}
       </div>
     </motion.div>

@@ -5,6 +5,8 @@ import { getBriefingData, getLatestMarketSnapshots } from "@/lib/briefing/query"
 import { getWeather } from "@/lib/briefing/weather";
 import { BriefingShell } from "@/components/briefing/BriefingShell";
 
+export const dynamic = "force-dynamic";
+
 function startOfToday() {
   const now = new Date();
   return new Date(now.getFullYear(), now.getMonth(), now.getDate());

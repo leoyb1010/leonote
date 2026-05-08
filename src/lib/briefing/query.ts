@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { deriveDisplayCategory, isDisplayableChinese, marketDisplayName, sourceDisplayName } from "./display";
 import type { BriefingCategory, BriefingRange, MarketSnapshotDTO, NewsItemDTO } from "./types";
 
 function startOfToday() {
@@ -25,9 +26,8 @@ export async function getBriefingData(userId: string, options?: { range?: Briefi
 
   const stateWhere = range === "favorites" ? { some: { userId, isFavorited: true } } : undefined;
 
-  const items = await prisma.newsItem.findMany({
+  const rawItems = await prisma.newsItem.findMany({
     where: {
-      ...(category === "all" ? {} : { category }),
       ...(range === "today" ? { publishedAt: { gte: today } } : {}),
       ...(range === "week" ? { publishedAt: { gte: weekStart } } : {}),
       ...(stateWhere ? { states: stateWhere } : {}),
@@ -36,9 +36,30 @@ export async function getBriefingData(userId: string, options?: { range?: Briefi
       source: true,
       states: { where: { userId }, take: 1 },
     },
-    orderBy: [{ publishedAt: "desc" }],
-    take: 80,
+    orderBy: [{ aiScore: "desc" }, { publishedAt: "desc" }],
+    take: category === "all" ? 500 : 240,
   });
+
+  const displayableItems = rawItems
+    .map((item) => ({
+      ...item,
+      displayCategory: deriveDisplayCategory({
+        category: item.category,
+        sourceName: item.source.name,
+        title: item.title,
+        excerpt: item.excerpt,
+      }),
+    }))
+    .filter((item) => category === "all" || item.displayCategory === category)
+    .filter((item) => isDisplayableChinese(item.title, item.excerpt, item.aiSummary));
+  const rssItems = displayableItems.filter((item) => item.source.kind !== "api");
+  const apiFallbackItems = displayableItems.filter((item) => item.source.kind === "api");
+  const sourceItems = rssItems.length >= 30 ? rssItems : [...rssItems, ...apiFallbackItems];
+  const items = category === "all"
+    ? (["world", "finance", "ai_tech"] as const).flatMap((itemCategory) =>
+        sourceItems.filter((item) => item.displayCategory === itemCategory).slice(0, 30),
+      )
+    : sourceItems.slice(0, 90);
 
   const dto: NewsItemDTO[] = items.map((item) => {
     const state = item.states[0];
@@ -48,8 +69,8 @@ export async function getBriefingData(userId: string, options?: { range?: Briefi
       url: item.url,
       imageUrl: item.imageUrl,
       excerpt: item.excerpt,
-      category: item.category as BriefingCategory,
-      sourceName: item.source.name,
+      category: item.displayCategory,
+      sourceName: sourceDisplayName(item.source.name, item.displayCategory),
       publishedAt: item.publishedAt.toISOString(),
       aiSummary: item.aiSummary,
       aiKeyPoints: parseJsonArray(item.aiKeyPoints),
@@ -79,7 +100,7 @@ export async function getLatestMarketSnapshots() {
     seen.add(row.symbol);
     latest.push({
       symbol: row.symbol,
-      name: row.name,
+      name: marketDisplayName(row),
       category: row.category,
       price: row.price,
       changePct: row.changePct,

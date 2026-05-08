@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { hasChineseSignal, isDisplayableChinese } from "./display";
 import { needsTranslation, translateBatch } from "./translate";
 
 function startOfToday() {
@@ -9,58 +10,56 @@ function startOfToday() {
 export async function generateBriefingDigest() {
   const today = startOfToday();
 
-  // 1. Translate English items — only query language=en to avoid filling batch with already-Chinese items
-  const untranslated = await prisma.newsItem.findMany({
-    where: {
-      publishedAt: { gte: today },
-      language: "en",
-    },
-    take: 60,
-  });
+  if (process.env.BRIEFING_TRANSLATE_ENGLISH === "true") {
+    const untranslated = await prisma.newsItem.findMany({
+      where: {
+        publishedAt: { gte: today },
+        language: "en",
+      },
+      take: 40,
+    });
 
-  const toTranslate: Array<{ id: string; title: string; excerpt: string }> = [];
-  for (const item of untranslated) {
-    if (needsTranslation(item.title)) {
-      toTranslate.push({ id: item.id, title: item.title, excerpt: item.excerpt });
+    const toTranslate: Array<{ id: string; title: string; excerpt: string }> = [];
+    for (const item of untranslated) {
+      if (needsTranslation(item.title)) {
+        toTranslate.push({ id: item.id, title: item.title, excerpt: item.excerpt });
+      }
+    }
+
+    if (toTranslate.length > 0) {
+      console.log(`[digest] translating ${toTranslate.length} English items`);
+
+      const titleTexts = toTranslate.map((t) => t.title);
+      const translatedTitles = await translateBatch(titleTexts);
+
+      const excerptTexts = toTranslate.map((t) => t.excerpt);
+      const translatedExcerpts = await translateBatch(excerptTexts);
+
+      for (let i = 0; i < toTranslate.length; i++) {
+        const orig = toTranslate[i];
+        const newTitle = translatedTitles[i] ?? orig.title;
+        const newExcerpt = translatedExcerpts[i] ?? orig.excerpt;
+        const wasTranslated = newTitle !== orig.title || newExcerpt !== orig.excerpt;
+        await prisma.newsItem.update({
+          where: { id: orig.id },
+          data: {
+            title: newTitle,
+            excerpt: newExcerpt,
+            ...(wasTranslated ? { language: "zh", aiSummary: newExcerpt } : {}),
+          },
+        });
+      }
     }
   }
 
-  if (toTranslate.length > 0) {
-    console.log(`[digest] translating ${toTranslate.length} English items`);
-
-    // Batch translate titles
-    const titleTexts = toTranslate.map((t) => t.title);
-    const translatedTitles = await translateBatch(titleTexts);
-
-    // Batch translate excerpts
-    const excerptTexts = toTranslate.map((t) => t.excerpt);
-    const translatedExcerpts = await translateBatch(excerptTexts);
-
-    // Write back
-    for (let i = 0; i < toTranslate.length; i++) {
-      const orig = toTranslate[i];
-      const newTitle = translatedTitles[i] ?? orig.title;
-      const newExcerpt = translatedExcerpts[i] ?? orig.excerpt;
-      // Only mark as zh if translation actually changed the text
-      const wasTranslated = newTitle !== orig.title || newExcerpt !== orig.excerpt;
-      await prisma.newsItem.update({
-        where: { id: orig.id },
-        data: {
-          title: newTitle,
-          excerpt: newExcerpt,
-          ...(wasTranslated ? { language: "zh", aiSummary: newExcerpt } : {}),
-        },
-      });
-    }
-  }
-
-  // 2. Fetch items for scoring + digest
-  const items = await prisma.newsItem.findMany({
+  const displayableItems = (await prisma.newsItem.findMany({
     where: { publishedAt: { gte: today } },
     include: { source: true },
     orderBy: [{ publishedAt: "desc" }],
-    take: 80,
-  });
+    take: 500,
+  })).filter((item) => isDisplayableChinese(item.title, item.excerpt, item.aiSummary));
+  const rssItems = displayableItems.filter((item) => item.source.kind !== "api");
+  const items = rssItems.length >= 10 ? rssItems : displayableItems;
 
   const now = new Date();
   const weekday = now.toLocaleDateString("zh-CN", { weekday: "long" });
@@ -104,6 +103,7 @@ export async function generateBriefingDigest() {
   const sorted = [...scoredItems].sort((a, b) => b.score - a.score);
   for (const item of sorted) {
     if (topHeadlines.length >= 3) break;
+    if (!hasChineseSignal(item.title)) continue;
     if (usedCategories.has(item.category) && sorted.length > 6) continue;
     usedCategories.add(item.category);
     topHeadlines.push(item.title);
@@ -112,7 +112,7 @@ export async function generateBriefingDigest() {
   const summary = {
     weekday,
     dateLabel,
-    headlines: topHeadlines.length >= 3 ? topHeadlines : items.slice(0, 3).map((i) => i.title),
+    headlines: topHeadlines.length >= 3 ? topHeadlines : items.filter((item) => hasChineseSignal(item.title)).slice(0, 3).map((i) => i.title),
   };
 
   const digest = await prisma.briefingDigest.upsert({

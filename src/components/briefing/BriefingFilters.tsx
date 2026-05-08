@@ -20,7 +20,7 @@ const categories: Array<{ value: Category; label: string }> = [
   { value: "all", label: "全部" },
   { value: "world", label: "世界" },
   { value: "finance", label: "金融" },
-  { value: "ai_tech", label: "AI 科技" },
+  { value: "ai_tech", label: "人工智能" },
 ];
 
 export function BriefingFilters({ range, category, onRangeChange, onCategoryChange }: Props) {

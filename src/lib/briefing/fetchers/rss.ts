@@ -4,7 +4,9 @@ import http from "node:http";
 import { HttpsProxyAgent } from "https-proxy-agent";
 import { prisma } from "@/lib/prisma";
 import { PRESET_NEWS_SOURCES } from "../sources";
+import { deriveDisplayCategory } from "../display";
 import { extractImageUrl, stableExternalId, stripHtml, truncate } from "../normalize";
+import type { BriefingCategory } from "../types";
 
 const proxyUrl = process.env.HTTPS_PROXY || process.env.HTTP_PROXY;
 const proxyAgent = proxyUrl ? new HttpsProxyAgent(proxyUrl) : undefined;
@@ -15,6 +17,10 @@ const parser = new Parser({
     "User-Agent": "LeonoteBriefing/1.0 (+https://leonote.local)",
   },
 });
+
+function inferCategory(defaultCategory: BriefingCategory, sourceName: string, title: string, excerpt: string): BriefingCategory {
+  return deriveDisplayCategory({ category: defaultCategory, sourceName, title, excerpt });
+}
 
 function fetchFeedXml(feedUrl: string, redirectCount = 0): Promise<string> {
   if (redirectCount > 5) return Promise.reject(new Error("too many redirects"));
@@ -105,6 +111,8 @@ export async function fetchNewsSources() {
         const excerpt = truncate(stripHtml(rawExcerpt), 220);
         const externalId = item.guid || stableExternalId(url);
         const imageUrl = extractImageUrl(item as Record<string, unknown>);
+        const category = inferCategory(source.category as BriefingCategory, source.name, title, excerpt);
+        const language = /[一-鿿]/.test(title + excerpt) ? "zh" : "en";
 
         await prisma.newsItem.upsert({
           where: {
@@ -122,9 +130,9 @@ export async function fetchNewsSources() {
             excerpt,
             author: item.creator || item.author || null,
             publishedAt,
-            category: source.category,
+            category,
             region: source.region,
-            language: /[一-鿿]/.test(title + excerpt) ? "zh" : "en",
+            language,
           },
           update: {
             title,
@@ -132,6 +140,8 @@ export async function fetchNewsSources() {
             imageUrl,
             excerpt,
             publishedAt,
+            category,
+            language,
           },
         });
 

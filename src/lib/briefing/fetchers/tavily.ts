@@ -46,9 +46,9 @@ async function searchTavily(query: string): Promise<TavilyResult[]> {
 
 async function ensureTavilySources() {
   const sources: Array<{ id: string; name: string; category: BriefingCategory }> = [
-    { id: "tavily-world", name: "Tavily · 世界", category: "world" },
-    { id: "tavily-finance", name: "Tavily · 金融", category: "finance" },
-    { id: "tavily-ai-tech", name: "Tavily · AI 科技", category: "ai_tech" },
+    { id: "tavily-world", name: "聚合资讯 · 世界", category: "world" },
+    { id: "tavily-finance", name: "聚合资讯 · 金融", category: "finance" },
+    { id: "tavily-ai-tech", name: "聚合资讯 · 人工智能", category: "ai_tech" },
   ];
 
   for (const src of sources) {
