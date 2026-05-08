@@ -5,6 +5,7 @@ import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
 import Link from "next/link";
 import {
+  Newspaper,
   Sun,
   FileText,
   FolderKanban,
@@ -24,6 +25,7 @@ export interface NavItem {
 }
 
 const navItems: NavItem[] = [
+  { id: "briefing", label: "简报", icon: <Newspaper size={20} />, href: "/briefing" },
   { id: "today", label: "今天", icon: <Sun size={20} />, href: "/" },
   { id: "notes", label: "笔记", icon: <FileText size={20} />, href: "/notes" },
   { id: "projects", label: "项目", icon: <FolderKanban size={20} />, href: "/projects" },

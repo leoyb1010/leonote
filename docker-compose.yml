@@ -17,5 +17,21 @@ services:
     volumes:
       - leonote-data:/app/data
 
+  briefing-cron:
+    build: .
+    container_name: leonote-briefing-cron
+    restart: unless-stopped
+    env_file:
+      - .env.production
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: file:/app/data/leonote.db
+      LEONOTE_INTERNAL_URL: http://leonote:4317
+    command: ["npm", "run", "briefing:cron"]
+    depends_on:
+      - leonote
+    volumes:
+      - leonote-data:/app/data
+
 volumes:
   leonote-data:

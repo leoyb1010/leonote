@@ -103,6 +103,16 @@ AI_FALLBACK_MODEL="deepseek-v4-pro"
 - 设置页「记账类型」入口
 - 完全软删除 + 删除类型后历史账单保留
 
+### 每日简报 (v1.6)
+- 多源抓取：RSS / Tavily / CoinGecko / 新浪行情
+- AI 摘要 + 质量评分 + 自动打标签
+- 市场 strip：sparkline 走势 + 涨跌幅
+- 天气 widget
+- Cron 定时任务自动生成日报
+- 一键导入 news → note
+- 侧边栏 Briefing 入口
+- BriefingHero / NewsColumn / MarketStrip / DeepReadCard
+
 ### 写作体验 (v1.4)
 - Focus Mode 安静写作：编辑器降噪、内容居中
 - Apple 风格编辑器 — 760px 固定宽度，17px 字体，1.78 行高（大屏 18px）
@@ -220,6 +230,7 @@ npm run ci           # 全链路：lint → typecheck → test → build
 
 | 版本 | 日期 | 更新内容 |
 |---|---|---|
+| **v1.6.0** | 2026-05-08 | 每日简报系统：5表（NewsSource/NewsItem/MarketSnapshot/BriefingDigest/CronRun）；RSS/Tavily/CoinGecko/Sina多源抓取；AI摘要+评分+标签；市场sparkline；天气widget；cron日报生成；news→note一键导入；简报专属UI |
 | **v1.5.2** | 2026-05-08 | 全局质量优化：export/import 重构（流式+进度）；AI summary/memory 增强上下文；register 强化校验+限流；daily ensure 独立端点；ThemeProvider/SegmentedControl 初始化优化；TodayPage 布局微调；request-guard 日志增强；部署文档更新 |
 | **v1.5.1** | 2026-05-08 | 安全加固：SSRF 172.x 范围精确到 172.16.0.0/12；CSP 新增 object-src 'none'；AI 支持 effort 参数（AI_EFFORT_LEVEL）；新增 /api/health 健康检查端点；新增 .dockerignore；删除死代码 storage.ts；完善限流/金额单位注释 |
 | **v1.5.0** | 2026-05-07 | 轻记账模块：ExpenseCategory + Expense 模型；format-money 金额格式化（分存储，¥展示）；5秒记账 QuickCapture（输入"拿铁 35"自动识别）；月度/本周合计 + 类型分布条；首页本周开销轻卡片；设置页记账类型入口；setNull 删除类型保留历史；全 API Zod 校验 + 软删除 |

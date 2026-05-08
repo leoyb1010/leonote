@@ -12,6 +12,7 @@ const schema = z.object({
   tags: z.array(z.string()).default([]),
   projectName: z.string().optional(),
   projectId: z.string().optional(),
+  source: z.string().max(120).optional(),
 });
 
 async function resolveProjectId(userId: string, projectId?: string | null, projectName?: string) {
@@ -66,6 +67,7 @@ export async function POST(request: Request) {
       title: parsed.data.title,
       content: parsed.data.content,
       excerpt: parsed.data.excerpt || parsed.data.content.slice(0, 120),
+      source: parsed.data.source,
       userId,
       projectId,
     },

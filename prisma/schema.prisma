@@ -185,3 +185,111 @@ model Expense {
   @@index([userId, deletedAt])
   @@index([userId, categoryId])
 }
+
+// === Leonote v1.6 Briefing ===
+
+model NewsSource {
+  id          String   @id @default(cuid())
+  kind        String   // rss | json | api
+  url         String
+  name        String
+  category    String   // world | finance | ai_tech
+  region      String   @default("global")
+  weight      Int      @default(50)
+  enabled     Boolean  @default(true)
+  lastFetchAt DateTime?
+  failCount   Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  items       NewsItem[]
+
+  @@index([enabled, category])
+  @@index([lastFetchAt])
+}
+
+model NewsItem {
+  id          String     @id @default(cuid())
+  sourceId    String
+  source      NewsSource @relation(fields: [sourceId], references: [id], onDelete: Cascade)
+
+  externalId  String
+  title       String
+  url         String
+  imageUrl    String?
+  excerpt     String     @default("")
+  content     String     @default("")
+  author      String?
+  publishedAt DateTime
+  fetchedAt   DateTime   @default(now())
+
+  category    String     // world | finance | ai_tech
+  language    String     @default("zh")
+  region      String     @default("global")
+
+  aiSummary   String?
+  aiKeyPoints String?    // JSON string: string[]
+  aiScore     Float?
+  aiTags      String?    // JSON string: string[]
+
+  states      UserBriefingState[]
+
+  @@unique([sourceId, externalId])
+  @@index([category, publishedAt])
+  @@index([publishedAt])
+  @@index([aiScore])
+}
+
+model UserBriefingState {
+  id             String   @id @default(cuid())
+  userId         String
+  itemId         String
+  item           NewsItem @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  isRead         Boolean  @default(false)
+  isFavorited    Boolean  @default(false)
+  isImported     Boolean  @default(false)
+  importedNoteId String?
+  readAt         DateTime?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@unique([userId, itemId])
+  @@index([userId, isRead])
+  @@index([userId, isFavorited])
+  @@index([itemId])
+}
+
+model MarketSnapshot {
+  id          String   @id @default(cuid())
+  symbol      String
+  name        String
+  category    String   // index_cn | index_global | fx | crypto | rates
+  price       Float
+  changePct   Float
+  changeAbs   Float
+  pointsJson  String   @default("[]") // recent points for SVG sparkline
+  capturedAt  DateTime @default(now())
+
+  @@index([symbol, capturedAt])
+  @@index([category, capturedAt])
+}
+
+model BriefingDigest {
+  id        String   @id @default(cuid())
+  date      DateTime @unique
+  summary   String   // JSON: { weekday, dateLabel, weather?, headlines: string[] }
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model CronRun {
+  id        String   @id @default(cuid())
+  task      String
+  ok        Boolean
+  message   String   @default("")
+  startedAt DateTime @default(now())
+  endedAt   DateTime?
+
+  @@index([task, startedAt])
+  @@index([ok, startedAt])
+}

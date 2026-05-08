@@ -3,17 +3,17 @@
 import React, { useState } from "react";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
-import { FilePlus2, FileText, FolderPlus, Plus, Sparkles, Sun, WalletCards } from "lucide-react";
+import { FilePlus2, FileText, FolderPlus, Newspaper, Plus, Sparkles, Sun, WalletCards } from "lucide-react";
 
 interface BottomNavProps {
   currentPath: string;
 }
 
 const navItems = [
-  { id: "today", label: "Today", icon: Sun, href: "/" },
-  { id: "notes", label: "Notes", icon: FileText, href: "/notes" },
+  { id: "briefing", label: "简报", icon: Newspaper, href: "/briefing" },
+  { id: "today", label: "今天", icon: Sun, href: "/" },
   { id: "new", label: "", icon: Plus, href: "/notes/new", isAction: true },
-  { id: "ledger", label: "记账", icon: WalletCards, href: "/ledger" },
+  { id: "notes", label: "笔记", icon: FileText, href: "/notes" },
   { id: "ai", label: "AI", icon: Sparkles, href: "/ai" },
 ];
 
