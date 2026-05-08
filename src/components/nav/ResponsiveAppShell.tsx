@@ -2,8 +2,10 @@
 
 import React, { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
+import { motion, AnimatePresence } from "framer-motion";
 import { DesktopSidebar } from "./DesktopSidebar";
 import { BottomNav } from "./BottomNav";
+import { pageBreathIn } from "@/lib/animations";
 
 interface ResponsiveAppShellProps {
   children: React.ReactNode;
@@ -39,7 +41,17 @@ export function ResponsiveAppShell({ children, header }: ResponsiveAppShellProps
         {header}
 
         <main className="flex-1 pb-[88px] md:pb-0">
-          {children}
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={pathname}
+              variants={pageBreathIn}
+              initial="initial"
+              animate="animate"
+              exit="exit"
+            >
+              {children}
+            </motion.div>
+          </AnimatePresence>
         </main>
       </div>
 

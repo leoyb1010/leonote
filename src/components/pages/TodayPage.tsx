@@ -3,10 +3,12 @@
 import React, { useEffect, useState } from "react";
 import { Sun, Sparkles, History, ArrowRight, WalletCards } from "lucide-react";
 import Link from "next/link";
+import { motion, AnimatePresence } from "framer-motion";
 import { NoteRow } from "@/components/notes/NoteRow";
 import { Button } from "@/components/base/Button";
 import { formatRelativeTime } from "@/lib/date";
 import { formatMoney } from "@/lib/format-money";
+import { heroTitleReveal, cardFloatIn, railSlideIn, listStagger, listItemFloat, card3DHover } from "@/lib/animations";
 
 interface ProjectPreview {
   id: string;
@@ -208,7 +210,12 @@ export function TodayPage({ data, signedIn }: TodayPageProps) {
   const showRightRail = memoryFlashback || weeklySettling.created > 0 || weeklyExpense.total > 0 || recentlyViewed.length > 0;
 
   const heroSection = (
-    <section className="leonote-hero pb-6 border-b border-[var(--hairline)]">
+    <motion.section
+      className="leonote-hero pb-6 border-b border-[var(--hairline)]"
+      variants={heroTitleReveal}
+      initial="initial"
+      animate="animate"
+    >
       <div className="flex items-end justify-between gap-4">
         <div>
           <p className="text-xs text-[var(--text-muted)] tracking-wide">{dateStr}</p>
@@ -225,7 +232,7 @@ export function TodayPage({ data, signedIn }: TodayPageProps) {
           <Button size="lg">开始书写</Button>
         </Link>
       </div>
-    </section>
+    </motion.section>
   );
 
   const mainContent = (
@@ -303,10 +310,10 @@ export function TodayPage({ data, signedIn }: TodayPageProps) {
   );
 
   const rightRail = showRightRail ? (
-    <aside className="space-y-4">
+    <motion.aside className="space-y-4" variants={railSlideIn} initial="initial" animate="animate">
       {/* Weekly Settling */}
       {weeklySettling.created > 0 && (
-        <div className="rounded-2xl border border-[var(--hairline)] bg-[var(--material-inset)] px-4 py-4">
+        <motion.div className="rounded-2xl border border-[var(--hairline)] bg-[var(--material-inset)] px-4 py-4" variants={cardFloatIn} whileHover={card3DHover.whileHover} whileTap={card3DHover.whileTap}>
           <div className="flex items-center gap-2 mb-3">
             <Sparkles size={16} className="text-[var(--text-muted)]" />
             <span className="text-xs font-medium text-[var(--text-muted)]">本周沉淀</span>
@@ -317,12 +324,12 @@ export function TodayPage({ data, signedIn }: TodayPageProps) {
             {weeklySettling.reviewed > 0 && <p>回看 {weeklySettling.reviewed} 篇旧笔记</p>}
             {weeklySettling.memories > 0 && <p>形成 {weeklySettling.memories} 条长期记忆</p>}
           </div>
-        </div>
+        </motion.div>
       )}
 
       {/* v1.5 Weekly Expense */}
       {weeklyExpense.total > 0 && (
-        <div className="rounded-2xl border border-[var(--hairline)] bg-[var(--material-inset)] px-4 py-4">
+        <motion.div className="rounded-2xl border border-[var(--hairline)] bg-[var(--material-inset)] px-4 py-4" variants={cardFloatIn} whileHover={card3DHover.whileHover} whileTap={card3DHover.whileTap}>
           <div className="mb-3 flex items-center justify-between gap-2">
             <div className="flex items-center gap-2">
               <WalletCards size={16} className="text-[var(--text-muted)]" />
@@ -340,12 +347,12 @@ export function TodayPage({ data, signedIn }: TodayPageProps) {
               主要花在 {weeklyExpense.topCategories.map((item) => `${item.emoji} ${item.name}`).join("、")}。
             </p>
           ) : null}
-        </div>
+        </motion.div>
       )}
 
       {/* Memory Flashback */}
       {memoryFlashback && (
-        <div className="rounded-2xl border border-[var(--hairline)] bg-[var(--material-inset)] px-4 py-4">
+        <motion.div className="rounded-2xl border border-[var(--hairline)] bg-[var(--material-inset)] px-4 py-4" variants={cardFloatIn} whileHover={card3DHover.whileHover} whileTap={card3DHover.whileTap}>
           <div className="flex items-center gap-2 mb-3">
             <History size={16} className="text-[var(--text-muted)]" />
             <span className="text-xs font-medium text-[var(--text-muted)]">记忆闪回</span>
@@ -360,12 +367,12 @@ export function TodayPage({ data, signedIn }: TodayPageProps) {
             &ldquo;{memoryFlashback.excerpt || memoryFlashback.title}&rdquo;
           </Link>
           <p className="mt-2 text-xs text-[var(--text-muted)]">也许今天可以重新看一眼。</p>
-        </div>
+        </motion.div>
       )}
 
       {/* Recently Viewed */}
       {recentlyViewed.length > 0 && (
-        <div className="rounded-2xl border border-[var(--hairline)] bg-[var(--material-inset)] px-4 py-4">
+        <motion.div className="rounded-2xl border border-[var(--hairline)] bg-[var(--material-inset)] px-4 py-4" variants={cardFloatIn} whileHover={card3DHover.whileHover} whileTap={card3DHover.whileTap}>
           <span className="text-xs font-medium text-[var(--text-muted)]">最近回看</span>
           <div className="mt-3 space-y-2">
             {recentlyViewed.map((item) => (
@@ -378,9 +385,9 @@ export function TodayPage({ data, signedIn }: TodayPageProps) {
               </Link>
             ))}
           </div>
-        </div>
+        </motion.div>
       )}
-    </aside>
+    </motion.aside>
   ) : null;
 
   // Empty state

@@ -31,8 +31,8 @@ export function NoteRow({ note, href, selected = false, className }: NoteRowProp
       href={destination}
       className={cn(
         "group relative block rounded-[var(--radius-md)] border border-transparent px-3.5 py-3",
-        "transition-[background-color,border-color] duration-[var(--duration-quick)]",
-        "hover:bg-[var(--interactive-hover)]",
+        "transition-all duration-[var(--duration-quick)]",
+        "hover:bg-[var(--interactive-hover)] hover:-translate-y-0.5 hover:shadow-[0_4px_20px_rgba(2,6,23,0.06)]",
         selected && "bg-[var(--interactive-selected)] before:absolute before:left-0 before:top-3 before:bottom-3 before:w-[2px] before:rounded-r-full before:bg-[var(--primary)]",
         className,
       )}
