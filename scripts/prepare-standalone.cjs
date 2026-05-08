@@ -23,7 +23,7 @@ if (fs.existsSync(staticDir)) {
   fs.rmSync(staticDir, { recursive: true, force: true });
 }
 fs.symlinkSync(
-  path.join("..", "..", ".next", "static"),
+  path.join("..", "..", "..", ".next", "static"),
   staticDir,
   "dir"
 );
