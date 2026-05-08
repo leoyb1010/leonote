@@ -16,6 +16,7 @@ type ThemeContextValue = {
   theme: ThemePreference;
   resolvedTheme: ResolvedTheme;
   setTheme: (theme: ThemePreference) => void;
+  mounted: boolean;
 };
 
 const STORAGE_KEY = "theme";
@@ -42,14 +43,21 @@ function applyTheme(theme: ResolvedTheme) {
 }
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [theme, setThemeState] = useState<ThemePreference>(readStoredTheme);
-  const [systemTheme, setSystemTheme] = useState<ResolvedTheme>(getSystemTheme);
+  const [mounted, setMounted] = useState(false);
+  const [theme, setThemeState] = useState<ThemePreference>(() => readStoredTheme());
+  const [systemTheme, setSystemTheme] = useState<ResolvedTheme>(() => getSystemTheme());
 
   const resolvedTheme: ResolvedTheme = theme === "system" ? systemTheme : theme;
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- standard mounted pattern for hydration safety
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (!mounted) return;
     applyTheme(resolvedTheme);
-  }, [resolvedTheme]);
+  }, [mounted, resolvedTheme]);
 
   useEffect(() => {
     const media = window.matchMedia("(prefers-color-scheme: dark)");
@@ -71,8 +79,8 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   );
 
   const value = useMemo(
-    () => ({ theme, resolvedTheme, setTheme }),
-    [theme, resolvedTheme, setTheme],
+    () => ({ theme, resolvedTheme, setTheme, mounted }),
+    [theme, resolvedTheme, setTheme, mounted],
   );
 
   return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;

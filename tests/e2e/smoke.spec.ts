@@ -36,9 +36,15 @@ test.describe("Leonote Smoke Tests", () => {
     // Login (mode auto-switched to login after successful registration)
     await page.getByRole("button", { name: "登录" }).click();
 
-    // Should redirect to home
+    // Should redirect to home with QuickCapture or hero section
     await page.waitForURL("**/");
-    await expect(page.getByRole("heading", { name: "今天" })).toBeVisible();
+    await expect(page.getByPlaceholder("有什么想法，先放在这里。")).toBeVisible();
+    await expect(page.getByRole("button", { name: "开始书写" })).toBeVisible();
+
+    // Create a real note via QuickCapture
+    await page.fill('textarea[placeholder="有什么想法，先放在这里。"]', "E2E 测试笔记内容");
+    await page.getByRole("button", { name: "安放" }).click();
+    await expect(page.getByText(/已(安放|保存|留下)/)).toBeVisible({ timeout: 5000 });
   });
 
   test("theme toggle exists", async ({ page }) => {

@@ -21,6 +21,9 @@ export async function POST(request: Request) {
     );
   }
 
+  const email = parsed.data.email.trim().toLowerCase();
+  const name = parsed.data.name.trim();
+
   const existingCount = await prisma.user.count();
   const allowRegistration =
     process.env.LEONOTE_ALLOW_REGISTRATION === "true";
@@ -45,7 +48,7 @@ export async function POST(request: Request) {
   }
 
   const existingUser = await prisma.user.findUnique({
-    where: { email: parsed.data.email },
+    where: { email },
   });
   if (existingUser) {
     return NextResponse.json(
@@ -54,13 +57,25 @@ export async function POST(request: Request) {
     );
   }
 
-  const user = await prisma.user.create({
-    data: {
-      name: parsed.data.name.trim(),
-      email: parsed.data.email.trim().toLowerCase(),
-      passwordHash: await hashPassword(parsed.data.password),
-    },
-  });
+  let user;
+  try {
+    user = await prisma.user.create({
+      data: {
+        name,
+        email,
+        passwordHash: await hashPassword(parsed.data.password),
+      },
+    });
+  } catch (err) {
+    const prismaErr = err as { code?: string };
+    if (prismaErr.code === "P2002") {
+      return NextResponse.json(
+        { ok: false, message: "该邮箱已被使用" },
+        { status: 409 },
+      );
+    }
+    throw err;
+  }
 
   return NextResponse.json({
     ok: true,

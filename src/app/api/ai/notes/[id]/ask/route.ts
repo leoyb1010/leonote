@@ -4,6 +4,7 @@ import { getSessionUserId } from "@/lib/session";
 import { requireOwnedNote } from "@/lib/server-notes";
 import { callChatJSON } from "@/lib/ai";
 import { prisma } from "@/lib/prisma";
+import { guardUserWriteRequest } from "@/lib/request-guard";
 
 const requestSchema = z.object({ question: z.string().min(1) });
 const responseSchema = z.object({
@@ -14,6 +15,9 @@ const responseSchema = z.object({
 export async function POST(request: Request, context: { params: Promise<{ id: string }> }) {
   const userId = await getSessionUserId();
   if (!userId) return NextResponse.json({ message: "未登录" }, { status: 401 });
+
+  const guard = guardUserWriteRequest(request, userId, "ai-note-ask", { limit: 30, windowMs: 60_000 });
+  if (guard) return guard;
 
   const body = await request.json();
   const parsed = requestSchema.safeParse(body);

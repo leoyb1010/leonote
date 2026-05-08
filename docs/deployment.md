@@ -35,7 +35,16 @@ npx prisma generate
 npm run build
 ```
 
-### 4. 启动
+### 4. 首次启动前创建数据库文件
+
+SQLite 文件在首次迁移前需要存在。运行：
+
+```bash
+mkdir -p data
+touch data/leonote.db
+```
+
+### 5. 启动
 
 ```bash
 npm run start:prod
@@ -45,7 +54,7 @@ npm run start:prod
 
 服务运行在 `http://0.0.0.0:4317`。
 
-### 5. 反向代理（推荐）
+### 6. 反向代理（推荐）
 
 使用 Nginx 或 Caddy 反代到 `4317` 端口，并配置 HTTPS。
 
@@ -67,11 +76,15 @@ server {
         proxy_set_header Host $host;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto $scheme;
+        # X-Forwarded-Host 必须由反代覆盖，不能透传客户端值
+        proxy_set_header X-Forwarded-Host $host;
     }
 }
 ```
 
-### 6. 首次使用
+> 安全提示：生产环境务必配置 `LEONOTE_PUBLIC_URL`。系统会优先信任该域名做来源校验，而非请求中的 `Host` / `X-Forwarded-Host` 头。Node 服务应绑定 `127.0.0.1`，不直接暴露公网端口。
+
+### 7. 首次使用
 
 1. 访问你的域名。
 2. 注册第一个账号（确保 `LEONOTE_ALLOW_REGISTRATION` 为 `"true"`）。
@@ -136,3 +149,11 @@ npm run build
 ```
 
 `start:prod` 脚本会自动执行 migration。
+
+---
+
+## 已知依赖告警
+
+`npm audit --omit=dev` 会报告 2 个 moderate 级别告警，来自 `next -> postcss` 依赖链（PostCSS CSS 输出中的 XSS 风险）。由于 Leonote 主要处理 Markdown 内容且不直接渲染用户 CSS，当前风险可控。
+
+不建议使用 `npm audit fix --force`（可能导致不兼容的大版本跳转）。关注 Next.js 后续补丁版本，优先升级包含 PostCSS 修复的 release。

@@ -20,12 +20,20 @@ export function ServerDailyClient() {
   useEffect(() => {
     fetch("/api/daily", { cache: "no-store" })
       .then((res) => res.json().then((data) => ({ ok: res.ok, data })))
-      .then(({ ok, data }) => {
+      .then(async ({ ok, data }) => {
         if (!ok) {
           setMessage(data.message || "加载失败");
           return;
         }
-        setToday(data.today);
+        if (data.today) {
+          setToday(data.today);
+        } else {
+          const ensureRes = await fetch("/api/daily/ensure", { method: "POST" });
+          const ensureData = await ensureRes.json();
+          if (ensureRes.ok && ensureData.today) {
+            setToday(ensureData.today);
+          }
+        }
         setRecent(data.recent || []);
         setMessage("");
       })

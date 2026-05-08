@@ -2,6 +2,7 @@
 set -eu
 
 mkdir -p /app/data
+touch /app/data/leonote.db
 
 npx prisma migrate deploy
 

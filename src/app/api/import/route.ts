@@ -7,6 +7,7 @@ import { getSessionUserId } from "@/lib/session";
 import { prisma } from "@/lib/prisma";
 import { ensureProject, requireOwnedNote, syncNoteTags, toNoteDTO } from "@/lib/server-notes";
 import { organizeImportedContent } from "@/lib/import-organizer";
+import { guardUserWriteRequest } from "@/lib/request-guard";
 
 const MAX_HTML_BYTES = 512_000;
 const MAX_IMPORT_FILE_BYTES = 2 * 1024 * 1024;
@@ -64,19 +65,79 @@ async function assertSafeUrl(raw: string) {
   return target;
 }
 
+const MAX_REDIRECTS = 3;
+const ALLOWED_CONTENT_TYPES = ["text/html", "text/plain", "application/xhtml+xml"];
+
+async function assertSafeFinalUrl(raw: string) {
+  const parsed = new URL(raw);
+  if (!["http:", "https:"].includes(parsed.protocol)) throw new Error("仅支持 http/https 链接");
+  if (BLOCKED_HOSTS.has(parsed.hostname.toLowerCase())) throw new Error("不允许访问本地或保留地址");
+  const resolved = await lookup(parsed.hostname, { all: true });
+  if (!resolved.length || resolved.some((item) => isBlockedIp(item.address))) throw new Error("不允许访问内网或保留地址");
+  return parsed;
+}
+
 async function fetchLinkSummary(raw: string) {
-  const target = await assertSafeUrl(raw);
+  const initialTarget = await assertSafeUrl(raw);
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
   try {
-    const res = await fetch(target.toString(), { redirect: "follow", signal: controller.signal, headers: { "User-Agent": "LeonoteBot/1.0" } });
-    if (!res.ok) throw new Error("内容不可访问");
-    const html = (await res.text()).slice(0, MAX_HTML_BYTES);
+    let currentUrl = initialTarget.toString();
+    let res: Response | null = null;
+
+    for (let hop = 0; hop <= MAX_REDIRECTS; hop++) {
+      res = await fetch(currentUrl, {
+        redirect: "manual",
+        signal: controller.signal,
+        headers: { "User-Agent": "LeonoteBot/1.0" },
+      });
+
+      if (res.status >= 300 && res.status < 400 && res.headers.has("location")) {
+        const location = res.headers.get("location")!;
+        const nextUrl = new URL(location, currentUrl).toString();
+        await assertSafeUrl(nextUrl);
+        currentUrl = nextUrl;
+        continue;
+      }
+      break;
+    }
+
+    if (!res || !res.ok) throw new Error("内容不可访问");
+
+    const finalUrl = new URL(res.url);
+    await assertSafeFinalUrl(finalUrl.toString());
+
+    const contentType = res.headers.get("content-type") || "";
+    if (!ALLOWED_CONTENT_TYPES.some((t) => contentType.includes(t))) {
+      throw new Error("不支持的内容类型");
+    }
+
+    const reader = res.body?.getReader();
+    if (!reader) throw new Error("内容不可读");
+
+    let html = "";
+    const decoder = new TextDecoder();
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      html += decoder.decode(value, { stream: true });
+      if (html.length >= MAX_HTML_BYTES) break;
+    }
+    html = html.slice(0, MAX_HTML_BYTES);
+
     const titleMatch = html.match(/<title[^>]*>([^<]+)<\/title>/i);
-    const title = titleMatch?.[1]?.trim() || target.hostname;
-    const summary = html.replace(/<script[\s\S]*?<\/script>/gi, " ").replace(/<style[\s\S]*?<\/style>/gi, " ").replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim().slice(0, 3000);
-    return { target, title, summary };
-  } finally { clearTimeout(timer); }
+    const title = titleMatch?.[1]?.trim() || finalUrl.hostname;
+    const summary = html
+      .replace(/<script[\s\S]*?<\/script>/gi, " ")
+      .replace(/<style[\s\S]*?<\/style>/gi, " ")
+      .replace(/<[^>]+>/g, " ")
+      .replace(/\s+/g, " ")
+      .trim()
+      .slice(0, 3000);
+    return { target: finalUrl, title, summary };
+  } finally {
+    clearTimeout(timer);
+  }
 }
 
 async function applyToExistingNote({ noteId, userId, content, mode }: { noteId: string; userId: string; content: string; mode: string }) {
@@ -90,6 +151,9 @@ async function applyToExistingNote({ noteId, userId, content, mode }: { noteId: 
 export async function POST(request: Request) {
   const userId = await getSessionUserId();
   if (!userId) return NextResponse.json({ ok: false, message: "未登录" }, { status: 401 });
+
+  const guard = guardUserWriteRequest(request, userId, "import", { limit: 30, windowMs: 60_000 });
+  if (guard) return guard;
 
   const contentLength = Number(request.headers.get("content-length") ?? "0");
   if (Number.isFinite(contentLength) && contentLength > MAX_MULTIPART_BYTES) {

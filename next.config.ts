@@ -31,7 +31,7 @@ const nextConfig: NextConfig = {
               "style-src 'self' 'unsafe-inline'",
               "img-src 'self' data: blob:",
               "media-src 'self' blob:",
-              "connect-src 'self' https:",
+              "connect-src 'self' https://api.deepseek.com https://api.openai.com https://api.anthropic.com https://api.moonshot.cn https://dashscope.aliyuncs.com https://open.bigmodel.cn",
               "object-src 'none'",
               "frame-ancestors 'none'",
               "base-uri 'self'",

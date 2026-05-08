@@ -2,10 +2,15 @@ import { NextResponse } from "next/server";
 import { getSessionUserId } from "@/lib/session";
 import { requireOwnedNote } from "@/lib/server-notes";
 import { callChatText } from "@/lib/ai";
+import { guardUserWriteRequest } from "@/lib/request-guard";
 
-export async function POST(_request: Request, context: { params: Promise<{ id: string }> }) {
+export async function POST(request: Request, context: { params: Promise<{ id: string }> }) {
   const userId = await getSessionUserId();
   if (!userId) return NextResponse.json({ message: "未登录" }, { status: 401 });
+
+  const guard = guardUserWriteRequest(request, userId, "ai-note-summarize", { limit: 20, windowMs: 60_000 });
+  if (guard) return guard;
+
   const { id } = await context.params;
   const note = await requireOwnedNote(id, userId);
   if (!note) return NextResponse.json({ message: "笔记不存在" }, { status: 404 });

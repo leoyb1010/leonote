@@ -14,15 +14,15 @@ const options: Array<{
 ];
 
 export function ThemeSegmentedControl() {
-  const { theme, resolvedTheme, setTheme } = useTheme();
+  const { theme, resolvedTheme, setTheme, mounted } = useTheme();
 
   return (
     <section className="rounded-[var(--radius-lg)] border border-[var(--border-default)] bg-[var(--surface-base)] p-5">
       <div className="mb-4 flex items-start justify-between gap-4">
         <div>
           <h2 className="text-base font-medium text-[var(--text-primary)]">外观</h2>
-          <p className="mt-1 text-sm text-[var(--text-muted)]">
-            当前生效：{resolvedTheme === "dark" ? "暗色" : "亮色"}
+          <p className="mt-1 text-sm text-[var(--text-muted)]" suppressHydrationWarning>
+            当前生效：{mounted ? (resolvedTheme === "dark" ? "暗色" : "亮色") : "—"}
           </p>
         </div>
       </div>

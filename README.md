@@ -220,6 +220,7 @@ npm run ci           # 全链路：lint → typecheck → test → build
 
 | 版本 | 日期 | 更新内容 |
 |---|---|---|
+| **v1.5.2** | 2026-05-08 | 全局质量优化：export/import 重构（流式+进度）；AI summary/memory 增强上下文；register 强化校验+限流；daily ensure 独立端点；ThemeProvider/SegmentedControl 初始化优化；TodayPage 布局微调；request-guard 日志增强；部署文档更新 |
 | **v1.5.1** | 2026-05-08 | 安全加固：SSRF 172.x 范围精确到 172.16.0.0/12；CSP 新增 object-src 'none'；AI 支持 effort 参数（AI_EFFORT_LEVEL）；新增 /api/health 健康检查端点；新增 .dockerignore；删除死代码 storage.ts；完善限流/金额单位注释 |
 | **v1.5.0** | 2026-05-07 | 轻记账模块：ExpenseCategory + Expense 模型；format-money 金额格式化（分存储，¥展示）；5秒记账 QuickCapture（输入"拿铁 35"自动识别）；月度/本周合计 + 类型分布条；首页本周开销轻卡片；设置页记账类型入口；setNull 删除类型保留历史；全 API Zod 校验 + 软删除 |
 | **v1.4.0** | 2026-05-06 | 情绪价值与高级感升级：Quiet Material 设计语言（--material-*、--hairline）；首页重构为数字居所（Hero + Capture Dock + 记忆闪回 + 本周沉淀 + 右栏）；大屏侧边栏 264/288px + 导航 44px hit-target；Button 尺寸 h-8/10/12 + Apple 风格系统按钮；编辑器 Focus Mode + 17px typography + 保存仪式感；AI 静读助手（ThinkingLine + 提炼要点/整理记忆）；全局微文案情绪化升级（删除/空状态/加载/版本）；PageContainer dashboard/reader 2xl 宽度策略 |

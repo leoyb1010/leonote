@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Sun, Sparkles, History, ArrowRight, WalletCards } from "lucide-react";
 import Link from "next/link";
 import { NoteRow } from "@/components/notes/NoteRow";
@@ -152,15 +152,23 @@ function QuickCapture({ onCreated }: { onCreated?: (note: QuickCaptureNote) => v
 export function TodayPage({ data, signedIn }: TodayPageProps) {
   const [recent, setRecent] = useState(data?.recent ?? []);
   const [counts, setCounts] = useState(data?.counts ?? { total: 0, favorite: 0, pinned: 0 });
+  const [mounted, setMounted] = useState(false);
 
-  const dateStr = new Date().toLocaleDateString("zh-CN", {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-    weekday: "long",
-  });
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- standard mounted pattern for hydration safety
+    setMounted(true);
+  }, []);
 
-  const greeting = getGreeting();
+  const dateStr = mounted
+    ? new Date().toLocaleDateString("zh-CN", {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+        weekday: "long",
+      })
+    : "";
+
+  const greeting = mounted ? getGreeting() : { emoji: "", line: "" };
 
   // Signed out
   if (!signedIn) {

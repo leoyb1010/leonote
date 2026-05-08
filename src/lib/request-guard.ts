@@ -18,9 +18,6 @@ function getRequestHost(request: Request) {
 
 function getAllowedOriginHosts(request: Request) {
   const hosts = new Set<string>();
-  const requestHost = getRequestHost(request);
-  if (requestHost) hosts.add(requestHost);
-
   const publicUrl = process.env.LEONOTE_PUBLIC_URL;
   if (publicUrl) {
     try {
@@ -28,6 +25,13 @@ function getAllowedOriginHosts(request: Request) {
     } catch {
       // Invalid deployment URL should not make same-origin checks fail open.
     }
+  }
+
+  // 仅在未配置 LEONOTE_PUBLIC_URL 时才回退到 request host。
+  // 生产环境应始终配置 LEONOTE_PUBLIC_URL，避免依赖客户端可伪造的 Host 头。
+  if (hosts.size === 0) {
+    const requestHost = getRequestHost(request);
+    if (requestHost) hosts.add(requestHost);
   }
 
   return hosts;

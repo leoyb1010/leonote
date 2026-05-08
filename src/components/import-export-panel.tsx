@@ -35,8 +35,22 @@ export function ImportExportPanel({ noteId, embedded, onImported }: Props) {
     setLoading(true);
     const params = new URLSearchParams();
     if (noteId) params.set("noteId", noteId);
-    if (exportAi) params.set("ai", "1");
     if (prompt.trim()) params.set("prompt", prompt.trim());
+
+    if (exportAi && noteId) {
+      const res = await fetch(`/api/export?${params.toString()}`, { method: "POST" });
+      if (!res.ok) {
+        setMessage("导出失败，请先登录后重试。");
+        setLoading(false);
+        return;
+      }
+      const blob = await res.blob();
+      downloadFromResponse(blob, `leonote-note-${noteId.slice(0, 6)}-ai.md`);
+      setMessage("已导出 AI 整理版。");
+      setLoading(false);
+      return;
+    }
+
     const res = await fetch(`/api/export?${params.toString()}`);
     if (!res.ok) {
       setMessage("导出失败，请先登录后重试。");
@@ -44,7 +58,7 @@ export function ImportExportPanel({ noteId, embedded, onImported }: Props) {
       return;
     }
     const blob = await res.blob();
-    const filename = noteId ? `leonote-note-${noteId.slice(0, 6)}-${exportAi ? "ai" : "raw"}.md` : `leonote-export-${new Date().toISOString().slice(0, 10)}.${exportAi ? "md" : "json"}`;
+    const filename = noteId ? `leonote-note-${noteId.slice(0, 6)}-raw.md` : `leonote-export-${new Date().toISOString().slice(0, 10)}.json`;
     downloadFromResponse(blob, filename);
     setMessage(exportAi ? "已导出 AI 整理版。" : "已导出原始内容。");
     setLoading(false);
