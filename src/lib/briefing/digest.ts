@@ -16,7 +16,7 @@ export async function generateBriefingDigest() {
         publishedAt: { gte: today },
         language: "en",
       },
-      take: 40,
+      take: 100,
     });
 
     const toTranslate: Array<{ id: string; title: string; excerpt: string }> = [];
