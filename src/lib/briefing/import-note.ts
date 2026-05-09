@@ -98,6 +98,13 @@ export async function importTodayDigestToNote(userId: string) {
   });
 
   const parsed = digest ? JSON.parse(digest.summary) : null;
+  const sourceId = `briefing-digest:${start.toISOString().slice(0, 10)}`;
+
+  const existing = await prisma.note.findFirst({
+    where: { userId, source: sourceId },
+  });
+  if (existing) return existing;
+
   const title = `📰 简报 · ${today.getMonth() + 1} 月 ${today.getDate()} 日`;
 
   const content = [

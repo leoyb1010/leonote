@@ -53,7 +53,7 @@ export function NewsCard({ item, onPatchItem, onClick }: Props) {
       }}
       className="group relative cursor-pointer py-4"
     >
-      {!item.isRead && <span className="absolute left-0 top-5 h-2 w-2 rounded-full bg-[var(--primary)]" />}
+      {!item.isRead && <span className="absolute left-0 top-[22px] h-2 w-2 rounded-full bg-[var(--primary)]" />}
 
       <div className={`pl-3.5 ${!item.isRead ? "" : ""}`}>
         <div className="flex items-center justify-between gap-2 mb-1">
