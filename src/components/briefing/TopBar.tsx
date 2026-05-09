@@ -17,11 +17,11 @@ interface Props {
 
 function fmtPrice(item: MarketSnapshotDTO): string {
   const v = item.price;
-  if (v === 0) return "0.00";
+  if (v === 0) return "0";
   if (item.category === "crypto") return v.toLocaleString("zh-CN", { maximumFractionDigits: 0 });
   if (item.category === "metal") return v.toFixed(1);
   if (item.category === "fx") return v.toFixed(4);
-  if (v > 10000) return (v / 10000).toFixed(2) + "万";
+  if (v > 10000) return v.toLocaleString("zh-CN", { maximumFractionDigits: 0 });
   if (v > 1000) return v.toLocaleString("zh-CN", { maximumFractionDigits: 0 });
   if (v < 0.01) return v.toFixed(4);
   return v.toLocaleString("zh-CN", { maximumFractionDigits: 2 });
@@ -64,7 +64,7 @@ function MarketTile({ item }: { item: MarketSnapshotDTO }) {
       </div>
       <div className={`mt-3 inline-flex items-center gap-1 rounded-[var(--radius-pill)] px-2 py-0.5 text-xs ${up ? "bg-[var(--success-soft)] text-[var(--success)]" : "bg-[var(--danger-soft)] text-[var(--danger)]"}`}>
         <Icon size={12} />
-        {up ? "+" : ""}{item.changePct.toFixed(2)}%
+        {up ? "+" : ""}{item.changePct}%
       </div>
     </div>
   );

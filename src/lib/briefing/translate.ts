@@ -47,7 +47,7 @@ async function translateOneBatch(texts: string[], apiKey: string): Promise<strin
     body: JSON.stringify({
       model: AI_MODEL,
       messages: [
-        { role: "system", content: "你是专业中文新闻编辑。输入N行外文或中英混杂资讯，输出N行简洁中文，顺序对应。只输出中文结果，不加编号或解释。" },
+        { role: "system", content: "你是专业新闻编辑。将输入的外文或中英混杂资讯翻译/改写为自然、准确的简体中文（不要使用繁体）。输出的每行简体中文需与输入顺序一一对应，仅输出结果，不加编号。" },
         { role: "user", content: prompt },
       ],
       max_tokens: Math.max(2048, texts.length * 120),
