@@ -101,7 +101,7 @@ export function needsChineseDisplay(input: string | null | undefined): boolean {
 }
 
 export function isDisplayableChinese(title: string, excerpt?: string | null, summary?: string | null, sourceName?: string): boolean {
-  if (sourceName?.startsWith("X ·")) return true; // X 监控源强制显示
+  if (sourceName?.startsWith("X ·")) return true; // X 监控源强制通过中文检测，但受 query.ts 中的 AI 摘要及翻译校验控制
   return !isLowValueBriefingTitle(title) && !hasNoisyEnglish(title) && (hasChineseSignal(title) || (needsChineseDisplay(title) === false && (hasChineseSignal(summary) || hasChineseSignal(excerpt))));
 }
 
