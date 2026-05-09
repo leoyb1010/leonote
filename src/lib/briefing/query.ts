@@ -54,6 +54,10 @@ export async function getBriefingData(userId: string, options?: { range?: Briefi
     .filter((item) => category === "all" || item.displayCategory === category)
     .filter((item) => {
       // 强制过滤掉任何仍然是英文的内容，确保首页只有简体中文
+      // 但是，对于 X 监控，我们只要它有翻译后的摘要，就认定它是可以展示的
+      if (item.displayCategory === "social_x") {
+         return !!item.aiSummary; // 必须有 AI 摘要才显示
+      }
       if (needsTranslation(item.title)) return false;
       return isDisplayableChinese(item.title, item.excerpt, item.aiSummary, item.source.name);
     });
@@ -68,9 +72,12 @@ export async function getBriefingData(userId: string, options?: { range?: Briefi
 
   const dto: NewsItemDTO[] = items.map((item) => {
     const state = item.states[0];
+    // 如果是 X 监控源且有 AI 摘要，说明已经翻译过了，我们将翻译后的内容替换到标题显示
+    const displayTitle = (item.displayCategory === "social_x" && item.aiSummary) ? item.aiSummary : item.title;
+    
     return {
       id: item.id,
-      title: item.title,
+      title: displayTitle,
       url: item.url,
       imageUrl: item.imageUrl,
       excerpt: item.excerpt,
