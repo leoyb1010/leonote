@@ -18,6 +18,7 @@ const CATEGORY_QUERIES: Record<BriefingCategory, string[]> = {
   world: ["今日国际要闻 全球重大新闻"],
   finance: ["今日全球金融市场 股市行情要闻"],
   ai_tech: ["今日人工智能AI 大模型 最新科技进展"],
+  social_x: [],
 };
 
 async function searchTavily(query: string): Promise<TavilyResult[]> {

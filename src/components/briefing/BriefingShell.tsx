@@ -47,6 +47,7 @@ export function BriefingShell({ initialDigest, initialItems, initialMarkets, ini
     world: visibleItems.filter((item) => item.category === "world"),
     finance: visibleItems.filter((item) => item.category === "finance"),
     ai_tech: visibleItems.filter((item) => item.category === "ai_tech"),
+    social_x: visibleItems.filter((item) => item.category === "social_x"),
   };
 
   async function refresh(nextRange = range, nextCategory = category) {
@@ -75,9 +76,10 @@ export function BriefingShell({ initialDigest, initialItems, initialMarkets, ini
 
   const columns = category === "all"
     ? [
-        { key: "world" as const, title: "世界", eyebrow: "国际要闻", items: grouped.world },
-        { key: "finance" as const, title: "金融", eyebrow: "市场财经", items: grouped.finance },
         { key: "ai_tech" as const, title: "人工智能", eyebrow: "科技进展", items: grouped.ai_tech },
+        { key: "social_x" as const, title: "X 监控", eyebrow: "社交舆情", items: grouped.social_x },
+        { key: "finance" as const, title: "金融", eyebrow: "市场财经", items: grouped.finance },
+        { key: "world" as const, title: "世界", eyebrow: "国际要闻", items: grouped.world },
       ]
     : [
         {
@@ -89,7 +91,7 @@ export function BriefingShell({ initialDigest, initialItems, initialMarkets, ini
       ];
 
   return (
-    <main className="mx-auto w-full max-w-[1320px] px-4 py-5 sm:px-6 lg:px-8">
+    <main className="mx-auto w-full max-w-[1720px] px-4 py-5 sm:px-6 lg:px-8">
       <BriefingHero digest={digest} total={visibleItems.length} range={range} />
 
       <div className="mt-4">
@@ -123,7 +125,7 @@ export function BriefingShell({ initialDigest, initialItems, initialMarkets, ini
         variants={listStagger}
         initial="initial"
         animate="animate"
-        className={`mt-4 grid gap-4 ${category === "all" ? "lg:grid-cols-3" : "lg:grid-cols-1"}`}
+        className={`mt-4 grid gap-4 ${category === "all" ? "lg:grid-cols-4" : "lg:grid-cols-1"}`}
       >
         {columns.map((column) => (
           <NewsColumn

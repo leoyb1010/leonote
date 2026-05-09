@@ -1,4 +1,4 @@
-export type BriefingCategory = "world" | "finance" | "ai_tech";
+export type BriefingCategory = "world" | "finance" | "ai_tech" | "social_x";
 export type BriefingRange = "today" | "week" | "favorites";
 
 export interface BriefingHeadline {

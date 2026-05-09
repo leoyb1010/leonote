@@ -59,6 +59,7 @@ export const CATEGORY_LABELS: Record<BriefingCategory, string> = {
   world: "世界",
   finance: "金融",
   ai_tech: "人工智能",
+  social_x: "X 监控",
 };
 
 export const MARKET_CATEGORY_LABELS: Record<string, string> = {
@@ -134,6 +135,7 @@ export function deriveDisplayCategory(input: {
   title: string;
   excerpt?: string | null;
 }): BriefingCategory {
+  if (input.sourceName.startsWith("X ·")) return "social_x";
   if (input.category === "world" || input.category === "finance") return input.category;
 
   const text = `${input.sourceName} ${input.title} ${input.excerpt ?? ""}`;

@@ -21,6 +21,7 @@ const categories: Array<{ value: Category; label: string }> = [
   { value: "world", label: "世界" },
   { value: "finance", label: "金融" },
   { value: "ai_tech", label: "人工智能" },
+  { value: "social_x", label: "X 监控" },
 ];
 
 export function BriefingFilters({ range, category, onRangeChange, onCategoryChange }: Props) {

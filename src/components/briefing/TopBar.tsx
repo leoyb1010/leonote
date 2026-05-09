@@ -18,13 +18,11 @@ interface Props {
 function fmtPrice(item: MarketSnapshotDTO): string {
   const v = item.price;
   if (v === 0) return "0";
-  if (item.category === "crypto") return v.toLocaleString("zh-CN", { maximumFractionDigits: 0 });
-  if (item.category === "metal") return v.toFixed(1);
-  if (item.category === "fx") return v.toFixed(4);
-  if (v > 10000) return v.toLocaleString("zh-CN", { maximumFractionDigits: 0 });
-  if (v > 1000) return v.toLocaleString("zh-CN", { maximumFractionDigits: 0 });
-  if (v < 0.01) return v.toFixed(4);
-  return v.toLocaleString("zh-CN", { maximumFractionDigits: 2 });
+  // 大于等于 10 的指数/价格，显示整数且不带千分位分隔符
+  if (v >= 10) return Math.floor(v).toString();
+  // 汇率或极小值保留 4 位
+  if (item.category === "fx" || v < 1) return v.toFixed(4);
+  return v.toFixed(2);
 }
 
 function formatCapturedAt(markets: MarketSnapshotDTO[]) {
@@ -64,7 +62,7 @@ function MarketTile({ item }: { item: MarketSnapshotDTO }) {
       </div>
       <div className={`mt-3 inline-flex items-center gap-1 rounded-[var(--radius-pill)] px-2 py-0.5 text-xs ${up ? "bg-[var(--success-soft)] text-[var(--success)]" : "bg-[var(--danger-soft)] text-[var(--danger)]"}`}>
         <Icon size={12} />
-        {up ? "+" : ""}{item.changePct}%
+        {up ? "+" : ""}{item.changePct.toFixed(2)}%
       </div>
     </div>
   );
