@@ -103,15 +103,18 @@ AI_FALLBACK_MODEL="deepseek-v4-pro"
 - 设置页「记账类型」入口
 - 完全软删除 + 删除类型后历史账单保留
 
-### 每日简报 (v1.6)
-- 多源抓取：RSS / Tavily / CoinGecko / 新浪行情
-- AI 摘要 + 质量评分 + 自动打标签
-- 市场 strip：sparkline 走势 + 涨跌幅
-- 天气 widget
-- Cron 定时任务自动生成日报
-- 一键导入 news → note
-- 侧边栏 Briefing 入口
-- BriefingHero / NewsColumn / MarketStrip / DeepReadCard
+### 每日简报 (v1.6.2)
+- 多源抓取：RSS / Tavily / CoinGecko / 新浪行情，支持 Cron 定时抓取、行情刷新与日报生成
+- AI 摘要 + 质量评分 + 自动标签，统一输出为适合中文阅读的简报结构
+- 全新日报式信息架构：可编辑标题、日期范围、刷新简报、存为笔记、复制摘要
+- Hero 概览区：资讯数量、未读数量、平均质量分、重要标签、深圳天气 widget
+- 核心阅读区：今日亮点、全部资讯流、深度阅读卡片、标签与洞察分布
+- 市场温度侧栏：sparkline 走势、涨跌幅、波动最大标的、行情同步状态
+- 底部/侧栏状态：生成时间、新闻同步时间、数据来源数量、最近 Cron 状态
+- 详情弹窗只展示用户真正需要的信息：标题、来源、发布时间、评分、标签、AI 摘要、要点、编辑摘录、原文入口
+- 数据标准化 pipeline：日期、评分、摘要长度、标签、要点、详情摘录、digest JSON、market points 全部统一清洗与容错
+- 严格过滤内部/技术/低价值字段：前端 DTO 不再暴露原始 `content`，避免 RSS/Tavily 原文、JSON、URL、GUID、来源调试信息进入详情
+- 一键导入 news → note / 今日简报 → note，导入内容使用同一套清洗后的展示字段
 
 ### 写作体验 (v1.4)
 - Focus Mode 安静写作：编辑器降噪、内容居中
@@ -187,6 +190,8 @@ User (用户)
   │     └── NoteRevision (版本历史)
   ├── Project (项目)
   ├── DailyNote (每日记录)
+  ├── NewsSource / NewsItem / UserBriefingState (每日简报资讯与用户状态)
+  ├── MarketSnapshot / BriefingDigest / CronRun (行情、日报摘要、定时任务记录)
   ├── AISetting (AI 配置，API Key 加密存储)
   └── MemoryFact (AI 长期记忆)
 ```
@@ -230,6 +235,7 @@ npm run ci           # 全链路：lint → typecheck → test → build
 
 | 版本 | 日期 | 更新内容 |
 |---|---|---|
+| **v1.6.2** | 2026-05-09 | 每日简报体验与数据逻辑大升级：将 Briefing 页面从四列信息看板重构为安静高级的个人日报；新增可编辑简报标题、日期范围、刷新简报、存为笔记、复制摘要；Hero 区展示资讯数、未读数、AI 平均质量分、重要标签与天气；核心内容拆分为今日亮点、全部资讯流、深度阅读、标签洞察、市场温度、来源/Cron 状态；重写 BriefingHero / BriefingShell / NewsCard / NewsColumn / NewsDetailModal / TopBar / DeepReadCard / loading；市场侧栏改为更轻的行式 Market Strip，保留 sparkline、涨跌幅、波动最大、缓存状态；详情弹窗彻底过滤无用信息，只展示标题、来源、时间、质量评分、标签、AI 摘要、要点、编辑摘录与原文入口；新增 briefing normalize pipeline，统一处理 HTML 清洗、空白折叠、摘要截断、JSON 数组解析、标签标准化、评分 clamp、阅读时间估算、详情摘录生成、digest JSON 容错、market points 容错；NewsItemDTO 移除原始 content，改为安全 detailText，从源头避免 RSS/Tavily 原文、URL/GUID/JSON/API 字段进入前端详情；/api/briefing/digest 增加 range/category 参数校验与 meta 输出；/api/briefing/state 不再返回完整内部 state；今日简报导入和单条新闻导入统一使用清洗后的标题、摘要、要点、标签与来源名；保持 Quiet Material 体系，使用 material-elevated/inset、hairline、克制动效、中文阅读字体栈与响应式侧栏 |
 | **v1.6.1** | 2026-05-09 | 安全加固+X监控修复：Cron定时任务Token鉴权（header/bearer双模式+timingSafeEqual）；img-proxy SSRF全链路防护（DNS解析校验/私有IP拦截/Content-Type白名单/2MB限制）；logout跨域请求拒绝；Docker入口SQLite迁移前备份+完整性校验；X监控内容显示逻辑修复（有AI摘要即展示翻译版）；清理未使用import；postcss override修复依赖冲突；新增briefing-auth鉴权单元测试 |
 | **v1.6.0** | 2026-05-08 | 每日简报系统：5表（NewsSource/NewsItem/MarketSnapshot/BriefingDigest/CronRun）；RSS/Tavily/CoinGecko/Sina多源抓取；AI摘要+评分+标签；市场sparkline；天气widget；cron日报生成；news→note一键导入；简报专属UI |
 | **v1.5.2** | 2026-05-08 | 全局质量优化：export/import 重构（流式+进度）；AI summary/memory 增强上下文；register 强化校验+限流；daily ensure 独立端点；ThemeProvider/SegmentedControl 初始化优化；TodayPage 布局微调；request-guard 日志增强；部署文档更新 |
