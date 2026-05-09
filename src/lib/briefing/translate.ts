@@ -30,11 +30,18 @@ async function getAIKey(): Promise<string> {
 
 /** Detect if text contains English/Traditional Chinese that needs normalization */
 export function needsTranslation(text: string): boolean {
-  const cjk = text.match(/[\u4e00-\u9fa5]/g); // Simplified Chinese range check
-  const hasTraditional = /[\u4E00-\u9FFF]/.test(text) && !/^[\u4E00-\u9FA5\u3000-\u303F\uFF00-\uFFEF0-9a-zA-Z\s]+$/.test(text);
+  if (!text) return false;
   
-  // If mostly English or has traditional characters, it needs a pass
-  return !cjk || cjk.length < 5 || hasTraditional;
+  // 检查是否包含英文单词（排除掉常见的 AI 缩写）
+  const words = text.match(/[A-Za-z]{2,}/g) ?? [];
+  const allowed = new Set(["AI", "AIGC", "OpenAI", "DeepSeek", "Claude", "Gemini", "GPT", "X"]);
+  const hasEnglishWords = words.some(w => !allowed.has(w));
+
+  const cjk = text.match(/[\u4e00-\u9fa5]/g); // Simplified Chinese range check
+  const hasTraditional = /[\u4E00-\u9FFF]/.test(text) && !/^[\u4E00-\u9FA5\u3000-\u303F\uFF00-\uFFEF0-9a-zA-Z\s,.]+$/.test(text);
+  
+  // 如果全是英文单词，或者包含繁体，或者中文字符太少，就认为需要翻译
+  return hasEnglishWords || !cjk || cjk.length < 3 || hasTraditional;
 }
 
 /** Translate 1 batch via DeepSeek, matches by position */
