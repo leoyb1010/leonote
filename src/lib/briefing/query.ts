@@ -58,7 +58,7 @@ export async function getBriefingData(userId: string, options?: { range?: Briefi
       if (item.displayCategory === "social_x") {
          return !!item.aiSummary; // 必须有 AI 摘要才显示
       }
-      if (needsTranslation(item.title)) return false;
+      if (needsTranslation(item.title) && (!item.aiSummary || needsTranslation(item.aiSummary))) return false;
       return isDisplayableChinese(item.title, item.excerpt, item.aiSummary, item.source.name);
     });
   const rssItems = displayableItems.filter((item) => item.source.kind !== "api");
