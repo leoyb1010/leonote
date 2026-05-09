@@ -51,7 +51,7 @@ export async function getBriefingData(userId: string, options?: { range?: Briefi
       }),
     }))
     .filter((item) => category === "all" || item.displayCategory === category)
-    .filter((item) => isDisplayableChinese(item.title, item.excerpt, item.aiSummary));
+    .filter((item) => isDisplayableChinese(item.title, item.excerpt, item.aiSummary, item.source.name));
   const rssItems = displayableItems.filter((item) => item.source.kind !== "api");
   const apiFallbackItems = displayableItems.filter((item) => item.source.kind === "api");
   const sourceItems = rssItems.length >= 30 ? rssItems : [...rssItems, ...apiFallbackItems];

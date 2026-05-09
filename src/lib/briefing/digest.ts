@@ -57,7 +57,7 @@ export async function generateBriefingDigest() {
     include: { source: true },
     orderBy: [{ publishedAt: "desc" }],
     take: 500,
-  })).filter((item) => isDisplayableChinese(item.title, item.excerpt, item.aiSummary));
+  })).filter((item) => isDisplayableChinese(item.title, item.excerpt, item.aiSummary, item.source.name));
   const rssItems = displayableItems.filter((item) => item.source.kind !== "api");
   const items = rssItems.length >= 10 ? rssItems : displayableItems;
 

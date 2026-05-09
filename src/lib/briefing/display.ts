@@ -99,7 +99,8 @@ export function needsChineseDisplay(input: string | null | undefined): boolean {
   return cjkCount < 4 || hasNoisyEnglish(text) || (latinWords >= 4 && cjkCount < latinWords * 2);
 }
 
-export function isDisplayableChinese(title: string, excerpt?: string | null, summary?: string | null): boolean {
+export function isDisplayableChinese(title: string, excerpt?: string | null, summary?: string | null, sourceName?: string): boolean {
+  if (sourceName?.startsWith("X ·")) return true; // X 监控源强制显示
   return !isLowValueBriefingTitle(title) && !hasNoisyEnglish(title) && (hasChineseSignal(title) || (needsChineseDisplay(title) === false && (hasChineseSignal(summary) || hasChineseSignal(excerpt))));
 }
 
