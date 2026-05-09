@@ -28,10 +28,13 @@ async function getAIKey(): Promise<string> {
   return "";
 }
 
-/** Detect if text contains Chinese characters */
+/** Detect if text contains English/Traditional Chinese that needs normalization */
 export function needsTranslation(text: string): boolean {
-  const cjk = text.match(/[一-鿿]/g);
-  return !cjk || cjk.length < 5;
+  const cjk = text.match(/[\u4e00-\u9fa5]/g); // Simplified Chinese range check
+  const hasTraditional = /[\u4E00-\u9FFF]/.test(text) && !/^[\u4E00-\u9FA5\u3000-\u303F\uFF00-\uFFEF0-9a-zA-Z\s]+$/.test(text);
+  
+  // If mostly English or has traditional characters, it needs a pass
+  return !cjk || cjk.length < 5 || hasTraditional;
 }
 
 /** Translate 1 batch via DeepSeek, matches by position */

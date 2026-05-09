@@ -14,9 +14,15 @@ export async function generateBriefingDigest() {
     const untranslated = await prisma.newsItem.findMany({
       where: {
         publishedAt: { gte: today },
-        language: "en",
+        // Target items that are either English or flagged as zh but might be traditional
+        OR: [
+          { language: "en" },
+          { language: "zh" }
+        ],
+        // 关键：排除掉已经由我们脚本更新过 aiSummary 的项，避免重复 AI 消耗
+        aiSummary: null,
       },
-      take: 100,
+      take: 120,
     });
 
     const toTranslate: Array<{ id: string; title: string; excerpt: string }> = [];
