@@ -85,8 +85,9 @@ export function hasNoisyEnglish(input: string | null | undefined): boolean {
 export function isLowValueBriefingTitle(input: string | null | undefined): boolean {
   const text = input?.trim() ?? "";
   if (!text) return true;
+  if (text.length < 6) return true; // 过滤掉过短的标题，如“确切地说”
   return (
-    /新闻与动态|世界新闻与国际头条|突发新闻、?最新头条|最新头条和视频|最新消息|完整报道|官方网站/.test(text) ||
+    /新闻与动态|世界新闻与国际头条|突发新闻、?最新头条|最新头条和视频|最新消息|完整报道|官方网站|确切地说|延伸阅读|点击查看|深度阅读/.test(text) ||
     /^(国际|世界|财经|科技)\s*[-|]/.test(text)
   );
 }

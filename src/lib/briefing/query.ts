@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { deriveDisplayCategory, isDisplayableChinese, marketDisplayName, sourceDisplayName } from "./display";
+import { needsTranslation } from "./translate";
 import type { BriefingCategory, BriefingRange, MarketSnapshotDTO, NewsItemDTO } from "./types";
 
 function startOfToday() {

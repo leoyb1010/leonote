@@ -21,7 +21,7 @@ export function BriefingHero({ digest, total, range }: Props) {
   };
   const data = digest ?? fallback;
   const rangeLabel = range === "today" ? "今日" : range === "week" ? "本周" : "收藏";
-  const headlines = data.headlines.filter(hasChineseSignal).slice(0, 3);
+  const headlines = data.headlines;
 
   return (
     <motion.section variants={cardFloatIn} initial="initial" animate="animate" className="card-premium relative overflow-hidden p-5 sm:p-6 lg:p-8">
@@ -39,7 +39,7 @@ export function BriefingHero({ digest, total, range }: Props) {
             {(headlines.length > 0 ? headlines : fallback.headlines).map((line, index) => (
               <div key={index} className="flex gap-3 items-start">
                 <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-[var(--primary)]" />
-                <p className="text-sm leading-relaxed text-[var(--text-secondary)] sm:text-[15px] line-clamp-2">
+                <p className="text-sm leading-relaxed text-[var(--text-secondary)] sm:text-[15px]">
                   {line}
                 </p>
               </div>

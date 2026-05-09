@@ -109,7 +109,8 @@ export async function generateBriefingDigest() {
   const sorted = [...scoredItems].sort((a, b) => b.score - a.score);
   for (const item of sorted) {
     if (topHeadlines.length >= 3) break;
-    if (!hasChineseSignal(item.title)) continue;
+    // 强制要求标题必须经过 AI 翻译/简体化处理
+    if (needsTranslation(item.title)) continue;
     if (usedCategories.has(item.category) && sorted.length > 6) continue;
     usedCategories.add(item.category);
     topHeadlines.push(item.title);
@@ -118,7 +119,7 @@ export async function generateBriefingDigest() {
   const summary = {
     weekday,
     dateLabel,
-    headlines: topHeadlines.length >= 3 ? topHeadlines : items.filter((item) => hasChineseSignal(item.title)).slice(0, 3).map((i) => i.title),
+    headlines: topHeadlines.length >= 3 ? topHeadlines : items.filter((item) => !needsTranslation(item.title)).slice(0, 3).map((i) => i.title),
   };
 
   const digest = await prisma.briefingDigest.upsert({
