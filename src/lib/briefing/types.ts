@@ -13,19 +13,34 @@ export interface BriefingDigestSummary {
   headlines: string[];
 }
 
+export interface BriefingMetaDTO {
+  generatedAt: string | null;
+  latestNewsFetchAt: string | null;
+  sourceCount: number;
+  cron: Array<{
+    task: string;
+    ok: boolean;
+    message: string;
+    startedAt: string;
+    endedAt: string | null;
+  }>;
+}
+
 export interface NewsItemDTO {
   id: string;
   title: string;
   url: string;
   imageUrl: string | null;
   excerpt: string;
-  content: string;
+  detailText: string;
   category: BriefingCategory;
   sourceName: string;
   publishedAt: string;
   aiSummary: string | null;
   aiKeyPoints: string[];
+  aiTags: string[];
   aiScore: number | null;
+  readingMinutes: number;
   isRead: boolean;
   isFavorited: boolean;
   isImported: boolean;

@@ -1,21 +1,21 @@
 import { prisma } from "@/lib/prisma";
-import { deriveDisplayCategory, isDisplayableChinese, marketDisplayName, sourceDisplayName } from "./display";
+import { categoryLabel, deriveDisplayCategory, isDisplayableChinese, marketDisplayName, sourceDisplayName } from "./display";
+import {
+  buildBriefingDetailText,
+  buildBriefingSummary,
+  estimateReadingMinutes,
+  normalizeBriefingTags,
+  normalizeScore,
+  parseJsonStringArray,
+  safeNumberArray,
+  sanitizeBriefingText,
+} from "./normalize";
 import { needsTranslation } from "./translate";
-import type { BriefingCategory, BriefingRange, MarketSnapshotDTO, NewsItemDTO } from "./types";
+import type { BriefingCategory, BriefingMetaDTO, BriefingRange, MarketSnapshotDTO, NewsItemDTO } from "./types";
 
 function startOfToday() {
   const now = new Date();
   return new Date(now.getFullYear(), now.getMonth(), now.getDate());
-}
-
-function parseJsonArray(value: string | null | undefined) {
-  if (!value) return [];
-  try {
-    const parsed = JSON.parse(value);
-    return Array.isArray(parsed) ? parsed.filter((item): item is string => typeof item === "string") : [];
-  } catch {
-    return [];
-  }
 }
 
 export async function getBriefingData(userId: string, options?: { range?: BriefingRange; category?: BriefingCategory | "all" }) {
@@ -72,22 +72,49 @@ export async function getBriefingData(userId: string, options?: { range?: Briefi
 
   const dto: NewsItemDTO[] = items.map((item) => {
     const state = item.states[0];
-    // 如果是 X 监控源且有 AI 摘要，说明已经翻译过了，我们将翻译后的内容替换到标题显示
-    const displayTitle = (item.displayCategory === "social_x" && item.aiSummary) ? item.aiSummary : item.title;
-    
+    const keyPoints = parseJsonStringArray(item.aiKeyPoints, 5);
+    const score = normalizeScore(item.aiScore);
+    const rawTitle = sanitizeBriefingText(item.title, 96);
+    const summary = buildBriefingSummary({
+      title: rawTitle,
+      aiSummary: item.aiSummary,
+      excerpt: item.excerpt,
+      max: 190,
+    });
+    const displayTitle = item.displayCategory === "social_x" && summary
+      ? sanitizeBriefingText(summary, 82)
+      : rawTitle;
+    const normalizedSummary = displayTitle === summary
+      ? buildBriefingSummary({ title: displayTitle, aiSummary: null, excerpt: item.excerpt, max: 160 })
+      : summary;
+    const tags = normalizeBriefingTags([
+      ...parseJsonStringArray(item.aiTags, 8),
+      categoryLabel(item.displayCategory),
+    ]);
+    const detailText = buildBriefingDetailText({
+      title: displayTitle,
+      summary: normalizedSummary,
+      excerpt: item.excerpt,
+      content: item.content,
+      keyPoints,
+      max: 820,
+    });
+
     return {
       id: item.id,
       title: displayTitle,
       url: item.url,
       imageUrl: item.imageUrl,
-      excerpt: item.excerpt,
+      excerpt: sanitizeBriefingText(item.excerpt, 180),
       category: item.displayCategory,
       sourceName: sourceDisplayName(item.source.name, item.displayCategory),
       publishedAt: item.publishedAt.toISOString(),
-      aiSummary: item.aiSummary,
-      aiKeyPoints: parseJsonArray(item.aiKeyPoints),
-      content: item.content,
-      aiScore: item.aiScore,
+      aiSummary: normalizedSummary || null,
+      aiKeyPoints: keyPoints,
+      aiTags: tags,
+      detailText,
+      aiScore: score,
+      readingMinutes: estimateReadingMinutes(detailText || normalizedSummary || item.excerpt),
       isRead: Boolean(state?.isRead),
       isFavorited: Boolean(state?.isFavorited),
       isImported: Boolean(state?.isImported),
@@ -117,10 +144,49 @@ export async function getLatestMarketSnapshots() {
       price: row.price,
       changePct: row.changePct,
       changeAbs: row.changeAbs,
-      points: JSON.parse(row.pointsJson || "[]"),
+      points: safeNumberArray(row.pointsJson),
       capturedAt: row.capturedAt.toISOString(),
     });
   }
 
   return latest;
+}
+
+export async function getBriefingMeta(): Promise<BriefingMetaDTO> {
+  const [sourceCount, latestSource, latestDigest, cron] = await Promise.all([
+    prisma.newsSource.count({ where: { enabled: true } }),
+    prisma.newsSource.findFirst({
+      where: { enabled: true, lastFetchAt: { not: null } },
+      orderBy: { lastFetchAt: "desc" },
+      select: { lastFetchAt: true },
+    }),
+    prisma.briefingDigest.findFirst({
+      orderBy: { updatedAt: "desc" },
+      select: { updatedAt: true, createdAt: true },
+    }),
+    prisma.cronRun.findMany({
+      orderBy: { startedAt: "desc" },
+      take: 4,
+      select: {
+        task: true,
+        ok: true,
+        message: true,
+        startedAt: true,
+        endedAt: true,
+      },
+    }),
+  ]);
+
+  return {
+    generatedAt: (latestDigest?.updatedAt ?? latestDigest?.createdAt ?? null)?.toISOString() ?? null,
+    latestNewsFetchAt: latestSource?.lastFetchAt?.toISOString() ?? null,
+    sourceCount,
+    cron: cron.map((item) => ({
+      task: item.task,
+      ok: item.ok,
+      message: sanitizeBriefingText(item.message, 80),
+      startedAt: item.startedAt.toISOString(),
+      endedAt: item.endedAt?.toISOString() ?? null,
+    })),
+  };
 }

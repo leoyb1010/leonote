@@ -37,5 +37,13 @@ export async function PATCH(request: Request) {
     },
   });
 
-  return NextResponse.json({ ok: true, state });
+  return NextResponse.json({
+    ok: true,
+    state: {
+      isRead: state.isRead,
+      isFavorited: state.isFavorited,
+      isImported: state.isImported,
+      importedNoteId: state.importedNoteId,
+    },
+  });
 }

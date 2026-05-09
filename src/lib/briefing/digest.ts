@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
-import { isDisplayableChinese } from "./display";
+import { categoryLabel, deriveDisplayCategory, isDisplayableChinese } from "./display";
+import { buildBriefingSummary, normalizeBriefingTags, sanitizeBriefingText } from "./normalize";
 import { needsTranslation, translateBatch } from "./translate";
 
 function startOfToday() {
@@ -112,13 +113,18 @@ export async function generateBriefingDigest() {
     if (needsTranslation(item.title)) continue;
     if (usedCategories.has(item.category) && sorted.length > 6) continue;
     usedCategories.add(item.category);
-    topHeadlines.push(item.title);
+    topHeadlines.push(sanitizeBriefingText(item.title, 90));
   }
 
   const summary = {
     weekday,
     dateLabel,
-    headlines: topHeadlines.length >= 3 ? topHeadlines : items.filter((item) => !needsTranslation(item.title)).slice(0, 3).map((i) => i.title),
+    headlines: topHeadlines.length >= 3
+      ? topHeadlines
+      : items
+          .filter((item) => !needsTranslation(item.title))
+          .slice(0, 3)
+          .map((item) => sanitizeBriefingText(item.title, 90)),
   };
 
   const digest = await prisma.briefingDigest.upsert({
@@ -129,12 +135,27 @@ export async function generateBriefingDigest() {
 
   // Write scores
   for (const item of scoredItems) {
+    const displayCategory = deriveDisplayCategory({
+      category: item.category,
+      sourceName: item.source.name,
+      title: item.title,
+      excerpt: item.excerpt,
+    });
+    const title = sanitizeBriefingText(item.title, 96);
+    const cleanSummary = buildBriefingSummary({
+      title,
+      aiSummary: item.aiSummary,
+      excerpt: item.excerpt,
+      max: 220,
+    });
+
     await prisma.newsItem.update({
       where: { id: item.id },
       data: {
         aiScore: item.score,
-        aiSummary: item.aiSummary || item.excerpt || null,
-        aiKeyPoints: item.aiKeyPoints || JSON.stringify([item.title]),
+        aiSummary: cleanSummary || null,
+        aiKeyPoints: item.aiKeyPoints || JSON.stringify([title]),
+        aiTags: item.aiTags || JSON.stringify(normalizeBriefingTags([categoryLabel(displayCategory), item.source.name], 4)),
       },
     });
   }

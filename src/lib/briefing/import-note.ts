@@ -1,5 +1,7 @@
 import { prisma } from "@/lib/prisma";
-import { categoryLabel, sourceDisplayName } from "./display";
+import { categoryLabel, deriveDisplayCategory, sourceDisplayName } from "./display";
+import { buildBriefingSummary, parseBriefingDigestSummary, parseJsonStringArray, sanitizeBriefingText } from "./normalize";
+import type { BriefingCategory } from "./types";
 
 function formatDateTime(input: Date) {
   return input.toLocaleString("zh-CN", {
@@ -11,16 +13,6 @@ function formatDateTime(input: Date) {
   });
 }
 
-function safeJsonArray(value: string | null) {
-  if (!value) return [];
-  try {
-    const parsed = JSON.parse(value);
-    return Array.isArray(parsed) ? parsed.filter((item): item is string => typeof item === "string") : [];
-  } catch {
-    return [];
-  }
-}
-
 export async function importNewsItemToNote(userId: string, itemId: string) {
   const item = await prisma.newsItem.findUnique({
     where: { id: itemId },
@@ -29,14 +21,28 @@ export async function importNewsItemToNote(userId: string, itemId: string) {
 
   if (!item) throw new Error("news-item-not-found");
 
-  const keyPoints = safeJsonArray(item.aiKeyPoints);
-  const label = item.category === "world" || item.category === "finance" || item.category === "ai_tech" ? categoryLabel(item.category) : "资讯";
-  const sourceName = sourceDisplayName(item.source.name, item.category);
+  const displayCategory = deriveDisplayCategory({
+    category: item.category,
+    sourceName: item.source.name,
+    title: item.title,
+    excerpt: item.excerpt,
+  });
+  const keyPoints = parseJsonStringArray(item.aiKeyPoints, 5);
+  const label = categoryLabel(displayCategory);
+  const sourceName = sourceDisplayName(item.source.name, displayCategory);
+  const title = sanitizeBriefingText(item.title, 96);
+  const summary = buildBriefingSummary({
+    title,
+    aiSummary: item.aiSummary,
+    excerpt: item.excerpt,
+    max: 220,
+  });
+  const tags = parseJsonStringArray(item.aiTags, 6);
 
   const content = [
-    `# ${item.title}`,
+    `# ${title}`,
     "",
-    item.aiSummary ? `> 智能摘要：${item.aiSummary}` : item.excerpt ? `> 摘要：${item.excerpt}` : "",
+    summary ? `> 智能摘要：${summary}` : "",
     "",
     keyPoints.length > 0 ? "**要点**" : "",
     ...keyPoints.map((point) => `- ${point}`),
@@ -46,16 +52,16 @@ export async function importNewsItemToNote(userId: string, itemId: string) {
     `**发布**：${formatDateTime(item.publishedAt)}  `,
     `**导入**：${formatDateTime(new Date())}`,
     "",
-    `#简报 #${label}`,
+    `#简报 #${label}${tags.length > 0 ? ` ${tags.map((tag) => `#${tag}`).join(" ")}` : ""}`,
   ]
     .filter((line) => line !== "")
     .join("\n");
 
   const note = await prisma.note.create({
     data: {
-      title: item.title,
+      title,
       content,
-      excerpt: item.aiSummary || item.excerpt || "来自 Briefing 的资讯笔记",
+      excerpt: summary || "来自 Briefing 的资讯笔记",
       source: `briefing:${item.id}`,
       userId,
     },
@@ -97,7 +103,7 @@ export async function importTodayDigestToNote(userId: string) {
     take: 8,
   });
 
-  const parsed = digest ? JSON.parse(digest.summary) : null;
+  const parsed = parseBriefingDigestSummary(digest?.summary);
   const sourceId = `briefing-digest:${start.toISOString().slice(0, 10)}`;
 
   const existing = await prisma.note.findFirst({
@@ -105,16 +111,26 @@ export async function importTodayDigestToNote(userId: string) {
   });
   if (existing) return existing;
 
-  const title = `📰 简报 · ${today.getMonth() + 1} 月 ${today.getDate()} 日`;
+  const title = `简报 · ${today.getMonth() + 1} 月 ${today.getDate()} 日`;
 
   const content = [
     `# ${title}`,
     "",
     "## 今天值得知道的三件事",
-    ...(parsed?.headlines ?? []).map((line: string) => `- ${line}`),
+    ...(parsed?.headlines ?? []).map((line) => `- ${line}`),
     "",
     "## 值得继续阅读",
-    ...items.map((item) => `- [${item.title}](${item.url}) · ${item.source.name}`),
+    ...items.map((item) => {
+      const displayCategory = deriveDisplayCategory({
+        category: item.category,
+        sourceName: item.source.name,
+        title: item.title,
+        excerpt: item.excerpt,
+      });
+      const label = categoryLabel(displayCategory as BriefingCategory);
+      const sourceName = sourceDisplayName(item.source.name, displayCategory);
+      return `- [${sanitizeBriefingText(item.title, 96)}](${item.url}) · ${sourceName} · ${label}`;
+    }),
     "",
     `导入时间：${formatDateTime(new Date())}`,
     "",
