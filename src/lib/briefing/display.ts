@@ -101,7 +101,7 @@ export function needsChineseDisplay(input: string | null | undefined): boolean {
 }
 
 export function isDisplayableChinese(title: string, excerpt?: string | null, summary?: string | null, sourceName?: string): boolean {
-  if (sourceName?.startsWith("X ·")) return true; // X 监控源强制通过中文检测，但受 query.ts 中的 AI 摘要及翻译校验控制
+  if (sourceName?.includes("X ·")) return true; // X 监控源强制通过
   return !isLowValueBriefingTitle(title) && !hasNoisyEnglish(title) && (hasChineseSignal(title) || (needsChineseDisplay(title) === false && (hasChineseSignal(summary) || hasChineseSignal(excerpt))));
 }
 
@@ -137,7 +137,7 @@ export function deriveDisplayCategory(input: {
   title: string;
   excerpt?: string | null;
 }): BriefingCategory {
-  if (input.sourceName.startsWith("X ·")) return "social_x";
+  if (input.sourceName.includes("X ·")) return "social_x";
   if (input.category === "world" || input.category === "finance") return input.category;
 
   const text = `${input.sourceName} ${input.title} ${input.excerpt ?? ""}`;

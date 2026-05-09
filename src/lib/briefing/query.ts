@@ -53,8 +53,6 @@ export async function getBriefingData(userId: string, options?: { range?: Briefi
     }))
     .filter((item) => category === "all" || item.displayCategory === category)
     .filter((item) => {
-      // X 监控内容必须完成 AI 摘要/翻译处理才允许显示
-      if (item.displayCategory === "social_x" && !item.aiSummary) return false;
       // 强制过滤掉任何仍然是英文的内容，确保首页只有简体中文
       if (needsTranslation(item.title)) return false;
       return isDisplayableChinese(item.title, item.excerpt, item.aiSummary, item.source.name);
