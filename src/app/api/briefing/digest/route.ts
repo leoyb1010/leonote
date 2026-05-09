@@ -27,9 +27,9 @@ export async function GET(request: Request) {
   const range = (["today", "week", "favorites"].includes(rangeParam) ? rangeParam : "today") as BriefingRange;
   const category = (["all", "world", "finance", "ai_tech", "social_x"].includes(categoryParam) ? categoryParam : "all") as BriefingCategory | "all";
 
-  if (range !== "favorites") {
-    await ensureBriefingFreshness({ force: forceRefresh });
-  }
+  const refreshStatus = range !== "favorites"
+    ? await ensureBriefingFreshness({ force: forceRefresh })
+    : { started: false, inFlight: false, skipped: true };
 
   const [digest, items, marketState, weather, meta] = await Promise.all([
     prisma.briefingDigest.findUnique({ where: { date: startOfToday() } }),
@@ -49,6 +49,7 @@ export async function GET(request: Request) {
       stale: marketState.stale,
       error: marketState.error,
     },
+    refreshStatus,
     weather,
     meta,
   });

@@ -4,6 +4,8 @@ import { decryptSecret } from "@/lib/crypto-secret";
 const AI_BASE = process.env.AI_BASE_URL || "https://api.deepseek.com";
 const AI_ENV_KEY = process.env.AI_API_KEY || process.env.OPENAI_API_KEY || "";
 const AI_MODEL = process.env.AI_MODEL || "deepseek-chat";
+const TRANSLATE_TIMEOUT_MS = Number(process.env.BRIEFING_TRANSLATE_TIMEOUT_MS || 8_000);
+const TRANSLATE_MAX_ITEMS = Number(process.env.BRIEFING_TRANSLATE_MAX_ITEMS || 12);
 
 let cachedKey = "";
 
@@ -53,30 +55,46 @@ async function translateOneBatch(texts: string[], apiKey: string): Promise<strin
     JSON.stringify(normalizedTexts),
   ].join("\n");
 
-  const res = await fetch(`${AI_BASE}/chat/completions`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json", Authorization: `Bearer ${apiKey}` },
-    body: JSON.stringify({
-      model: AI_MODEL,
-      messages: [
-        { role: "system", content: "你是专业新闻编辑。将输入的外文或中英混杂资讯翻译/改写为自然、准确的简体中文（不要使用繁体）。输出的每行简体中文需与输入顺序一一对应，仅输出结果，不加编号。" },
-        { role: "user", content: prompt },
-      ],
-      max_tokens: Math.min(
-        6000,
-        Math.max(2048, Math.ceil(normalizedTexts.join("").length * 1.2) + texts.length * 80),
-      ),
-      temperature: 0.2,
-    }),
-  });
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), TRANSLATE_TIMEOUT_MS);
 
-  if (!res.ok) {
-    const errText = await res.text().catch(() => "unknown");
-    console.error(`[translate] API ${res.status}:`, errText.slice(0, 300));
+  let json: {
+    error?: unknown;
+    choices?: Array<{ message?: { content?: string } }>;
+    usage?: unknown;
+  };
+  try {
+    const res = await fetch(`${AI_BASE}/chat/completions`, {
+      method: "POST",
+      signal: controller.signal,
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${apiKey}` },
+      body: JSON.stringify({
+        model: AI_MODEL,
+        messages: [
+          { role: "system", content: "你是专业新闻编辑。将输入的外文或中英混杂资讯翻译/改写为自然、准确的简体中文（不要使用繁体）。输出的每行简体中文需与输入顺序一一对应，仅输出结果，不加编号。" },
+          { role: "user", content: prompt },
+        ],
+        max_tokens: Math.min(
+          6000,
+          Math.max(2048, Math.ceil(normalizedTexts.join("").length * 1.2) + texts.length * 80),
+        ),
+        temperature: 0.2,
+      }),
+    });
+
+    if (!res.ok) {
+      const errText = await res.text().catch(() => "unknown");
+      console.error(`[translate] API ${res.status}:`, errText.slice(0, 300));
+      return texts;
+    }
+
+    json = await res.json();
+  } catch (error) {
+    console.error("[translate] request failed:", error instanceof Error ? error.message : "unknown");
     return texts;
+  } finally {
+    clearTimeout(timer);
   }
-
-  const json = await res.json();
 
   if (json.error) {
     console.error(`[translate] API error:`, JSON.stringify(json.error).slice(0, 300));
@@ -133,11 +151,15 @@ export async function translateBatch(texts: string[]): Promise<string[]> {
   const apiKey = await getAIKey();
   if (!apiKey) { console.error("[translate] no API key"); return texts; }
 
-  const chunkSize = 20;
+  const chunkSize = 12;
   const result: string[] = [...texts];
+  const maxItems = Number.isFinite(TRANSLATE_MAX_ITEMS)
+    ? Math.max(0, TRANSLATE_MAX_ITEMS)
+    : 60;
+  const limitedTexts = texts.slice(0, maxItems);
 
-  for (let offset = 0; offset < texts.length; offset += chunkSize) {
-    const chunk = texts.slice(offset, offset + chunkSize);
+  for (let offset = 0; offset < limitedTexts.length; offset += chunkSize) {
+    const chunk = limitedTexts.slice(offset, offset + chunkSize);
     const translated = await translateOneBatch(chunk, apiKey);
 
     for (let i = 0; i < chunk.length; i++) {

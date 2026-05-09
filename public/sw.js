@@ -1,5 +1,5 @@
-const CACHE_NAME = `leonote-${"__BUILD_ID__"}`;
-const STATIC_ASSETS = ["/manifest.json", "/icon-192.png", "/icon-512.png", "/offline.html"];
+const CACHE_NAME = "leonote-runtime-v20260510";
+const STATIC_ASSETS = ["/manifest.json", "/favicon.ico", "/icon-192.png", "/icon-512.png", "/offline.html"];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(
@@ -19,12 +19,19 @@ self.addEventListener("activate", (event) => {
   self.clients.claim();
 });
 
+self.addEventListener("message", (event) => {
+  if (event.data?.type === "SKIP_WAITING") {
+    self.skipWaiting();
+  }
+});
+
 self.addEventListener("fetch", (event) => {
   const req = event.request;
   if (req.method !== "GET") return;
 
   const url = new URL(req.url);
   if (url.pathname.startsWith("/api/")) return;
+  if (url.pathname.startsWith("/_next/")) return;
 
   const acceptsHtml =
     req.headers.get("accept")?.includes("text/html");

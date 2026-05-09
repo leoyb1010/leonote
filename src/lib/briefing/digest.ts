@@ -3,6 +3,11 @@ import { categoryLabel, deriveDisplayCategory, isDisplayableChinese } from "./di
 import { buildBriefingKeyPoints, buildBriefingSummary, normalizeBriefingTags, parseJsonStringArray, sanitizeBriefingText } from "./normalize";
 import { needsTranslation, translateBatch } from "./translate";
 
+function translationItemLimit() {
+  const configured = Number(process.env.BRIEFING_TRANSLATE_ITEM_LIMIT || process.env.BRIEFING_TRANSLATE_MAX_ITEMS || 12);
+  return Number.isFinite(configured) ? Math.max(0, configured) : 12;
+}
+
 function startOfToday() {
   const now = new Date();
   return new Date(now.getFullYear(), now.getMonth(), now.getDate());
@@ -27,6 +32,7 @@ export async function generateBriefingDigest() {
     });
 
     const toTranslate: Array<{ id: string; title: string; excerpt: string; content: string }> = [];
+    const translateContent = process.env.BRIEFING_TRANSLATE_CONTENT === "true";
     for (const item of untranslated) {
       const needsTitle = needsTranslation(item.title);
       const needsExcerpt = needsTranslation(item.excerpt);
@@ -36,25 +42,26 @@ export async function generateBriefingDigest() {
           id: item.id,
           title: item.title,
           excerpt: item.excerpt,
-          content: needsContent ? sanitizeBriefingText(item.content, 900) : "",
+          content: translateContent && needsContent ? sanitizeBriefingText(item.content, 900) : "",
         });
       }
     }
 
-    if (toTranslate.length > 0) {
-      console.log(`[digest] translating ${toTranslate.length} English items`);
+    const selectedToTranslate = toTranslate.slice(0, translationItemLimit());
+    if (selectedToTranslate.length > 0) {
+      console.log(`[digest] translating ${selectedToTranslate.length}/${toTranslate.length} English items`);
 
-      const titleTexts = toTranslate.map((t) => t.title);
+      const titleTexts = selectedToTranslate.map((t) => t.title);
       const translatedTitles = await translateBatch(titleTexts);
 
-      const excerptTexts = toTranslate.map((t) => sanitizeBriefingText(t.excerpt || t.content, 700));
+      const excerptTexts = selectedToTranslate.map((t) => sanitizeBriefingText(t.excerpt || t.content, 700));
       const translatedExcerpts = await translateBatch(excerptTexts);
-      const contentTexts = toTranslate.map((t) => t.content).filter(Boolean);
+      const contentTexts = selectedToTranslate.map((t) => t.content).filter(Boolean);
       const translatedContents = contentTexts.length > 0 ? await translateBatch(contentTexts) : [];
       let contentIndex = 0;
 
-      for (let i = 0; i < toTranslate.length; i++) {
-        const orig = toTranslate[i];
+      for (let i = 0; i < selectedToTranslate.length; i++) {
+        const orig = selectedToTranslate[i];
         const newTitle = translatedTitles[i] ?? orig.title;
         const newExcerpt = translatedExcerpts[i] ?? orig.excerpt;
         const newContent = orig.content

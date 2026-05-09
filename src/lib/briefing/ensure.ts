@@ -6,6 +6,15 @@ type EnsureOptions = {
   force?: boolean;
   minItems?: number;
   maxAgeMinutes?: number;
+  wait?: boolean;
+  timeoutMs?: number;
+};
+
+type EnsureResult = {
+  started: boolean;
+  inFlight: boolean;
+  skipped: boolean;
+  timedOut?: boolean;
 };
 
 let inFlight: Promise<void> | null = null;
@@ -50,17 +59,53 @@ async function shouldRefresh(options: EnsureOptions) {
 }
 
 export async function ensureBriefingFreshness(options: EnsureOptions = {}) {
-  if (!(await shouldRefresh(options))) return;
-  if (inFlight) return inFlight;
+  if (!(await shouldRefresh(options))) {
+    return { started: false, inFlight: false, skipped: true } satisfies EnsureResult;
+  }
 
-  inFlight = (async () => {
-    try {
-      await fetchNewsSources();
-    } finally {
-      await generateBriefingDigest();
-      inFlight = null;
-    }
-  })();
+  const alreadyRunning = Boolean(inFlight);
 
-  return inFlight;
+  if (!inFlight) {
+    inFlight = (async () => {
+      try {
+        await fetchNewsSources();
+      } catch (error) {
+        console.error("[briefing] background fetch failed", error instanceof Error ? error.message : "unknown");
+      }
+
+      try {
+        await generateBriefingDigest();
+      } catch (error) {
+        console.error("[briefing] background digest failed", error instanceof Error ? error.message : "unknown");
+      } finally {
+        inFlight = null;
+      }
+    })();
+  }
+
+  if (options.wait) {
+    const timedOut = await waitForRefresh(options.timeoutMs ?? 12_000);
+    return {
+      started: !alreadyRunning,
+      inFlight: Boolean(inFlight),
+      skipped: false,
+      timedOut,
+    } satisfies EnsureResult;
+  }
+
+  return {
+    started: !alreadyRunning,
+    inFlight: true,
+    skipped: false,
+  } satisfies EnsureResult;
+}
+
+async function waitForRefresh(timeoutMs: number) {
+  if (!inFlight) return false;
+
+  const timeout = new Promise<"timeout">((resolve) => {
+    setTimeout(() => resolve("timeout"), timeoutMs);
+  });
+  const result = await Promise.race([inFlight.then(() => "done" as const), timeout]);
+  return result === "timeout";
 }
