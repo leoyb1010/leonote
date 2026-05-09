@@ -230,7 +230,7 @@ npm run ci           # 全链路：lint → typecheck → test → build
 
 | 版本 | 日期 | 更新内容 |
 |---|---|---|
-| **v1.6.1** | 2026-05-09 | 简报数据增强与体验打磨：增加 X (Twitter) 镜像监控源；引入简繁体智能识别与全量简体翻译引擎；UI 扩展为 4 栏布局；优化金融数字千分位及精度渲染逻辑；改进后台抓取鉴权兼容性及重试容错 |
+| **v1.6.1** | 2026-05-09 | 安全加固+X监控修复：Cron定时任务Token鉴权（header/bearer双模式+timingSafeEqual）；img-proxy SSRF全链路防护（DNS解析校验/私有IP拦截/Content-Type白名单/2MB限制）；logout跨域请求拒绝；Docker入口SQLite迁移前备份+完整性校验；X监控内容显示逻辑修复（有AI摘要即展示翻译版）；清理未使用import；postcss override修复依赖冲突；新增briefing-auth鉴权单元测试 |
 | **v1.6.0** | 2026-05-08 | 每日简报系统：5表（NewsSource/NewsItem/MarketSnapshot/BriefingDigest/CronRun）；RSS/Tavily/CoinGecko/Sina多源抓取；AI摘要+评分+标签；市场sparkline；天气widget；cron日报生成；news→note一键导入；简报专属UI |
 | **v1.5.2** | 2026-05-08 | 全局质量优化：export/import 重构（流式+进度）；AI summary/memory 增强上下文；register 强化校验+限流；daily ensure 独立端点；ThemeProvider/SegmentedControl 初始化优化；TodayPage 布局微调；request-guard 日志增强；部署文档更新 |
 | **v1.5.1** | 2026-05-08 | 安全加固：SSRF 172.x 范围精确到 172.16.0.0/12；CSP 新增 object-src 'none'；AI 支持 effort 参数（AI_EFFORT_LEVEL）；新增 /api/health 健康检查端点；新增 .dockerignore；删除死代码 storage.ts；完善限流/金额单位注释 |
