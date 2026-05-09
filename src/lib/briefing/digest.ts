@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/prisma";
-import { hasChineseSignal, isDisplayableChinese } from "./display";
+import { isDisplayableChinese } from "./display";
 import { needsTranslation, translateBatch } from "./translate";
 
 function startOfToday() {

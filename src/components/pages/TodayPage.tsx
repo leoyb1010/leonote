@@ -3,12 +3,12 @@
 import React, { useEffect, useState } from "react";
 import { Sun, Sparkles, History, ArrowRight, WalletCards } from "lucide-react";
 import Link from "next/link";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { NoteRow } from "@/components/notes/NoteRow";
 import { Button } from "@/components/base/Button";
 import { formatRelativeTime } from "@/lib/date";
 import { formatMoney } from "@/lib/format-money";
-import { heroTitleReveal, cardFloatIn, railSlideIn, listStagger, listItemFloat, card3DHover } from "@/lib/animations";
+import { heroTitleReveal, cardFloatIn, railSlideIn, card3DHover } from "@/lib/animations";
 
 interface ProjectPreview {
   id: string;

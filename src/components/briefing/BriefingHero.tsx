@@ -2,7 +2,6 @@
 
 import { motion } from "framer-motion";
 import { cardFloatIn, heroTitleReveal } from "@/lib/animations";
-import { hasChineseSignal } from "@/lib/briefing/display";
 import type { BriefingDigestSummary } from "@/lib/briefing/types";
 
 interface Props {
