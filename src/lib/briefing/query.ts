@@ -56,7 +56,7 @@ export async function getBriefingData(userId: string, options?: { range?: Briefi
   const apiFallbackItems = displayableItems.filter((item) => item.source.kind === "api");
   const sourceItems = rssItems.length >= 30 ? rssItems : [...rssItems, ...apiFallbackItems];
   const items = category === "all"
-    ? (["world", "finance", "ai_tech"] as const).flatMap((itemCategory) =>
+    ? (["ai_tech", "social_x", "finance", "world"] as const).flatMap((itemCategory) =>
         sourceItems.filter((item) => item.displayCategory === itemCategory).slice(0, 30),
       )
     : sourceItems.slice(0, 90);
