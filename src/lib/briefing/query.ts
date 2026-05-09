@@ -51,7 +51,11 @@ export async function getBriefingData(userId: string, options?: { range?: Briefi
       }),
     }))
     .filter((item) => category === "all" || item.displayCategory === category)
-    .filter((item) => isDisplayableChinese(item.title, item.excerpt, item.aiSummary, item.source.name));
+    .filter((item) => {
+      // 强制过滤掉任何仍然是英文的内容，确保首页只有简体中文
+      if (needsTranslation(item.title)) return false;
+      return isDisplayableChinese(item.title, item.excerpt, item.aiSummary, item.source.name);
+    });
   const rssItems = displayableItems.filter((item) => item.source.kind !== "api");
   const apiFallbackItems = displayableItems.filter((item) => item.source.kind === "api");
   const sourceItems = rssItems.length >= 30 ? rssItems : [...rssItems, ...apiFallbackItems];
