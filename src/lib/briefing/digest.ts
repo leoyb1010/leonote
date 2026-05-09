@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { categoryLabel, deriveDisplayCategory, isDisplayableChinese } from "./display";
-import { buildBriefingSummary, normalizeBriefingTags, sanitizeBriefingText } from "./normalize";
+import { buildBriefingKeyPoints, buildBriefingSummary, normalizeBriefingTags, parseJsonStringArray, sanitizeBriefingText } from "./normalize";
 import { needsTranslation, translateBatch } from "./translate";
 
 function startOfToday() {
@@ -10,25 +10,34 @@ function startOfToday() {
 
 export async function generateBriefingDigest() {
   const today = startOfToday();
+  const todayWindow = {
+    OR: [
+      { publishedAt: { gte: today } },
+      { fetchedAt: { gte: today } },
+    ],
+  };
 
-  if (process.env.BRIEFING_TRANSLATE_ENGLISH === "true") {
+  if (process.env.BRIEFING_TRANSLATE_ENGLISH !== "false") {
     const untranslated = await prisma.newsItem.findMany({
       where: {
-        publishedAt: { gte: today },
-        OR: [
-          { language: "en" },
-          { language: "zh" }
-        ],
-        // 如果 aiSummary 是空的，说明没有经过翻译流程
-        aiSummary: null,
+        ...todayWindow,
       },
-      take: 200, // 再放大一次批处理量，确保把之前的都洗一遍
+      orderBy: [{ fetchedAt: "desc" }],
+      take: 240,
     });
 
-    const toTranslate: Array<{ id: string; title: string; excerpt: string }> = [];
+    const toTranslate: Array<{ id: string; title: string; excerpt: string; content: string }> = [];
     for (const item of untranslated) {
-      if (needsTranslation(item.title)) {
-        toTranslate.push({ id: item.id, title: item.title, excerpt: item.excerpt });
+      const needsTitle = needsTranslation(item.title);
+      const needsExcerpt = needsTranslation(item.excerpt);
+      const needsContent = item.content.length > item.excerpt.length + 80 && needsTranslation(item.content);
+      if (needsTitle || needsExcerpt || needsContent) {
+        toTranslate.push({
+          id: item.id,
+          title: item.title,
+          excerpt: item.excerpt,
+          content: needsContent ? sanitizeBriefingText(item.content, 900) : "",
+        });
       }
     }
 
@@ -38,20 +47,43 @@ export async function generateBriefingDigest() {
       const titleTexts = toTranslate.map((t) => t.title);
       const translatedTitles = await translateBatch(titleTexts);
 
-      const excerptTexts = toTranslate.map((t) => t.excerpt);
+      const excerptTexts = toTranslate.map((t) => sanitizeBriefingText(t.excerpt || t.content, 700));
       const translatedExcerpts = await translateBatch(excerptTexts);
+      const contentTexts = toTranslate.map((t) => t.content).filter(Boolean);
+      const translatedContents = contentTexts.length > 0 ? await translateBatch(contentTexts) : [];
+      let contentIndex = 0;
 
       for (let i = 0; i < toTranslate.length; i++) {
         const orig = toTranslate[i];
         const newTitle = translatedTitles[i] ?? orig.title;
         const newExcerpt = translatedExcerpts[i] ?? orig.excerpt;
-        const wasTranslated = newTitle !== orig.title || newExcerpt !== orig.excerpt;
+        const newContent = orig.content
+          ? translatedContents[contentIndex++] ?? orig.content
+          : "";
+        const cleanSummary = buildBriefingSummary({
+          title: newTitle,
+          aiSummary: newExcerpt,
+          excerpt: newExcerpt,
+          content: newContent,
+          max: 260,
+        });
+        const keyPoints = buildBriefingKeyPoints({
+          title: newTitle,
+          aiSummary: cleanSummary,
+          excerpt: newExcerpt,
+          content: newContent,
+          max: 4,
+        });
+        const wasTranslated = newTitle !== orig.title || newExcerpt !== orig.excerpt || Boolean(newContent && newContent !== orig.content);
         await prisma.newsItem.update({
           where: { id: orig.id },
           data: {
             title: newTitle,
             excerpt: newExcerpt,
-            ...(wasTranslated ? { language: "zh", aiSummary: newExcerpt } : {}),
+            ...(newContent ? { content: newContent } : {}),
+            language: wasTranslated ? "zh" : undefined,
+            aiSummary: cleanSummary || newExcerpt || null,
+            aiKeyPoints: keyPoints.length > 0 ? JSON.stringify(keyPoints) : undefined,
           },
         });
       }
@@ -59,9 +91,9 @@ export async function generateBriefingDigest() {
   }
 
   const displayableItems = (await prisma.newsItem.findMany({
-    where: { publishedAt: { gte: today } },
+    where: todayWindow,
     include: { source: true },
-    orderBy: [{ publishedAt: "desc" }],
+    orderBy: [{ fetchedAt: "desc" }, { publishedAt: "desc" }],
     take: 500,
   })).filter((item) => isDisplayableChinese(item.title, item.excerpt, item.aiSummary, item.source.name));
   const rssItems = displayableItems.filter((item) => item.source.kind !== "api");
@@ -146,15 +178,27 @@ export async function generateBriefingDigest() {
       title,
       aiSummary: item.aiSummary,
       excerpt: item.excerpt,
-      max: 220,
+      content: item.content,
+      max: 240,
     });
+    const existingKeyPoints = parseJsonStringArray(item.aiKeyPoints, 5);
+    const generatedKeyPoints = buildBriefingKeyPoints({
+      title,
+      aiSummary: cleanSummary,
+      excerpt: item.excerpt,
+      content: item.content,
+      max: 4,
+    });
+    const keyPoints = generatedKeyPoints.length > 0
+      ? generatedKeyPoints
+      : existingKeyPoints.filter((point) => point !== title);
 
     await prisma.newsItem.update({
       where: { id: item.id },
       data: {
         aiScore: item.score,
         aiSummary: cleanSummary || null,
-        aiKeyPoints: item.aiKeyPoints || JSON.stringify([title]),
+        aiKeyPoints: keyPoints.length > 0 ? JSON.stringify(keyPoints) : JSON.stringify([cleanSummary || title]),
         aiTags: item.aiTags || JSON.stringify(normalizeBriefingTags([categoryLabel(displayCategory), item.source.name], 4)),
       },
     });

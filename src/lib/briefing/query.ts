@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { categoryLabel, deriveDisplayCategory, isDisplayableChinese, marketDisplayName, sourceDisplayName } from "./display";
 import {
+  buildBriefingKeyPoints,
   buildBriefingDetailText,
   buildBriefingSummary,
   estimateReadingMinutes,
@@ -18,6 +19,28 @@ function startOfToday() {
   return new Date(now.getFullYear(), now.getMonth(), now.getDate());
 }
 
+function rangeWhere(range: BriefingRange, today: Date, weekStart: Date) {
+  if (range === "today") {
+    return {
+      OR: [
+        { publishedAt: { gte: today } },
+        { fetchedAt: { gte: today } },
+      ],
+    };
+  }
+
+  if (range === "week") {
+    return {
+      OR: [
+        { publishedAt: { gte: weekStart } },
+        { fetchedAt: { gte: weekStart } },
+      ],
+    };
+  }
+
+  return {};
+}
+
 export async function getBriefingData(userId: string, options?: { range?: BriefingRange; category?: BriefingCategory | "all" }) {
   const range = options?.range ?? "today";
   const category = options?.category ?? "all";
@@ -29,8 +52,7 @@ export async function getBriefingData(userId: string, options?: { range?: Briefi
 
   const rawItems = await prisma.newsItem.findMany({
     where: {
-      ...(range === "today" ? { publishedAt: { gte: today } } : {}),
-      ...(range === "week" ? { publishedAt: { gte: weekStart } } : {}),
+      ...rangeWhere(range, today, weekStart),
       ...(stateWhere ? { states: stateWhere } : {}),
     },
     include: {
@@ -41,7 +63,27 @@ export async function getBriefingData(userId: string, options?: { range?: Briefi
     take: category === "all" ? 500 : 240,
   });
 
-  const displayableItems = rawItems
+  let candidateRows = rawItems;
+  if (range === "today" && rawItems.length < 12) {
+    const seen = new Set(rawItems.map((item) => item.id));
+    const recentFallback = await prisma.newsItem.findMany({
+      where: {
+        OR: [
+          { publishedAt: { gte: weekStart } },
+          { fetchedAt: { gte: weekStart } },
+        ],
+      },
+      include: {
+        source: true,
+        states: { where: { userId }, take: 1 },
+      },
+      orderBy: [{ aiScore: "desc" }, { fetchedAt: "desc" }, { publishedAt: "desc" }],
+      take: 240,
+    });
+    candidateRows = [...rawItems, ...recentFallback.filter((item) => !seen.has(item.id))];
+  }
+
+  const displayableItems = candidateRows
     .map((item) => ({
       ...item,
       displayCategory: deriveDisplayCategory({
@@ -53,10 +95,8 @@ export async function getBriefingData(userId: string, options?: { range?: Briefi
     }))
     .filter((item) => category === "all" || item.displayCategory === category)
     .filter((item) => {
-      // 强制过滤掉任何仍然是英文的内容，确保首页只有简体中文
-      // 但是，对于 X 监控，我们只要它有翻译后的摘要，就认定它是可以展示的
       if (item.displayCategory === "social_x") {
-         return !!item.aiSummary; // 必须有 AI 摘要才显示
+        return !!item.aiSummary;
       }
       if (needsTranslation(item.title) && (!item.aiSummary || needsTranslation(item.aiSummary))) return false;
       return isDisplayableChinese(item.title, item.excerpt, item.aiSummary, item.source.name);
@@ -72,21 +112,32 @@ export async function getBriefingData(userId: string, options?: { range?: Briefi
 
   const dto: NewsItemDTO[] = items.map((item) => {
     const state = item.states[0];
-    const keyPoints = parseJsonStringArray(item.aiKeyPoints, 5);
+    const storedKeyPoints = parseJsonStringArray(item.aiKeyPoints, 5);
     const score = normalizeScore(item.aiScore);
     const rawTitle = sanitizeBriefingText(item.title, 96);
     const summary = buildBriefingSummary({
       title: rawTitle,
       aiSummary: item.aiSummary,
       excerpt: item.excerpt,
-      max: 190,
+      content: item.content,
+      max: 220,
     });
-    const displayTitle = item.displayCategory === "social_x" && summary
+    const displayTitle = (item.displayCategory === "social_x" || needsTranslation(rawTitle)) && summary
       ? sanitizeBriefingText(summary, 82)
       : rawTitle;
     const normalizedSummary = displayTitle === summary
-      ? buildBriefingSummary({ title: displayTitle, aiSummary: null, excerpt: item.excerpt, max: 160 })
+      ? buildBriefingSummary({ title: displayTitle, aiSummary: null, excerpt: item.excerpt, content: item.content, max: 170 })
       : summary;
+    const generatedKeyPoints = buildBriefingKeyPoints({
+      title: displayTitle,
+      aiSummary: normalizedSummary,
+      excerpt: item.excerpt,
+      content: item.content,
+      max: 4,
+    });
+    const keyPoints = generatedKeyPoints.length > 0
+      ? generatedKeyPoints
+      : storedKeyPoints.filter((point) => point !== rawTitle && point !== displayTitle);
     const tags = normalizeBriefingTags([
       ...parseJsonStringArray(item.aiTags, 8),
       categoryLabel(item.displayCategory),
@@ -97,7 +148,7 @@ export async function getBriefingData(userId: string, options?: { range?: Briefi
       excerpt: item.excerpt,
       content: item.content,
       keyPoints,
-      max: 820,
+      max: 1400,
     });
 
     return {

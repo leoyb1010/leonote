@@ -12,9 +12,10 @@ const proxyUrl = process.env.HTTPS_PROXY || process.env.HTTP_PROXY;
 const proxyAgent = proxyUrl ? new HttpsProxyAgent(proxyUrl) : undefined;
 
 const parser = new Parser({
-  timeout: 10000,
+  timeout: 15000,
   headers: {
-    "User-Agent": "LeonoteBriefing/1.0 (+https://leonote.local)",
+    "Accept": "application/rss+xml, application/atom+xml, application/xml, text/xml;q=0.9, */*;q=0.8",
+    "User-Agent": "Mozilla/5.0 (compatible; LeonoteBriefing/1.0; +https://leonote.local)",
   },
 });
 
@@ -30,13 +31,17 @@ function fetchFeedXml(feedUrl: string, redirectCount = 0): Promise<string> {
     const req = mod.get(
       feedUrl,
       {
-        headers: { "User-Agent": "LeonoteBriefing/1.0" },
+        headers: {
+          "Accept": "application/rss+xml, application/atom+xml, application/xml, text/xml;q=0.9, */*;q=0.8",
+          "User-Agent": "Mozilla/5.0 (compatible; LeonoteBriefing/1.0; +https://leonote.local)",
+        },
         ...(proxyAgent ? { agent: proxyAgent } : {}),
       },
       (res) => {
         // Handle redirects — resolve relative locations against original URL
         if (res.statusCode && res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {
           const next = new URL(res.headers.location, feedUrl).toString();
+          res.resume();
           fetchFeedXml(next, redirectCount + 1).then(resolve, reject);
           return;
         }
@@ -51,7 +56,7 @@ function fetchFeedXml(feedUrl: string, redirectCount = 0): Promise<string> {
       },
     );
     req.on("error", reject);
-    req.setTimeout(10000, () => {
+    req.setTimeout(15000, () => {
       req.destroy();
       reject(new Error("timeout"));
     });
@@ -60,6 +65,7 @@ function fetchFeedXml(feedUrl: string, redirectCount = 0): Promise<string> {
 
 async function ensurePresetSources() {
   for (const source of PRESET_NEWS_SOURCES) {
+    const enabled = source.enabled ?? true;
     await prisma.newsSource.upsert({
       where: { id: stableExternalId(source.url) },
       create: {
@@ -70,16 +76,60 @@ async function ensurePresetSources() {
         category: source.category,
         region: source.region,
         weight: source.weight,
+        enabled,
       },
       update: {
         kind: source.kind,
+        url: source.url,
         name: source.name,
         category: source.category,
         region: source.region,
         weight: source.weight,
+        enabled,
+        failCount: 0,
       },
     });
   }
+}
+
+function stringField(value: unknown): string {
+  return typeof value === "string" ? value : "";
+}
+
+function safePublishedAt(isoDate: unknown, pubDate: unknown) {
+  const raw = stringField(isoDate) || stringField(pubDate);
+  const date = raw ? new Date(raw) : new Date();
+  return Number.isFinite(date.getTime()) ? date : new Date();
+}
+
+function itemText(item: Record<string, unknown>) {
+  const encoded = stringField(item["content:encoded"]);
+  const content = stringField(item.content);
+  const summary = stringField(item.summary);
+  const snippet = stringField(item.contentSnippet);
+  const rawContent = encoded || content || summary || snippet;
+  const rawExcerpt = snippet || summary || content || encoded;
+
+  return {
+    excerpt: truncate(stripHtml(rawExcerpt), 320),
+    content: truncate(stripHtml(rawContent), 1800),
+  };
+}
+
+function itemAuthor(item: Record<string, unknown>) {
+  const creator = stringField(item.creator);
+  const author = stringField(item.author);
+  if (creator) return creator;
+  if (author) return author;
+
+  const authorRecord = item.author;
+  if (authorRecord && typeof authorRecord === "object" && "name" in authorRecord) {
+    const name = (authorRecord as { name?: unknown }).name;
+    if (Array.isArray(name) && typeof name[0] === "string") return name[0];
+    if (typeof name === "string") return name;
+  }
+
+  return null;
 }
 
 export async function fetchNewsSources() {
@@ -96,23 +146,17 @@ export async function fetchNewsSources() {
       const feed = await parser.parseString(xml);
       let inserted = 0;
 
-      for (const item of feed.items.slice(0, 30)) {
+      for (const item of feed.items.slice(0, 40)) {
         const url = item.link?.trim();
         const title = item.title?.trim();
         if (!url || !title) continue;
 
-        const publishedAt = item.isoDate
-          ? new Date(item.isoDate)
-          : item.pubDate
-            ? new Date(item.pubDate)
-            : new Date();
-
-        const rawExcerpt = item.contentSnippet || item.summary || item.content || "";
-        const excerpt = truncate(stripHtml(rawExcerpt), 220);
+        const publishedAt = safePublishedAt(item.isoDate, item.pubDate);
+        const { excerpt, content } = itemText(item as Record<string, unknown>);
         const externalId = item.guid || stableExternalId(url);
         const imageUrl = extractImageUrl(item as Record<string, unknown>);
         const category = inferCategory(source.category as BriefingCategory, source.name, title, excerpt);
-        const language = /[一-鿿]/.test(title + excerpt) ? "zh" : "en";
+        const language = /[\u3400-\u9fff]/.test(title + excerpt + content) ? "zh" : "en";
 
         await prisma.newsItem.upsert({
           where: {
@@ -128,7 +172,8 @@ export async function fetchNewsSources() {
             url,
             imageUrl,
             excerpt,
-            author: item.creator || item.author || null,
+            content,
+            author: itemAuthor(item as Record<string, unknown>),
             publishedAt,
             category,
             region: source.region,
@@ -139,6 +184,8 @@ export async function fetchNewsSources() {
             url,
             imageUrl,
             excerpt,
+            content,
+            author: itemAuthor(item as Record<string, unknown>),
             publishedAt,
             category,
             language,
@@ -165,7 +212,6 @@ export async function fetchNewsSources() {
         where: { id: source.id },
         data: {
           failCount: { increment: 1 },
-          enabled: source.failCount + 1 >= 5 ? false : source.enabled,
         },
       });
     }

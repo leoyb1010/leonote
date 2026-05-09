@@ -28,6 +28,10 @@ const ALLOWED_LATIN_WORDS = new Set([
   "iPad",
   "Mac",
   "App",
+  "CNBC",
+  "CBS",
+  "ABC",
+  "MIT",
 ]);
 
 const SOURCE_NAME_MAP: Record<string, string> = {
@@ -37,6 +41,14 @@ const SOURCE_NAME_MAP: Record<string, string> = {
   "TechCrunch AI": "海外科技媒体",
   "The Verge AI": "海外科技媒体",
   "arXiv cs.AI": "论文预印本",
+  "CBS 世界": "海外综合媒体",
+  "ABC 国际": "海外综合媒体",
+  "CNBC 全球市场": "海外财经媒体",
+  "CNBC 投资市场": "海外财经媒体",
+  "Seeking Alpha 快讯": "海外财经快讯",
+  "VentureBeat AI": "海外科技媒体",
+  "MIT Technology Review": "MIT 科技评论",
+  "Google AI Blog": "Google 人工智能博客",
   "Tavily · 世界": "聚合资讯 · 世界",
   "Tavily · 金融": "聚合资讯 · 金融",
   "Tavily · AI 科技": "聚合资讯 · 人工智能",
@@ -102,11 +114,12 @@ export function needsChineseDisplay(input: string | null | undefined): boolean {
 
 export function isDisplayableChinese(title: string, excerpt?: string | null, summary?: string | null, sourceName?: string): boolean {
   if (sourceName?.includes("X ·")) return true; // X 监控源强制通过
-  // 如果已经有了 AI 摘要，说明已经翻译过，肯定可以展示
+  if (isLowValueBriefingTitle(title)) return false;
+  // 如果已经有了中文智能摘要，标题仍含英文专有名词也允许展示。
   if (summary && hasChineseSignal(summary)) return true;
   // 必须有起码的中文字符
   if (!hasChineseSignal(title) && !hasChineseSignal(summary) && !hasChineseSignal(excerpt)) return false;
-  return !isLowValueBriefingTitle(title) && !hasNoisyEnglish(title) && (hasChineseSignal(title) || (needsChineseDisplay(title) === false && (hasChineseSignal(summary) || hasChineseSignal(excerpt))));
+  return !hasNoisyEnglish(title) && (hasChineseSignal(title) || (needsChineseDisplay(title) === false && (hasChineseSignal(summary) || hasChineseSignal(excerpt))));
 }
 
 export function sourceDisplayName(name: string, category?: BriefingCategory | string): string {

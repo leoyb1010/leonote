@@ -43,6 +43,7 @@ export function NewsCard({ item, featured = false, onPatchItem, onClick }: Props
   const [imageHidden, setImageHidden] = useState(false);
   const imageUrl = !imageHidden ? proxyImageUrl(item.imageUrl) : null;
   const score = scorePercent(item.aiScore);
+  const summaryText = item.aiSummary || item.detailText || item.excerpt || "摘要正在生成";
 
   async function markRead() {
     if (item.isRead) return;
@@ -129,7 +130,7 @@ export function NewsCard({ item, featured = false, onPatchItem, onClick }: Props
         </h3>
 
         <p className="mt-2 line-clamp-3 font-[var(--font-reading)] text-sm leading-6 text-[var(--text-secondary)]">
-          {item.aiSummary || item.excerpt || "暂无摘要"}
+          {summaryText}
         </p>
 
         {item.aiTags.length > 0 ? (

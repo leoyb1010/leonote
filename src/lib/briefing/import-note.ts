@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { categoryLabel, deriveDisplayCategory, sourceDisplayName } from "./display";
-import { buildBriefingSummary, parseBriefingDigestSummary, parseJsonStringArray, sanitizeBriefingText } from "./normalize";
+import { buildBriefingDetailText, buildBriefingKeyPoints, buildBriefingSummary, parseBriefingDigestSummary, parseJsonStringArray, sanitizeBriefingText } from "./normalize";
 import type { BriefingCategory } from "./types";
 
 function formatDateTime(input: Date) {
@@ -27,7 +27,6 @@ export async function importNewsItemToNote(userId: string, itemId: string) {
     title: item.title,
     excerpt: item.excerpt,
   });
-  const keyPoints = parseJsonStringArray(item.aiKeyPoints, 5);
   const label = categoryLabel(displayCategory);
   const sourceName = sourceDisplayName(item.source.name, displayCategory);
   const title = sanitizeBriefingText(item.title, 96);
@@ -35,9 +34,25 @@ export async function importNewsItemToNote(userId: string, itemId: string) {
     title,
     aiSummary: item.aiSummary,
     excerpt: item.excerpt,
+    content: item.content,
     max: 220,
   });
+  const keyPoints = buildBriefingKeyPoints({
+    title,
+    aiSummary: summary,
+    excerpt: item.excerpt,
+    content: item.content,
+    max: 5,
+  }).concat(parseJsonStringArray(item.aiKeyPoints, 5)).filter((point, index, array) => point !== title && array.indexOf(point) === index).slice(0, 5);
   const tags = parseJsonStringArray(item.aiTags, 6);
+  const detailText = buildBriefingDetailText({
+    title,
+    summary,
+    excerpt: item.excerpt,
+    content: item.content,
+    keyPoints,
+    max: 1400,
+  });
 
   const content = [
     `# ${title}`,
@@ -46,6 +61,9 @@ export async function importNewsItemToNote(userId: string, itemId: string) {
     "",
     keyPoints.length > 0 ? "**要点**" : "",
     ...keyPoints.map((point) => `- ${point}`),
+    "",
+    detailText ? "**正文摘录**" : "",
+    detailText || "",
     "",
     `**来源**：[${sourceName}](${item.url})  `,
     `**分类**：${label}  `,
@@ -97,7 +115,12 @@ export async function importTodayDigestToNote(userId: string) {
   });
 
   const items = await prisma.newsItem.findMany({
-    where: { publishedAt: { gte: start } },
+    where: {
+      OR: [
+        { publishedAt: { gte: start } },
+        { fetchedAt: { gte: start } },
+      ],
+    },
     include: { source: true },
     orderBy: [{ aiScore: "desc" }, { publishedAt: "desc" }],
     take: 8,

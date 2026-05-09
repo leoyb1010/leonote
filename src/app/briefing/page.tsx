@@ -5,6 +5,7 @@ import { getBriefingData, getBriefingMeta } from "@/lib/briefing/query";
 import { getLiveMarketSnapshots } from "@/lib/briefing/live-market";
 import { getWeather } from "@/lib/briefing/weather";
 import { parseBriefingDigestSummary } from "@/lib/briefing/normalize";
+import { ensureBriefingFreshness } from "@/lib/briefing/ensure";
 import { BriefingShell } from "@/components/briefing/BriefingShell";
 
 export const dynamic = "force-dynamic";
@@ -17,6 +18,8 @@ function startOfToday() {
 export default async function BriefingPage() {
   const userId = await getSessionUserId();
   if (!userId) redirect("/login");
+
+  await ensureBriefingFreshness();
 
   const [digest, items, marketState, weather, meta] = await Promise.all([
     prisma.briefingDigest.findUnique({ where: { date: startOfToday() } }),

@@ -46,9 +46,11 @@ export function needsTranslation(text: string): boolean {
 
 /** Translate 1 batch via DeepSeek, matches by position */
 async function translateOneBatch(texts: string[], apiKey: string): Promise<string[]> {
+  const normalizedTexts = texts.map((text) => text.replace(/\s+/g, " ").trim());
   const prompt = [
-    "将以下资讯标题或摘要改写成自然、准确、适合中文简报阅读的中文。保留必要专有名词，输出每行的中文结果（顺序与输入一一对应，不要编号）：",
-    ...texts,
+    "将以下资讯标题、摘要或正文摘录翻译/改写成自然、准确、适合个人日报阅读的简体中文。",
+    "要求：保留必要专有名词；不要使用繁体；不要加入输入里没有的事实；输出必须是 JSON 字符串数组，顺序和输入一一对应，不要输出解释。",
+    JSON.stringify(normalizedTexts),
   ].join("\n");
 
   const res = await fetch(`${AI_BASE}/chat/completions`, {
@@ -60,7 +62,10 @@ async function translateOneBatch(texts: string[], apiKey: string): Promise<strin
         { role: "system", content: "你是专业新闻编辑。将输入的外文或中英混杂资讯翻译/改写为自然、准确的简体中文（不要使用繁体）。输出的每行简体中文需与输入顺序一一对应，仅输出结果，不加编号。" },
         { role: "user", content: prompt },
       ],
-      max_tokens: Math.max(2048, texts.length * 120),
+      max_tokens: Math.min(
+        6000,
+        Math.max(2048, Math.ceil(normalizedTexts.join("").length * 1.2) + texts.length * 80),
+      ),
       temperature: 0.2,
     }),
   });
@@ -83,7 +88,10 @@ async function translateOneBatch(texts: string[], apiKey: string): Promise<strin
     console.error(`[translate] empty content from API, usage:`, JSON.stringify(json.usage ?? {}));
     return texts;
   }
-  const lines = raw.split("\n").map((l: string) => l.trim()).filter((l: string) => l.length > 0);
+  const parsed = parseJsonStringArray(raw);
+  if (parsed.length === texts.length) return parsed.map(cleanTranslatedLine);
+
+  const lines = raw.split("\n").map((l: string) => cleanTranslatedLine(l)).filter((l: string) => l.length > 0);
 
   if (lines.length !== texts.length) {
     console.error(`[translate] line mismatch: got ${lines.length}, expected ${texts.length}`);
@@ -97,6 +105,25 @@ async function translateOneBatch(texts: string[], apiKey: string): Promise<strin
   }
 
   return lines;
+}
+
+function parseJsonStringArray(input: string): string[] {
+  const cleaned = input.trim().replace(/^```(?:json)?/i, "").replace(/```$/i, "").trim();
+  try {
+    const parsed = JSON.parse(cleaned);
+    return Array.isArray(parsed) ? parsed.filter((item): item is string => typeof item === "string") : [];
+  } catch {
+    return [];
+  }
+}
+
+function cleanTranslatedLine(input: string): string {
+  return input
+    .trim()
+    .replace(/^[-*•]\s*/, "")
+    .replace(/^\d+[.)、]\s*/, "")
+    .replace(/^["“”]+|["“”]+$/g, "")
+    .trim();
 }
 
 /** Translate batch, splitting into chunks of 20 */

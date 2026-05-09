@@ -82,6 +82,13 @@ LEONOTE_ALLOW_REGISTRATION="false"
 AI_BASE_URL="https://api.deepseek.com"
 AI_MODEL="deepseek-v4-flash"
 AI_FALLBACK_MODEL="deepseek-v4-pro"
+
+# 每日简报
+BRIEFING_CRON_TOKEN="change-me-long-random-token"
+BRIEFING_AUTO_REFRESH="true"
+BRIEFING_MIN_ITEMS="12"
+BRIEFING_MAX_AGE_MINUTES="30"
+BRIEFING_TRANSLATE_ENGLISH="true"
 ```
 
 ---
@@ -103,8 +110,12 @@ AI_FALLBACK_MODEL="deepseek-v4-pro"
 - 设置页「记账类型」入口
 - 完全软删除 + 删除类型后历史账单保留
 
-### 每日简报 (v1.6.2)
+### 每日简报 (v1.6.3)
 - 多源抓取：RSS / Tavily / CoinGecko / 新浪行情，支持 Cron 定时抓取、行情刷新与日报生成
+- 资讯源扩容与可靠性治理：新增联合国中文、海外综合媒体、CNBC/MarketWatch/Seeking Alpha、IT之家、爱范儿、钛媒体、量子位、Solidot、VentureBeat、MIT Technology Review、Google AI Blog 等真实 RSS 源；默认停用不稳定 Nitter/X RSS，避免源失效拖空首页
+- 首页自动补抓：简报页与刷新 API 会在内容不足、抓取过期或当日 digest 缺失时自动执行 RSS 抓取 + digest 标准化，避免 Cron 未跑或源刚恢复时出现“全部资讯空白”
+- 抓取后即标准化：RSS 入库时保存更完整的正文摘录；digest 生成时统一做简体中文翻译/改写、摘要兜底、要点抽取、评分与标签生成
+- 英文源中文化：配置 AI Key 后，英文标题/摘要/正文摘录会自动翻译成自然简体中文；没有 AI Key 时仍优先展示中文源内容，不让首页空白
 - AI 摘要 + 质量评分 + 自动标签，统一输出为适合中文阅读的简报结构
 - 全新日报式信息架构：可编辑标题、日期范围、刷新简报、存为笔记、复制摘要
 - Hero 概览区：资讯数量、未读数量、平均质量分、重要标签、深圳天气 widget
@@ -112,6 +123,7 @@ AI_FALLBACK_MODEL="deepseek-v4-pro"
 - 市场温度侧栏：sparkline 走势、涨跌幅、波动最大标的、行情同步状态
 - 底部/侧栏状态：生成时间、新闻同步时间、数据来源数量、最近 Cron 状态
 - 详情弹窗只展示用户真正需要的信息：标题、来源、发布时间、评分、标签、AI 摘要、要点、编辑摘录、原文入口
+- 详情弹窗可直接阅读主要内容：智能摘要永不空白，正文摘录长度提升并过滤 RSS/URL/广告/关注公众号等噪音，不再强迫每条都跳原文
 - 数据标准化 pipeline：日期、评分、摘要长度、标签、要点、详情摘录、digest JSON、market points 全部统一清洗与容错
 - 严格过滤内部/技术/低价值字段：前端 DTO 不再暴露原始 `content`，避免 RSS/Tavily 原文、JSON、URL、GUID、来源调试信息进入详情
 - 一键导入 news → note / 今日简报 → note，导入内容使用同一套清洗后的展示字段
@@ -235,6 +247,7 @@ npm run ci           # 全链路：lint → typecheck → test → build
 
 | 版本 | 日期 | 更新内容 |
 |---|---|---|
+| **v1.6.3** | 2026-05-10 | 每日简报资讯链路可靠性修复：修复首页/简报页“全部资讯空白”的根因，列表查询从单纯 `publishedAt >= today` 扩展为 `publishedAt/fetchedAt` 双窗口，并在今日内容不足时回退到近 7 天高质量内容；新增 `ensureBriefingFreshness`，页面首屏与 `/api/briefing/digest` 会在内容不足、抓取过期、digest 缺失或用户手动刷新时自动执行 RSS 抓取 + digest 标准化；`fetch-news` Cron 完成抓取后立即生成 digest，避免抓到数据但前端仍无评分/摘要；RSS 源扩容到更稳定的真实信息源，新增联合国中文/全球、CBS、ABC、CNBC、MarketWatch、Seeking Alpha、IT之家、爱范儿、钛媒体、量子位、Solidot、VentureBeat、MIT Technology Review、Google AI Blog，并默认停用不稳定 Nitter/X RSS；RSS 入库保存正文摘录 `content`，修复部分源 `author` 为对象导致整源中断的问题；翻译 pipeline 默认开启（可用 `BRIEFING_TRANSLATE_ENGLISH=false` 关闭），配置 AI Key 后英文标题/摘要/正文摘录自动改写为简体中文；无 AI Key 时仍优先展示中文源并生成摘要兜底，确保 `aiSummary/detailText/keyPoints` 不为空；详情弹窗智能摘要恢复并升级为“摘要 + 要点 + 正文摘录”的阅读卡片，正文摘录提升到 1600 字符并过滤 RSS/URL/广告/关注公众号等噪音；导入 news→note 同步使用新摘要、要点与正文摘录；继续保持 Quiet Material 与多分辨率布局兼容 |
 | **v1.6.2** | 2026-05-09 | 每日简报体验与数据逻辑大升级：将 Briefing 页面从四列信息看板重构为安静高级的个人日报；新增可编辑简报标题、日期范围、刷新简报、存为笔记、复制摘要；Hero 区展示资讯数、未读数、AI 平均质量分、重要标签与天气；核心内容拆分为今日亮点、全部资讯流、深度阅读、标签洞察、市场温度、来源/Cron 状态；重写 BriefingHero / BriefingShell / NewsCard / NewsColumn / NewsDetailModal / TopBar / DeepReadCard / loading；市场侧栏改为更轻的行式 Market Strip，保留 sparkline、涨跌幅、波动最大、缓存状态；详情弹窗彻底过滤无用信息，只展示标题、来源、时间、质量评分、标签、AI 摘要、要点、编辑摘录与原文入口；新增 briefing normalize pipeline，统一处理 HTML 清洗、空白折叠、摘要截断、JSON 数组解析、标签标准化、评分 clamp、阅读时间估算、详情摘录生成、digest JSON 容错、market points 容错；NewsItemDTO 移除原始 content，改为安全 detailText，从源头避免 RSS/Tavily 原文、URL/GUID/JSON/API 字段进入前端详情；/api/briefing/digest 增加 range/category 参数校验与 meta 输出；/api/briefing/state 不再返回完整内部 state；今日简报导入和单条新闻导入统一使用清洗后的标题、摘要、要点、标签与来源名；保持 Quiet Material 体系，使用 material-elevated/inset、hairline、克制动效、中文阅读字体栈与响应式侧栏 |
 | **v1.6.1** | 2026-05-09 | 安全加固+X监控修复：Cron定时任务Token鉴权（header/bearer双模式+timingSafeEqual）；img-proxy SSRF全链路防护（DNS解析校验/私有IP拦截/Content-Type白名单/2MB限制）；logout跨域请求拒绝；Docker入口SQLite迁移前备份+完整性校验；X监控内容显示逻辑修复（有AI摘要即展示翻译版）；清理未使用import；postcss override修复依赖冲突；新增briefing-auth鉴权单元测试 |
 | **v1.6.0** | 2026-05-08 | 每日简报系统：5表（NewsSource/NewsItem/MarketSnapshot/BriefingDigest/CronRun）；RSS/Tavily/CoinGecko/Sina多源抓取；AI摘要+评分+标签；市场sparkline；天气widget；cron日报生成；news→note一键导入；简报专属UI |

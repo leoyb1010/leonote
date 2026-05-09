@@ -37,7 +37,7 @@ function safeDetailText(input: string) {
       return true;
     })
     .join("\n")
-    .slice(0, 900)
+    .slice(0, 1600)
     .trim();
 }
 
@@ -55,6 +55,7 @@ export function NewsDetailModal({ item, anchorRect, onClose, onPatchItem }: Prop
   const [panelPosition, setPanelPosition] = useState<{ top: number; left: number; width: number; maxHeight: number } | null>(null);
   const panelRef = useRef<HTMLDivElement>(null);
   const detailText = useMemo(() => safeDetailText(item.detailText || item.aiSummary || item.excerpt || ""), [item.detailText, item.aiSummary, item.excerpt]);
+  const summaryText = item.aiSummary || item.excerpt || detailText || "摘要正在生成，先看下方正文摘录。";
   const imageUrl = !imageHidden ? proxyImageUrl(item.imageUrl) : null;
 
   useEffect(() => {
@@ -235,7 +236,7 @@ export function NewsDetailModal({ item, anchorRect, onClose, onPatchItem }: Prop
               <section className="mt-6 rounded-[var(--radius-lg)] border border-[var(--hairline)] bg-[var(--material-inset)] p-4">
                 <p className="mb-2 text-xs font-medium text-[var(--primary)]">智能摘要</p>
                 <p className="font-[var(--font-reading)] text-[15px] leading-7 text-[var(--text-secondary)]">
-                  {item.aiSummary || item.excerpt || "暂无摘要"}
+                  {summaryText}
                 </p>
               </section>
 
@@ -255,7 +256,7 @@ export function NewsDetailModal({ item, anchorRect, onClose, onPatchItem }: Prop
 
               {detailText ? (
                 <section className="mt-5">
-                  <p className="mb-3 text-xs font-medium text-[var(--text-secondary)]">编辑摘录</p>
+                  <p className="mb-3 text-xs font-medium text-[var(--text-secondary)]">正文摘录</p>
                   <p className="whitespace-pre-line font-[var(--font-reading)] text-sm leading-7 text-[var(--text-secondary)]">
                     {detailText}
                   </p>

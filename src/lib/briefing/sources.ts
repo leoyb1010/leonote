@@ -7,6 +7,7 @@ export interface PresetNewsSource {
   category: BriefingCategory;
   region: "cn" | "global" | "us";
   weight: number;
+  enabled?: boolean;
 }
 
 export const PRESET_NEWS_SOURCES: PresetNewsSource[] = [
@@ -36,11 +37,75 @@ export const PRESET_NEWS_SOURCES: PresetNewsSource[] = [
   },
   {
     kind: "rss",
+    name: "联合国新闻中文",
+    url: "https://news.un.org/feed/subscribe/zh/news/all/rss.xml",
+    category: "world",
+    region: "global",
+    weight: 78,
+  },
+  {
+    kind: "rss",
+    name: "联合国新闻全球",
+    url: "https://news.un.org/feed/subscribe/en/news/all/rss.xml",
+    category: "world",
+    region: "global",
+    weight: 60,
+  },
+  {
+    kind: "rss",
+    name: "CBS 世界",
+    url: "https://www.cbsnews.com/latest/rss/world",
+    category: "world",
+    region: "us",
+    weight: 58,
+  },
+  {
+    kind: "rss",
+    name: "ABC 国际",
+    url: "https://abcnews.go.com/abcnews/internationalheadlines",
+    category: "world",
+    region: "us",
+    weight: 56,
+  },
+  {
+    kind: "rss",
     name: "纽约时报中文网",
     url: "https://cn.nytimes.com/rss/",
     category: "world",
     region: "global",
     weight: 70,
+  },
+  {
+    kind: "rss",
+    name: "CNBC 全球市场",
+    url: "https://www.cnbc.com/id/100003114/device/rss/rss.html",
+    category: "finance",
+    region: "us",
+    weight: 66,
+  },
+  {
+    kind: "rss",
+    name: "CNBC 投资市场",
+    url: "https://www.cnbc.com/id/15839069/device/rss/rss.html",
+    category: "finance",
+    region: "us",
+    weight: 64,
+  },
+  {
+    kind: "rss",
+    name: "MarketWatch",
+    url: "https://feeds.content.dowjones.io/public/rss/mw_topstories",
+    category: "finance",
+    region: "us",
+    weight: 60,
+  },
+  {
+    kind: "rss",
+    name: "Seeking Alpha 快讯",
+    url: "https://seekingalpha.com/market_currents.xml",
+    category: "finance",
+    region: "us",
+    weight: 55,
   },
   {
     kind: "rss",
@@ -76,6 +141,46 @@ export const PRESET_NEWS_SOURCES: PresetNewsSource[] = [
   },
   {
     kind: "rss",
+    name: "IT之家",
+    url: "https://www.ithome.com/rss/",
+    category: "ai_tech",
+    region: "cn",
+    weight: 74,
+  },
+  {
+    kind: "rss",
+    name: "爱范儿",
+    url: "https://www.ifanr.com/feed",
+    category: "ai_tech",
+    region: "cn",
+    weight: 70,
+  },
+  {
+    kind: "rss",
+    name: "钛媒体",
+    url: "https://www.tmtpost.com/rss.xml",
+    category: "ai_tech",
+    region: "cn",
+    weight: 68,
+  },
+  {
+    kind: "rss",
+    name: "量子位",
+    url: "https://www.qbitai.com/feed",
+    category: "ai_tech",
+    region: "cn",
+    weight: 68,
+  },
+  {
+    kind: "rss",
+    name: "Solidot",
+    url: "https://www.solidot.org/index.rss",
+    category: "ai_tech",
+    region: "cn",
+    weight: 60,
+  },
+  {
+    kind: "rss",
     name: "海外科技媒体",
     url: "https://techcrunch.com/category/artificial-intelligence/feed/",
     category: "ai_tech",
@@ -92,6 +197,30 @@ export const PRESET_NEWS_SOURCES: PresetNewsSource[] = [
   },
   {
     kind: "rss",
+    name: "VentureBeat AI",
+    url: "https://venturebeat.com/category/ai/feed/",
+    category: "ai_tech",
+    region: "us",
+    weight: 66,
+  },
+  {
+    kind: "rss",
+    name: "MIT Technology Review",
+    url: "https://www.technologyreview.com/feed/",
+    category: "ai_tech",
+    region: "us",
+    weight: 64,
+  },
+  {
+    kind: "rss",
+    name: "Google AI Blog",
+    url: "https://blog.google/technology/ai/rss/",
+    category: "ai_tech",
+    region: "us",
+    weight: 63,
+  },
+  {
+    kind: "rss",
     name: "论文预印本",
     url: "https://export.arxiv.org/rss/cs.AI",
     category: "ai_tech",
@@ -105,6 +234,7 @@ export const PRESET_NEWS_SOURCES: PresetNewsSource[] = [
     category: "ai_tech",
     region: "us",
     weight: 85,
+    enabled: false,
   },
   {
     kind: "rss",
@@ -113,6 +243,7 @@ export const PRESET_NEWS_SOURCES: PresetNewsSource[] = [
     category: "ai_tech",
     region: "us",
     weight: 85,
+    enabled: false,
   },
   {
     kind: "rss",
@@ -121,6 +252,7 @@ export const PRESET_NEWS_SOURCES: PresetNewsSource[] = [
     category: "ai_tech",
     region: "us",
     weight: 85,
+    enabled: false,
   },
   {
     kind: "rss",
@@ -129,6 +261,7 @@ export const PRESET_NEWS_SOURCES: PresetNewsSource[] = [
     category: "ai_tech",
     region: "us",
     weight: 80,
+    enabled: false,
   },
   {
     kind: "rss",
@@ -137,6 +270,7 @@ export const PRESET_NEWS_SOURCES: PresetNewsSource[] = [
     category: "ai_tech",
     region: "us",
     weight: 82,
+    enabled: false,
   },
   {
     kind: "rss",
@@ -145,6 +279,7 @@ export const PRESET_NEWS_SOURCES: PresetNewsSource[] = [
     category: "ai_tech",
     region: "us",
     weight: 80,
+    enabled: false,
   },
 ];
 

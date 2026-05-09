@@ -9,11 +9,11 @@ describe("briefing display rules", () => {
     expect(marketDisplayName({ symbol: "BTC-USD", name: "BTC" })).toBe("比特币");
   });
 
-  it("detects English-only news as not ready for the main list", () => {
+  it("allows English-source news after a Chinese editorial summary exists", () => {
     expect(needsChineseDisplay("OpenAI launches a new agent platform")).toBe(true);
-    expect(isDisplayableChinese("OpenAI launches a new agent platform", "中文摘要已经生成")).toBe(false);
-    expect(isDisplayableChinese("OpenAI 发布新的智能体平台", "中文摘要已经生成")).toBe(true);
-    expect(isDisplayableChinese("世界新闻与国际头条 | NPR", "中文摘要已经生成")).toBe(false);
+    expect(isDisplayableChinese("OpenAI launches a new agent platform", "", "中文摘要已经生成")).toBe(true);
+    expect(isDisplayableChinese("OpenAI 发布新的智能体平台", "", "中文摘要已经生成")).toBe(true);
+    expect(isDisplayableChinese("世界新闻与国际头条 | NPR", "", "中文摘要已经生成")).toBe(false);
   });
 
   it("classifies broad business feeds before rendering", () => {

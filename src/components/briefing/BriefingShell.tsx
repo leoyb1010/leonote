@@ -193,11 +193,11 @@ export function BriefingShell({ initialDigest, initialItems, initialMarkets, ini
       .sort((a, b) => (b.aiScore ?? 0) - (a.aiScore ?? 0))[0] ?? null
   ), [visibleItems]);
 
-  async function refresh(nextRange = range, nextCategory = category) {
+  async function refresh(nextRange = range, nextCategory = category, force = false) {
     setLoading(true);
     setRefreshError(null);
     try {
-      const res = await fetch(`/api/briefing/digest?range=${encodeURIComponent(nextRange)}&category=${encodeURIComponent(nextCategory)}`, { cache: "no-store" });
+      const res = await fetch(`/api/briefing/digest?range=${encodeURIComponent(nextRange)}&category=${encodeURIComponent(nextCategory)}${force ? "&refresh=1" : ""}`, { cache: "no-store" });
       const json = await res.json();
       if (json.ok) {
         setItems(json.items);
@@ -306,7 +306,7 @@ export function BriefingShell({ initialDigest, initialItems, initialMarkets, ini
         loading={loading}
         importingDigest={importingDigest}
         copied={copied}
-        onRefresh={() => void refresh()}
+        onRefresh={() => void refresh(range, category, true)}
         onImportDigest={() => void importDigest()}
         onCopySummary={() => void copySummary()}
         onTitleChange={setBriefingTitle}

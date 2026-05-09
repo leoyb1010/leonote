@@ -19,7 +19,7 @@ const LOW_VALUE_LINE_RE =
   /^(url|uri|guid|id|uuid|source|author|published|fetched|score|content|description|摘要|正文|链接|来源)\s*[:=：]/i;
 
 const BOILERPLATE_RE =
-  /(cookie|subscribe|newsletter|copyright|all rights reserved|read more|点击查看|阅读全文|责任编辑|免责声明|广告|扫码|客户端|下载|更多精彩|原文链接)/i;
+  /(cookie|subscribe|newsletter|copyright|all rights reserved|read more|点击查看|阅读全文|责任编辑|免责声明|广告|扫码|客户端|下载|更多精彩|原文链接|欢迎关注|微信公众号|微信号)/i;
 
 export function normalizeWhitespace(input = "") {
   return input
@@ -95,6 +95,8 @@ export function sanitizeBriefingText(input: string | null | undefined, max = 180
   const cleaned = normalizeWhitespace(stripHtml(input ?? ""))
     .replace(/https?:\/\/\S+/gi, "")
     .replace(/\butm_[a-z_]+=\S+/gi, "")
+    .replace(/#?欢迎关注[^。！？\n]*(?:。|$)/g, "")
+    .replace(/更多精彩内容[^。！？\n]*(?:。|$)/g, "")
     .replace(/\s*([,，。！？；:：])\s*/g, "$1")
     .replace(/\s{2,}/g, " ")
     .trim();
@@ -140,13 +142,53 @@ export function buildBriefingSummary(input: {
   title: string;
   aiSummary?: string | null;
   excerpt?: string | null;
+  content?: string | null;
   max?: number;
 }): string {
-  const candidates = [input.aiSummary, input.excerpt]
-    .map((value) => sanitizeBriefingText(value, input.max ?? 180))
-    .filter((value) => value && value !== input.title);
+  const candidates = [input.aiSummary, input.excerpt, input.content]
+    .map((value) => {
+      const cleaned = sanitizeBriefingText(value, input.max ?? 180);
+      const lines = meaningfulLines(cleaned).filter((line) => line !== input.title);
+      return lines.length > 0 ? truncate(lines.join(" "), input.max ?? 180) : cleaned;
+    })
+    .filter((value) => value && value !== input.title && value.length >= 10);
 
-  return candidates[0] ?? "";
+  return candidates[0] ?? (input.title ? `这条资讯关注：${sanitizeBriefingText(input.title, Math.max(40, input.max ?? 180))}` : "");
+}
+
+export function buildBriefingKeyPoints(input: {
+  title: string;
+  aiSummary?: string | null;
+  excerpt?: string | null;
+  content?: string | null;
+  max?: number;
+}): string[] {
+  const max = input.max ?? 4;
+  const candidates = [input.aiSummary, input.excerpt, input.content]
+    .map((value) => sanitizeBriefingText(value, 1200))
+    .filter(Boolean);
+  const seen = new Set<string>();
+  const points: string[] = [];
+
+  for (const candidate of candidates) {
+    const lines = meaningfulLines(candidate).flatMap((line) =>
+      line
+        .split(/(?<=[。！？!?])\s+/)
+        .map((part) => sanitizeBriefingText(part, 120))
+        .filter((part) => part.length >= 12),
+    );
+
+    for (const line of lines) {
+      if (line === input.title) continue;
+      const key = line.slice(0, 42);
+      if (seen.has(key)) continue;
+      seen.add(key);
+      points.push(line);
+      if (points.length >= max) return points;
+    }
+  }
+
+  return points;
 }
 
 export function buildBriefingDetailText(input: {
@@ -159,8 +201,8 @@ export function buildBriefingDetailText(input: {
 }): string {
   const max = input.max ?? 760;
   const candidates = [
-    ...(input.keyPoints ?? []),
     input.summary,
+    ...(input.keyPoints ?? []),
     input.excerpt,
     input.content,
   ];

@@ -5,6 +5,7 @@ import { getBriefingData, getBriefingMeta } from "@/lib/briefing/query";
 import { getLiveMarketSnapshots } from "@/lib/briefing/live-market";
 import { getWeather } from "@/lib/briefing/weather";
 import { parseBriefingDigestSummary } from "@/lib/briefing/normalize";
+import { ensureBriefingFreshness } from "@/lib/briefing/ensure";
 import type { BriefingCategory, BriefingRange } from "@/lib/briefing/types";
 
 export const dynamic = "force-dynamic";
@@ -22,8 +23,13 @@ export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const rangeParam = searchParams.get("range") || "today";
   const categoryParam = searchParams.get("category") || "all";
+  const forceRefresh = searchParams.get("refresh") === "1";
   const range = (["today", "week", "favorites"].includes(rangeParam) ? rangeParam : "today") as BriefingRange;
   const category = (["all", "world", "finance", "ai_tech", "social_x"].includes(categoryParam) ? categoryParam : "all") as BriefingCategory | "all";
+
+  if (range !== "favorites") {
+    await ensureBriefingFreshness({ force: forceRefresh });
+  }
 
   const [digest, items, marketState, weather, meta] = await Promise.all([
     prisma.briefingDigest.findUnique({ where: { date: startOfToday() } }),
