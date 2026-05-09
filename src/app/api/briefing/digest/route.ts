@@ -1,11 +1,13 @@
 import { NextResponse } from "next/server";
 import { getSessionUserId } from "@/lib/session";
 import { prisma } from "@/lib/prisma";
-import { getBriefingData, getLatestMarketSnapshots } from "@/lib/briefing/query";
+import { getBriefingData } from "@/lib/briefing/query";
+import { getLiveMarketSnapshots } from "@/lib/briefing/live-market";
 import { getWeather } from "@/lib/briefing/weather";
 import type { BriefingCategory, BriefingRange } from "@/lib/briefing/types";
 
 export const dynamic = "force-dynamic";
+export const runtime = "nodejs";
 
 function startOfToday() {
   const now = new Date();
@@ -20,10 +22,10 @@ export async function GET(request: Request) {
   const range = (searchParams.get("range") || "today") as BriefingRange;
   const category = (searchParams.get("category") || "all") as BriefingCategory | "all";
 
-  const [digest, items, markets, weather] = await Promise.all([
+  const [digest, items, marketState, weather] = await Promise.all([
     prisma.briefingDigest.findUnique({ where: { date: startOfToday() } }),
     getBriefingData(userId, { range, category }),
-    getLatestMarketSnapshots(),
+    getLiveMarketSnapshots(),
     getWeather().catch(() => null),
   ]);
 
@@ -31,7 +33,12 @@ export async function GET(request: Request) {
     ok: true,
     digest: digest ? JSON.parse(digest.summary) : null,
     items,
-    markets,
+    markets: marketState.markets,
+    marketStatus: {
+      refreshed: marketState.refreshed,
+      stale: marketState.stale,
+      error: marketState.error,
+    },
     weather,
   });
 }

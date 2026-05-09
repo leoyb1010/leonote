@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowUpRight, Bookmark, FilePlus2, X } from "lucide-react";
 import { Button } from "@/components/base/Button";
@@ -9,6 +10,7 @@ import type { NewsItemDTO } from "@/lib/briefing/types";
 
 interface Props {
   item: NewsItemDTO;
+  anchorRect?: { top: number; left: number; width: number; height: number };
   onClose: () => void;
   onPatchItem: (itemId: string, patch: Partial<NewsItemDTO>) => void;
 }
@@ -29,8 +31,10 @@ function cleanContent(input: string) {
     .trim();
 }
 
-export function NewsDetailModal({ item, onClose, onPatchItem }: Props) {
+export function NewsDetailModal({ item, anchorRect, onClose, onPatchItem }: Props) {
   const [saving, setSaving] = useState(false);
+  const [panelPosition, setPanelPosition] = useState<{ top: number; left: number; width: number; maxHeight: number } | null>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
   const content = useMemo(() => cleanContent(item.content || item.excerpt || ""), [item.content, item.excerpt]);
 
   useEffect(() => {
@@ -45,6 +49,51 @@ export function NewsDetailModal({ item, onClose, onPatchItem }: Props) {
       window.removeEventListener("keydown", handleKey);
     };
   }, [onClose]);
+
+  useEffect(() => {
+    function updatePanelPosition() {
+      if (window.innerWidth < 640) {
+        setPanelPosition(null);
+        return;
+      }
+
+      const margin = 16;
+      const width = Math.min(window.innerWidth - margin * 2, window.innerWidth >= 1024 ? 760 : 680);
+      const maxHeight = Math.min(window.innerHeight - margin * 2, 780);
+      const measuredHeight = panelRef.current
+        ? Math.max(panelRef.current.offsetHeight, panelRef.current.scrollHeight)
+        : 560;
+      const currentHeight = Math.min(measuredHeight, maxHeight);
+      const rawTop = anchorRect ? anchorRect.top - 10 : margin;
+      const top = Math.min(
+        Math.max(margin, rawTop),
+        Math.max(margin, window.innerHeight - currentHeight - margin),
+      );
+      const rawLeft = anchorRect ? anchorRect.left - 4 : window.innerWidth / 2 - width / 2;
+      const left = Math.min(
+        Math.max(margin, rawLeft),
+        Math.max(margin, window.innerWidth - width - margin),
+      );
+
+      setPanelPosition({ top, left, width, maxHeight });
+    }
+
+    const frames = [
+      window.requestAnimationFrame(updatePanelPosition),
+      window.requestAnimationFrame(() => window.requestAnimationFrame(updatePanelPosition)),
+    ];
+    const observer = typeof ResizeObserver === "undefined" ? null : new ResizeObserver(updatePanelPosition);
+    if (panelRef.current) observer?.observe(panelRef.current);
+
+    window.addEventListener("resize", updatePanelPosition);
+    window.addEventListener("orientationchange", updatePanelPosition);
+    return () => {
+      frames.forEach((frame) => window.cancelAnimationFrame(frame));
+      observer?.disconnect();
+      window.removeEventListener("resize", updatePanelPosition);
+      window.removeEventListener("orientationchange", updatePanelPosition);
+    };
+  }, [anchorRect, item.id, content]);
 
   async function importNote() {
     if (saving || item.isImported) return;
@@ -74,10 +123,10 @@ export function NewsDetailModal({ item, onClose, onPatchItem }: Props) {
 
   const label = categoryLabel(item.category);
 
-  return (
+  const modal = (
     <AnimatePresence>
       <motion.div
-        className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6"
+        className="fixed inset-0 z-50"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
@@ -91,10 +140,12 @@ export function NewsDetailModal({ item, onClose, onPatchItem }: Props) {
         />
 
         <motion.div
-          className="card-premium relative z-10 flex max-h-[88dvh] w-full max-w-3xl flex-col overflow-hidden"
-          initial={{ opacity: 0, scale: 0.94, y: 24 }}
+          ref={panelRef}
+          className="card-premium fixed bottom-0 left-0 right-0 z-10 flex max-h-[calc(100dvh-18px)] w-full flex-col overflow-hidden rounded-b-none sm:bottom-auto sm:right-auto sm:rounded-[var(--radius-xl)]"
+          style={{ position: "fixed", ...panelPosition }}
+          initial={{ opacity: 0, scale: 0.98, y: 18 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
-          exit={{ opacity: 0, scale: 0.94, y: 24 }}
+          exit={{ opacity: 0, scale: 0.98, y: 18 }}
           transition={{ type: "spring", stiffness: 340, damping: 30 }}
           onClick={(e) => e.stopPropagation()}
         >
@@ -115,15 +166,18 @@ export function NewsDetailModal({ item, onClose, onPatchItem }: Props) {
           </div>
 
           <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4 sm:px-6 sm:py-5">
-            <span className="inline-block rounded-[var(--radius-pill)] border border-[var(--hairline)] bg-[var(--material-inset)] px-2.5 py-1 text-[11px] text-[var(--text-muted)]">
-              {label}
-            </span>
+            <div className="flex flex-wrap items-center gap-2 text-[11px] text-[var(--text-muted)]">
+              <span className="rounded-[var(--radius-pill)] border border-[var(--hairline)] bg-[var(--material-inset)] px-2.5 py-1">
+                {label}
+              </span>
+              <span>{formatTime(item.publishedAt)}</span>
+            </div>
 
             <h2 className="mt-3 text-xl font-semibold leading-snug text-[var(--text-primary)] sm:text-2xl">
               {item.title}
             </h2>
 
-            <div className="mt-5 rounded-[var(--radius-lg)] border border-[var(--hairline)] bg-[var(--material-inset)] p-4">
+            <div className="mt-5 border-l-2 border-[var(--ai-accent)] pl-4">
               <p className="mb-1 text-[11px] font-medium text-[var(--ai-accent)]">智能摘要</p>
               <p className="text-sm leading-relaxed text-[var(--text-secondary)]">
                 {item.aiSummary || item.excerpt || "暂无摘要"}
@@ -154,7 +208,7 @@ export function NewsDetailModal({ item, onClose, onPatchItem }: Props) {
             )}
           </div>
 
-          <div className="flex shrink-0 flex-wrap items-center gap-3 border-t border-[var(--hairline)] bg-[var(--material-elevated)] px-4 py-3 sm:px-5">
+          <div className="flex shrink-0 flex-wrap items-center gap-3 border-t border-[var(--hairline)] bg-[var(--material-elevated)] px-4 py-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] sm:px-5 sm:pb-3">
             <Button size="sm" onClick={importNote} disabled={saving || item.isImported} className="gap-1.5">
               <FilePlus2 size={14} />
               {item.isImported ? "已存入笔记" : saving ? "保存中…" : "存为笔记"}
@@ -184,4 +238,6 @@ export function NewsDetailModal({ item, onClose, onPatchItem }: Props) {
       </motion.div>
     </AnimatePresence>
   );
+
+  return createPortal(modal, document.body);
 }

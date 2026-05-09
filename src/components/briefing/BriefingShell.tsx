@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import { Loader2 } from "lucide-react";
 import { BriefingHero } from "./BriefingHero";
@@ -13,6 +13,8 @@ import { categoryLabel } from "@/lib/briefing/display";
 import type { BriefingCategory, BriefingDigestSummary, BriefingRange, MarketSnapshotDTO, NewsItemDTO, WeatherDTO } from "@/lib/briefing/types";
 
 type CategoryFilter = BriefingCategory | "all";
+type DetailAnchor = { top: number; left: number; width: number; height: number };
+type SelectedDetail = { item: NewsItemDTO; anchor: DetailAnchor };
 
 interface Props {
   initialDigest: BriefingDigestSummary | null;
@@ -28,8 +30,10 @@ export function BriefingShell({ initialDigest, initialItems, initialMarkets, ini
   const [weather, setWeather] = useState(initialWeather);
   const [range, setRange] = useState<BriefingRange>("today");
   const [category, setCategory] = useState<CategoryFilter>("all");
-  const [selectedItem, setSelectedItem] = useState<NewsItemDTO | null>(null);
+  const [selectedDetail, setSelectedDetail] = useState<SelectedDetail | null>(null);
   const [loading, setLoading] = useState(false);
+  const [marketRefreshing, setMarketRefreshing] = useState(false);
+  const [marketError, setMarketError] = useState<string | null>(null);
 
   const dateLabel = useMemo(() => {
     const weekdays = ["星期日", "星期一", "星期二", "星期三", "星期四", "星期五", "星期六"];
@@ -60,18 +64,49 @@ export function BriefingShell({ initialDigest, initialItems, initialMarkets, ini
         setDigest(json.digest);
         setMarkets(json.markets);
         setWeather(json.weather);
+        setMarketError(json.marketStatus?.error ?? null);
       }
     } finally {
       setLoading(false);
     }
   }
 
+  const refreshMarkets = useCallback(async (force = false) => {
+    setMarketRefreshing(true);
+    try {
+      const res = await fetch(`/api/briefing/markets${force ? "?refresh=1" : ""}`, { cache: "no-store" });
+      const json = await res.json();
+      if (json.ok) {
+        setMarkets(json.markets);
+        setMarketError(json.marketStatus?.error ?? null);
+      } else {
+        setMarketError(json.message ?? "行情更新失败");
+      }
+    } catch (error) {
+      setMarketError(error instanceof Error ? error.message : "行情更新失败");
+    } finally {
+      setMarketRefreshing(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    const id = window.setInterval(() => {
+      refreshMarkets(false);
+    }, 60_000);
+
+    return () => window.clearInterval(id);
+  }, [refreshMarkets]);
+
   function patchItem(itemId: string, patch: Partial<Pick<NewsItemDTO, "isRead" | "isFavorited" | "isImported" | "importedNoteId">>) {
     setItems((prev) => prev.map((item) => (item.id === itemId ? { ...item, ...patch } : item)));
-    setSelectedItem((prev) => (prev?.id === itemId ? { ...prev, ...patch } : prev));
+    setSelectedDetail((prev) => (prev?.item.id === itemId ? { ...prev, item: { ...prev.item, ...patch } } : prev));
     if (range === "favorites" && patch.isFavorited === false) {
       setItems((prev) => prev.filter((item) => item.id !== itemId));
     }
+  }
+
+  function openDetail(item: NewsItemDTO, anchor: DetailAnchor) {
+    setSelectedDetail({ item, anchor });
   }
 
   const columns = category === "all"
@@ -95,7 +130,14 @@ export function BriefingShell({ initialDigest, initialItems, initialMarkets, ini
       <BriefingHero digest={digest} total={visibleItems.length} range={range} />
 
       <div className="mt-4">
-        <TopBar markets={markets} weather={weather} dateLabel={dateLabel} />
+        <TopBar
+          markets={markets}
+          weather={weather}
+          dateLabel={dateLabel}
+          refreshing={marketRefreshing}
+          error={marketError}
+          onRefresh={() => refreshMarkets(true)}
+        />
       </div>
 
       <div className="mt-5">
@@ -135,15 +177,16 @@ export function BriefingShell({ initialDigest, initialItems, initialMarkets, ini
             items={column.items}
             limit={category === "all" ? 10 : 24}
             onPatchItem={patchItem}
-            onClick={setSelectedItem}
+            onClick={openDetail}
           />
         ))}
       </motion.section>
 
-      {selectedItem && (
+      {selectedDetail && (
         <NewsDetailModal
-          item={selectedItem}
-          onClose={() => setSelectedItem(null)}
+          item={selectedDetail.item}
+          anchorRect={selectedDetail.anchor}
+          onClose={() => setSelectedDetail(null)}
           onPatchItem={patchItem}
         />
       )}

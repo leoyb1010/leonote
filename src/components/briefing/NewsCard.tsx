@@ -5,10 +5,12 @@ import { Bookmark } from "lucide-react";
 import { card3DHover } from "@/lib/animations";
 import type { NewsItemDTO } from "@/lib/briefing/types";
 
+type DetailAnchor = { top: number; left: number; width: number; height: number };
+
 interface Props {
   item: NewsItemDTO;
   onPatchItem: (itemId: string, patch: Partial<NewsItemDTO>) => void;
-  onClick: (item: NewsItemDTO) => void;
+  onClick: (item: NewsItemDTO, anchor: DetailAnchor) => void;
 }
 
 function timeAgo(input: string) {
@@ -47,9 +49,13 @@ export function NewsCard({ item, onPatchItem, onClick }: Props) {
   return (
     <motion.article
       {...card3DHover}
-      onClick={() => {
+      onClick={(event) => {
+        const rect = event.currentTarget.getBoundingClientRect();
         markRead();
-        onClick({ ...item, isRead: true });
+        onClick(
+          { ...item, isRead: true },
+          { top: rect.top, left: rect.left, width: rect.width, height: rect.height },
+        );
       }}
       className="group relative cursor-pointer py-4"
     >

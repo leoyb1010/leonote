@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { ArrowDownRight, ArrowUpRight, Clock3, Droplets } from "lucide-react";
+import { Activity, AlertCircle, ArrowDownRight, ArrowUpRight, Clock3, Droplets, RefreshCw } from "lucide-react";
 import { MarketSparkline } from "./MarketSparkline";
 import { cardFloatIn } from "@/lib/animations";
 import { marketCategoryLabel } from "@/lib/briefing/display";
@@ -13,6 +13,9 @@ interface Props {
   markets: MarketSnapshotDTO[];
   weather: WeatherDTO | null;
   dateLabel: string;
+  refreshing?: boolean;
+  error?: string | null;
+  onRefresh?: () => void;
 }
 
 function fmtPrice(item: MarketSnapshotDTO): string {
@@ -26,12 +29,28 @@ function fmtPrice(item: MarketSnapshotDTO): string {
 }
 
 function formatCapturedAt(markets: MarketSnapshotDTO[]) {
+  const latest = latestMarketTime(markets);
+  if (!latest) return "等待数据";
+  return latest.toLocaleTimeString("zh-CN", { hour: "2-digit", minute: "2-digit" });
+}
+
+function latestMarketTime(markets: MarketSnapshotDTO[]) {
   const latest = markets.reduce<Date | null>((acc, item) => {
     const current = new Date(item.capturedAt);
     return !acc || current > acc ? current : acc;
   }, null);
-  if (!latest) return "等待数据";
-  return latest.toLocaleTimeString("zh-CN", { hour: "2-digit", minute: "2-digit" });
+  return latest;
+}
+
+function freshness(markets: MarketSnapshotDTO[]) {
+  const latest = latestMarketTime(markets);
+  if (!latest) return { label: "等待同步", tone: "idle" as const };
+
+  const ageMinutes = Math.max(0, Math.floor((Date.now() - latest.getTime()) / 60_000));
+  if (ageMinutes < 1) return { label: "刚刚同步", tone: "fresh" as const };
+  if (ageMinutes <= 5) return { label: `${ageMinutes} 分钟前`, tone: "fresh" as const };
+  if (ageMinutes <= 30) return { label: `${ageMinutes} 分钟前`, tone: "warm" as const };
+  return { label: `${ageMinutes} 分钟前`, tone: "stale" as const };
 }
 
 function rankMarkets(markets: MarketSnapshotDTO[]) {
@@ -51,24 +70,35 @@ function rankMarkets(markets: MarketSnapshotDTO[]) {
 function MarketTile({ item }: { item: MarketSnapshotDTO }) {
   const up = item.changePct >= 0;
   const Icon = up ? ArrowUpRight : ArrowDownRight;
+  const changeAbs = Math.abs(item.changeAbs);
+  const absLabel = changeAbs >= 10 ? changeAbs.toFixed(0) : changeAbs < 1 ? changeAbs.toFixed(4) : changeAbs.toFixed(2);
   return (
-    <div className="rounded-[var(--radius-lg)] border border-[var(--hairline)] bg-[var(--material-inset)] px-3 py-3">
+    <div className="relative min-h-[116px] overflow-hidden rounded-[var(--radius-lg)] border border-[var(--hairline)] bg-[var(--material-inset)] px-3 py-3">
+      <div className={`absolute inset-y-3 left-0 w-0.5 rounded-full ${up ? "bg-[var(--success)]" : "bg-[var(--danger)]"}`} />
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <p className="truncate text-xs text-[var(--text-muted)]">{item.name}</p>
-          <p className="mt-1 text-lg font-semibold leading-none text-[var(--text-primary)]">{fmtPrice(item)}</p>
+          <p className="numeric-display mt-1 text-xl font-semibold leading-none text-[var(--text-primary)]">{fmtPrice(item)}</p>
         </div>
-        <MarketSparkline points={item.points} positive={up} />
+        <div className="mt-1 shrink-0">
+          <MarketSparkline points={item.points} positive={up} />
+        </div>
       </div>
-      <div className={`mt-3 inline-flex items-center gap-1 rounded-[var(--radius-pill)] px-2 py-0.5 text-xs ${up ? "bg-[var(--success-soft)] text-[var(--success)]" : "bg-[var(--danger-soft)] text-[var(--danger)]"}`}>
-        <Icon size={12} />
-        {up ? "+" : ""}{item.changePct.toFixed(2)}%
+
+      <div className="mt-4 flex items-center justify-between gap-2">
+        <div className={`inline-flex items-center gap-1 rounded-[var(--radius-pill)] px-2 py-0.5 text-xs ${up ? "bg-[var(--success-soft)] text-[var(--success)]" : "bg-[var(--danger-soft)] text-[var(--danger)]"}`}>
+          <Icon size={12} />
+          {up ? "+" : ""}{item.changePct.toFixed(2)}%
+        </div>
+        <span className="numeric-display text-[11px] text-[var(--text-muted)]">
+          {up ? "+" : "-"}{absLabel}
+        </span>
       </div>
     </div>
   );
 }
 
-export function TopBar({ markets, weather, dateLabel }: Props) {
+export function TopBar({ markets, weather, dateLabel, refreshing = false, error, onRefresh }: Props) {
   const orderedMarkets = rankMarkets(markets).slice(0, 9);
   const groups = orderedMarkets.reduce<Array<{ category: string; items: MarketSnapshotDTO[] }>>((acc, item) => {
     const group = acc.find((entry) => entry.category === item.category);
@@ -79,13 +109,24 @@ export function TopBar({ markets, weather, dateLabel }: Props) {
   const mostMoved = orderedMarkets
     .filter((item) => Number.isFinite(item.changePct))
     .sort((a, b) => Math.abs(b.changePct) - Math.abs(a.changePct))[0];
+  const freshnessState = freshness(markets);
+  const freshnessTone = error ? "border-[var(--danger)] text-[var(--danger)] bg-[var(--danger-soft)]" :
+    freshnessState.tone === "fresh" ? "border-[var(--success)] text-[var(--success)] bg-[var(--success-soft)]" :
+    freshnessState.tone === "warm" ? "border-[var(--warning)] text-[var(--warning)] bg-[var(--warning-soft)]" :
+    "border-[var(--hairline)] text-[var(--text-muted)] bg-[var(--material-inset)]";
 
   return (
     <motion.section variants={cardFloatIn} initial="initial" animate="animate" className="card-premium p-4 sm:p-5">
-      <div className="mb-4 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+      <div className="mb-4 flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
         <div>
           <p className="text-[11px] text-[var(--text-muted)]">{dateLabel}</p>
-          <h2 className="mt-1 text-base font-semibold text-[var(--text-primary)]">每日看板</h2>
+          <div className="mt-1 flex flex-wrap items-center gap-2">
+            <h2 className="text-base font-semibold text-[var(--text-primary)]">实时行情看板</h2>
+            <span className="inline-flex items-center gap-1 rounded-[var(--radius-pill)] border border-[var(--hairline)] bg-[var(--material-inset)] px-2 py-0.5 text-[11px] text-[var(--text-muted)]">
+              <Activity size={12} />
+              {orderedMarkets.length} 项
+            </span>
+          </div>
         </div>
         <div className="flex flex-wrap gap-2">
           {weather && (
@@ -96,6 +137,10 @@ export function TopBar({ markets, weather, dateLabel }: Props) {
               <span className="inline-flex items-center gap-1 text-xs text-[var(--text-muted)]"><Droplets size={12} />{weather.humidity}%</span>
             </div>
           )}
+          <div className={`inline-flex items-center gap-1.5 rounded-[var(--radius-pill)] border px-3 py-1.5 text-xs ${freshnessTone}`} title={error ?? undefined}>
+            {error ? <AlertCircle size={13} /> : <Clock3 size={13} />}
+            {error ? "实时源异常，显示缓存" : freshnessState.label}
+          </div>
           <div className="inline-flex items-center gap-1.5 rounded-[var(--radius-pill)] border border-[var(--hairline)] bg-[var(--material-inset)] px-3 py-1.5 text-xs text-[var(--text-muted)]">
             <Clock3 size={13} />
             行情 {formatCapturedAt(markets)}
@@ -105,6 +150,18 @@ export function TopBar({ markets, weather, dateLabel }: Props) {
               波动最大：{mostMoved.name}
             </div>
           )}
+          {onRefresh && (
+            <button
+              type="button"
+              onClick={onRefresh}
+              disabled={refreshing}
+              title="刷新实时行情"
+              className="inline-flex items-center gap-1.5 rounded-[var(--radius-pill)] border border-[var(--hairline)] bg-[var(--material-inset)] px-3 py-1.5 text-xs text-[var(--text-secondary)] transition-colors hover:border-[var(--text-secondary)] hover:bg-[var(--interactive-hover)] disabled:cursor-wait disabled:opacity-60"
+            >
+              <RefreshCw size={13} className={refreshing ? "animate-spin" : ""} />
+              刷新
+            </button>
+          )}
         </div>
       </div>
 
@@ -113,9 +170,9 @@ export function TopBar({ markets, weather, dateLabel }: Props) {
           市场数据收集中…
         </p>
       ) : (
-        <div className="grid gap-4 xl:grid-cols-5">
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
           {groups.map((group) => (
-            <section key={group.category} className="min-w-0">
+            <section key={group.category} className="min-w-0 rounded-[var(--radius-lg)] border border-[var(--hairline)] bg-[var(--material-inset)] p-3">
               <div className="mb-2 flex items-center justify-between">
                 <p className="text-xs font-medium text-[var(--text-secondary)]">{marketCategoryLabel(group.category)}</p>
                 <span className="text-[11px] text-[var(--text-muted)]">{group.items.length}</span>

@@ -3,13 +3,15 @@ import { NewsCard } from "./NewsCard";
 import { listItemFloat } from "@/lib/animations";
 import type { NewsItemDTO } from "@/lib/briefing/types";
 
+type DetailAnchor = { top: number; left: number; width: number; height: number };
+
 interface Props {
   title: string;
   eyebrow: string;
   items: NewsItemDTO[];
   limit?: number;
   onPatchItem: (itemId: string, patch: Partial<NewsItemDTO>) => void;
-  onClick: (item: NewsItemDTO) => void;
+  onClick: (item: NewsItemDTO, anchor: DetailAnchor) => void;
 }
 
 export function NewsColumn({ title, eyebrow, items, limit = 10, onPatchItem, onClick }: Props) {
