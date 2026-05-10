@@ -41,7 +41,7 @@ test.describe("Leonote Smoke Tests", () => {
     await page.waitForLoadState("networkidle");
     const quickCapture = page.getByPlaceholder("有什么想法，先放在这里。");
     await expect(quickCapture).toBeVisible();
-    await expect(page.getByRole("link", { name: "开始书写" })).toBeVisible();
+    await expect(page.getByTestId("today-start-writing")).toBeVisible();
 
     // Create a real note via QuickCapture
     await quickCapture.fill("E2E 测试笔记内容");

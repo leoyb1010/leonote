@@ -1,11 +1,11 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { Sun, Sparkles, History, ArrowRight, WalletCards } from "lucide-react";
+import { FilePlus2, FolderPlus, Sun, Sparkles, History, ArrowRight, WalletCards } from "lucide-react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { NoteRow } from "@/components/notes/NoteRow";
-import { Button } from "@/components/base/Button";
+import { Button, buttonClass } from "@/components/base/Button";
 import { formatRelativeTime } from "@/lib/date";
 import { formatMoney } from "@/lib/format-money";
 import { heroTitleReveal, cardFloatIn, railSlideIn, card3DHover } from "@/lib/animations";
@@ -292,7 +292,7 @@ export function TodayPage({ data, signedIn }: TodayPageProps) {
 
   const heroSection = (
     <motion.section
-      className="leonote-hero pb-6 border-b border-[var(--hairline)]"
+      className="leonote-hero relative z-20 pb-6 border-b border-[var(--hairline)]"
       variants={heroTitleReveal}
       initial="initial"
       animate="animate"
@@ -309,9 +309,54 @@ export function TodayPage({ data, signedIn }: TodayPageProps) {
             </p>
           )}
         </div>
-        <Button size="lg" className="w-full shrink-0 sm:w-auto" asChild>
-          <Link href="/notes/new">开始书写</Link>
-        </Button>
+        <details className="relative w-full shrink-0 open:z-[80] sm:w-auto">
+          <summary
+            data-testid="today-start-writing"
+            className={buttonClass("primary", "lg", "w-full list-none sm:w-auto [&::-webkit-details-marker]:hidden")}
+          >
+            开始书写
+          </summary>
+          <div
+            data-testid="today-create-menu"
+            className="absolute right-0 top-[calc(100%+0.5rem)] z-[70] w-full min-w-[260px] rounded-[var(--radius-2xl)] border border-[var(--hairline)] bg-[var(--material-elevated)] p-2 shadow-[var(--shadow-md)] sm:w-[320px]"
+          >
+            <p className="px-3 py-2 text-sm font-medium text-[var(--text-primary)]">选择要写什么</p>
+            {/* Native anchors keep this menu usable even if client routing has not hydrated yet. */}
+            {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
+            <a
+              href="/notes/new"
+              className="flex min-h-[56px] items-center gap-3 rounded-2xl px-4 text-sm text-[var(--text-secondary)] transition-colors hover:bg-[var(--interactive-hover)] hover:text-[var(--text-primary)]"
+            >
+              <FilePlus2 size={18} className="shrink-0 text-[var(--primary)]" />
+              <span>
+                <span className="block font-medium text-[var(--text-primary)]">新笔记</span>
+                <span className="mt-0.5 block text-xs text-[var(--text-muted)]">打开完整编辑器</span>
+              </span>
+            </a>
+            {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
+            <a
+              href="/ledger"
+              className="flex min-h-[56px] items-center gap-3 rounded-2xl px-4 text-sm text-[var(--text-secondary)] transition-colors hover:bg-[var(--interactive-hover)] hover:text-[var(--text-primary)]"
+            >
+              <WalletCards size={18} className="shrink-0 text-[var(--primary)]" />
+              <span>
+                <span className="block font-medium text-[var(--text-primary)]">记一笔</span>
+                <span className="mt-0.5 block text-xs text-[var(--text-muted)]">记录今天的花费</span>
+              </span>
+            </a>
+            {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
+            <a
+              href="/projects"
+              className="flex min-h-[56px] items-center gap-3 rounded-2xl px-4 text-sm text-[var(--text-secondary)] transition-colors hover:bg-[var(--interactive-hover)] hover:text-[var(--text-primary)]"
+            >
+              <FolderPlus size={18} className="shrink-0 text-[var(--primary)]" />
+              <span>
+                <span className="block font-medium text-[var(--text-primary)]">项目笔记</span>
+                <span className="mt-0.5 block text-xs text-[var(--text-muted)]">进入项目空间继续写</span>
+              </span>
+            </a>
+          </div>
+        </details>
       </div>
     </motion.section>
   );

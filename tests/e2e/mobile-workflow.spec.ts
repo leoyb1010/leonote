@@ -70,13 +70,18 @@ test("key pages share the mobile width contract", async ({ page }) => {
   }
 });
 
-test("today and notes create buttons open the editor on mobile", async ({ page }) => {
+test("today create chooser and notes create button open the editor on mobile", async ({ page }) => {
   await login(page);
   await page.setViewportSize({ width: 390, height: 844 });
 
   await page.goto("/");
   await page.waitForLoadState("networkidle");
-  await page.getByRole("link", { name: "开始书写" }).click();
+  const todayStartWriting = page.getByTestId("today-start-writing");
+  await expect(todayStartWriting).toHaveJSProperty("tagName", "SUMMARY");
+  await todayStartWriting.click();
+  const createMenu = page.getByTestId("today-create-menu");
+  await expect(createMenu).toBeVisible();
+  await createMenu.getByRole("link", { name: /新笔记/ }).click();
   await expect(page).toHaveURL(/\/notes\/new$/);
   await expect(page.getByLabel("笔记标题")).toBeVisible();
   await expect(page.getByLabel("笔记内容")).toBeVisible();
