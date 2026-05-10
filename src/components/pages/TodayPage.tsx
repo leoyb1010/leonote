@@ -183,9 +183,9 @@ export function TodayPage({ data, signedIn }: TodayPageProps) {
         <p className="text-base text-[var(--text-secondary)] max-w-sm mb-8 leading-relaxed">
           把想法安放成时间里的智慧。
         </p>
-        <Link href="/login">
-          <Button size="lg">进入 Leonote</Button>
-        </Link>
+        <Button size="lg" asChild>
+          <Link href="/login">进入 Leonote</Link>
+        </Button>
       </div>
     );
   }
@@ -309,9 +309,9 @@ export function TodayPage({ data, signedIn }: TodayPageProps) {
             </p>
           )}
         </div>
-        <Link href="/notes/new" className="w-full shrink-0 sm:w-auto">
-          <Button size="lg" className="w-full sm:w-auto">开始书写</Button>
-        </Link>
+        <Button size="lg" className="w-full shrink-0 sm:w-auto" asChild>
+          <Link href="/notes/new">开始书写</Link>
+        </Button>
       </div>
     </motion.section>
   );

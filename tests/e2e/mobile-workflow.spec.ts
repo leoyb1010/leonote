@@ -70,6 +70,25 @@ test("key pages share the mobile width contract", async ({ page }) => {
   }
 });
 
+test("today and notes create buttons open the editor on mobile", async ({ page }) => {
+  await login(page);
+  await page.setViewportSize({ width: 390, height: 844 });
+
+  await page.goto("/");
+  await page.waitForLoadState("networkidle");
+  await page.getByRole("link", { name: "开始书写" }).click();
+  await expect(page).toHaveURL(/\/notes\/new$/);
+  await expect(page.getByLabel("笔记标题")).toBeVisible();
+  await expect(page.getByLabel("笔记内容")).toBeVisible();
+
+  await page.goto("/notes");
+  await page.waitForLoadState("networkidle");
+  await page.getByRole("link", { name: "新建" }).click();
+  await expect(page).toHaveURL(/\/notes\/new$/);
+  await expect(page.getByLabel("笔记标题")).toBeVisible();
+  await expect(page.getByLabel("笔记内容")).toBeVisible();
+});
+
 test("clicking the editor save button saves and closes the note", async ({ page }) => {
   await login(page);
   await page.setViewportSize({ width: 390, height: 844 });

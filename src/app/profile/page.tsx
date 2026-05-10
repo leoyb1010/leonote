@@ -92,9 +92,9 @@ export default function ProfilePage() {
       {needLogin ? (
         <Card>
           <p className="text-sm text-[var(--text-secondary)] mb-4">{message}</p>
-          <Link href="/login">
-            <Button>去登录</Button>
-          </Link>
+          <Button asChild>
+            <Link href="/login">去登录</Link>
+          </Button>
         </Card>
       ) : (
         <>

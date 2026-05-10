@@ -127,7 +127,9 @@ export function LedgerPage({ signedIn, categories, summary }: Props) {
         <p className="mt-3 max-w-sm text-sm leading-6 text-[var(--text-secondary)]">
           登录后，把日常花费轻轻放在这里。
         </p>
-        <Link href="/login" className="mt-8"><Button size="lg">进入 Leonote</Button></Link>
+        <Button size="lg" className="mt-8" asChild>
+          <Link href="/login">进入 Leonote</Link>
+        </Button>
       </div>
     );
   }

@@ -1,7 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { ShellProvider } from "@/components/nav/ShellProvider";
-import { PwaRegister } from "@/components/PwaRegister";
+import { ClientRuntimeRecovery, PwaRegister } from "@/components/PwaRegister";
 import { ThemeProvider } from "@/components/theme/ThemeProvider";
 
 const themeInitScript = `
@@ -56,6 +56,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <ThemeProvider>
           <ShellProvider>{children}</ShellProvider>
         </ThemeProvider>
+        <ClientRuntimeRecovery />
         <PwaRegister />
       </body>
     </html>

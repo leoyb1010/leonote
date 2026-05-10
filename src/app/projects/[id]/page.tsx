@@ -65,9 +65,12 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
 
         <div className="flex items-center justify-between">
           <h2 className="text-lg font-semibold text-[var(--text-primary)]">项目笔记</h2>
-          <Link href="/notes/new">
-            <Button size="sm" variant="secondary" icon={<Plus size={14} />}>新建</Button>
-          </Link>
+          <Button size="sm" variant="secondary" asChild>
+            <Link href="/notes/new">
+              <Plus size={14} />
+              新建
+            </Link>
+          </Button>
         </div>
 
         {notes.length === 0 ? (

@@ -197,7 +197,9 @@ export function ExpenseDetail({ expense: initialExpense, categories }: Props) {
           删除
         </Button>
         <div className="flex gap-2">
-          <Link href="/ledger"><Button variant="secondary">回到记账</Button></Link>
+          <Button variant="secondary" asChild>
+            <Link href="/ledger">回到记账</Link>
+          </Button>
           {!editing ? (
             <Button icon={<Pencil size={15} />} onClick={() => setEditing(true)}>
               编辑

@@ -55,9 +55,9 @@ export function ServerNoteList() {
         title="全部笔记"
         description={items.length > 0 ? `${items.length} 篇笔记` : undefined}
         actions={
-          <Link href="/notes/new" className="block w-full sm:w-auto">
-            <Button size="sm" className="w-full sm:w-auto">新建</Button>
-          </Link>
+          <Button size="sm" className="w-full sm:w-auto" asChild>
+            <Link href="/notes/new">新建</Link>
+          </Button>
         }
       />
 
