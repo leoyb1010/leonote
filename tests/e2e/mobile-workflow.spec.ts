@@ -26,10 +26,27 @@ async function expectNoHorizontalOverflow(page: Page) {
     viewport: document.documentElement.clientWidth,
     documentWidth: document.documentElement.scrollWidth,
     bodyWidth: document.body.scrollWidth,
+    offenders: Array.from(document.querySelectorAll("body *"))
+      .map((element) => {
+        const rect = element.getBoundingClientRect();
+        const style = getComputedStyle(element);
+        return {
+          tag: element.tagName.toLowerCase(),
+          text: (element.textContent ?? "").trim().replace(/\s+/g, " ").slice(0, 80),
+          left: rect.left,
+          right: rect.right,
+          width: rect.width,
+          visible: style.display !== "none" && style.visibility !== "hidden" && rect.width > 1 && rect.height > 1,
+        };
+      })
+      .filter((item) => item.visible)
+      .filter((item) => item.left < -1 || item.right > document.documentElement.clientWidth + 1 || item.width > document.documentElement.clientWidth + 1)
+      .slice(0, 10),
   }));
 
   expect(metrics.documentWidth).toBeLessThanOrEqual(metrics.viewport + 1);
   expect(metrics.bodyWidth).toBeLessThanOrEqual(metrics.viewport + 1);
+  expect(metrics.offenders).toEqual([]);
 }
 
 test("key pages share the mobile width contract", async ({ page }) => {
@@ -71,4 +88,18 @@ test("clicking the editor save button saves and closes the note", async ({ page 
   await expect(page).toHaveURL(/\/notes$/);
   await expect(page.getByText("全部笔记")).toBeVisible();
   await expect(page.getByText(title)).toBeVisible({ timeout: 5000 });
+});
+
+test("today page uses compact mobile typography", async ({ page }) => {
+  await login(page);
+  await page.setViewportSize({ width: 320, height: 568 });
+
+  await page.goto("/");
+  await page.waitForLoadState("networkidle");
+
+  const headingSize = await page.locator("h1").first().evaluate((element) =>
+    Number.parseFloat(getComputedStyle(element).fontSize),
+  );
+  expect(headingSize).toBeLessThanOrEqual(20);
+  await expectNoHorizontalOverflow(page);
 });

@@ -209,6 +209,87 @@ export function TodayPage({ data, signedIn }: TodayPageProps) {
 
   const showRightRail = memoryFlashback || weeklySettling.created > 0 || weeklyExpense.total > 0 || recentlyViewed.length > 0;
 
+  const renderRailCards = () => (
+    <>
+      {/* Weekly Settling */}
+      {weeklySettling.created > 0 && (
+        <motion.div className="min-w-0 rounded-2xl border border-[var(--hairline)] bg-[var(--material-inset)] px-4 py-4" variants={cardFloatIn} whileHover={card3DHover.whileHover} whileTap={card3DHover.whileTap}>
+          <div className="flex items-center gap-2 mb-3">
+            <Sparkles size={16} className="text-[var(--text-muted)]" />
+            <span className="text-xs font-medium text-[var(--text-muted)]">本周沉淀</span>
+          </div>
+          <div className="space-y-1.5 text-sm text-[var(--text-secondary)]">
+            <p>新增 {weeklySettling.created} 篇笔记</p>
+            <p>编辑 {weeklySettling.edited} 次</p>
+            {weeklySettling.reviewed > 0 && <p>回看 {weeklySettling.reviewed} 篇旧笔记</p>}
+            {weeklySettling.memories > 0 && <p>形成 {weeklySettling.memories} 条长期记忆</p>}
+          </div>
+        </motion.div>
+      )}
+
+      {/* v1.5 Weekly Expense */}
+      {weeklyExpense.total > 0 && (
+        <motion.div className="min-w-0 rounded-2xl border border-[var(--hairline)] bg-[var(--material-inset)] px-4 py-4" variants={cardFloatIn} whileHover={card3DHover.whileHover} whileTap={card3DHover.whileTap}>
+          <div className="mb-3 flex items-center justify-between gap-2">
+            <div className="flex min-w-0 items-center gap-2">
+              <WalletCards size={16} className="shrink-0 text-[var(--text-muted)]" />
+              <span className="truncate text-xs font-medium text-[var(--text-muted)]">本周开销</span>
+            </div>
+            <Link href="/ledger" className="shrink-0 text-xs text-[var(--primary)] hover:underline">
+              看一眼
+            </Link>
+          </div>
+          <p className="text-sm text-[var(--text-secondary)] [font-variant-numeric:tabular-nums]">
+            这周记下 {formatMoney(weeklyExpense.total)}
+          </p>
+          {weeklyExpense.topCategories.length > 0 ? (
+            <p className="mt-2 text-xs leading-5 text-[var(--text-muted)]">
+              主要花在 {weeklyExpense.topCategories.map((item) => `${item.emoji} ${item.name}`).join("、")}。
+            </p>
+          ) : null}
+        </motion.div>
+      )}
+
+      {/* Memory Flashback */}
+      {memoryFlashback && (
+        <motion.div className="min-w-0 rounded-2xl border border-[var(--hairline)] bg-[var(--material-inset)] px-4 py-4" variants={cardFloatIn} whileHover={card3DHover.whileHover} whileTap={card3DHover.whileTap}>
+          <div className="flex items-center gap-2 mb-3">
+            <History size={16} className="text-[var(--text-muted)]" />
+            <span className="text-xs font-medium text-[var(--text-muted)]">记忆闪回</span>
+          </div>
+          <p className="text-xs text-[var(--text-muted)] mb-2">
+            你在 {formatRelativeTime(memoryFlashback.updatedAt)}前写过：
+          </p>
+          <Link
+            href={`/notes/${memoryFlashback.id}`}
+            className="block break-words text-sm text-[var(--text-primary)] leading-relaxed hover:text-[var(--primary)] transition-colors"
+          >
+            &ldquo;{memoryFlashback.excerpt || memoryFlashback.title}&rdquo;
+          </Link>
+          <p className="mt-2 text-xs text-[var(--text-muted)]">也许今天可以重新看一眼。</p>
+        </motion.div>
+      )}
+
+      {/* Recently Viewed */}
+      {recentlyViewed.length > 0 && (
+        <motion.div className="min-w-0 rounded-2xl border border-[var(--hairline)] bg-[var(--material-inset)] px-4 py-4" variants={cardFloatIn} whileHover={card3DHover.whileHover} whileTap={card3DHover.whileTap}>
+          <span className="text-xs font-medium text-[var(--text-muted)]">最近回看</span>
+          <div className="mt-3 space-y-2">
+            {recentlyViewed.map((item) => (
+              <Link
+                key={item.id}
+                href={`/notes/${item.id}`}
+                className="block truncate text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
+              >
+                {item.title}
+              </Link>
+            ))}
+          </div>
+        </motion.div>
+      )}
+    </>
+  );
+
   const heroSection = (
     <motion.section
       className="leonote-hero pb-6 border-b border-[var(--hairline)]"
@@ -219,7 +300,7 @@ export function TodayPage({ data, signedIn }: TodayPageProps) {
       <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-end">
         <div>
           <p className="text-xs text-[var(--text-muted)] tracking-wide">{dateStr}</p>
-          <h1 className="mt-2 text-[1.375rem] font-semibold tracking-[-0.03em] text-[var(--text-primary)]">
+          <h1 className="mt-2 text-lg font-semibold leading-snug tracking-[-0.01em] text-[var(--text-primary)] sm:text-[1.375rem] sm:tracking-[-0.03em]">
             {greeting.line}
           </h1>
           {counts.total > 0 && (
@@ -236,7 +317,7 @@ export function TodayPage({ data, signedIn }: TodayPageProps) {
   );
 
   const mainContent = (
-    <div className="space-y-8">
+    <div className="min-w-0 space-y-8">
       {heroSection}
 
       {/* QuickCapture */}
@@ -245,16 +326,16 @@ export function TodayPage({ data, signedIn }: TodayPageProps) {
       {/* Recent Notes */}
       {recent.length > 0 && (
         <section>
-          <div className="flex items-center justify-between mb-3">
+          <div className="mb-3 flex min-w-0 items-center justify-between gap-3">
             <h2 className="text-sm font-medium text-[var(--text-secondary)]">最近编辑</h2>
             <Link
               href="/notes"
-              className="text-xs text-[var(--primary)] hover:underline inline-flex items-center gap-1"
+              className="inline-flex shrink-0 items-center gap-1 text-xs text-[var(--primary)] hover:underline"
             >
               查看全部 <ArrowRight size={12} />
             </Link>
           </div>
-          <div className="divide-y divide-[var(--hairline)] rounded-[var(--radius-xl)] border border-[var(--hairline)] bg-[var(--material-elevated)] p-1">
+          <div className="min-w-0 divide-y divide-[var(--hairline)] rounded-[var(--radius-xl)] border border-[var(--hairline)] bg-[var(--material-elevated)] p-1">
             {recent.slice(0, 5).map((note) => (
               <NoteRow key={note.id} note={note} />
             ))}
@@ -265,21 +346,21 @@ export function TodayPage({ data, signedIn }: TodayPageProps) {
       {/* Projects */}
       {projects.length > 0 && (
         <section>
-          <div className="flex items-center justify-between mb-3">
+          <div className="mb-3 flex min-w-0 items-center justify-between gap-3">
             <h2 className="text-sm font-medium text-[var(--text-secondary)]">进行中的项目</h2>
             <Link
               href="/projects"
-              className="text-xs text-[var(--primary)] hover:underline inline-flex items-center gap-1"
+              className="inline-flex shrink-0 items-center gap-1 text-xs text-[var(--primary)] hover:underline"
             >
               查看全部 <ArrowRight size={12} />
             </Link>
           </div>
-          <div className="divide-y divide-[var(--hairline)] rounded-[var(--radius-xl)] border border-[var(--hairline)] bg-[var(--material-elevated)] p-1">
+          <div className="min-w-0 divide-y divide-[var(--hairline)] rounded-[var(--radius-xl)] border border-[var(--hairline)] bg-[var(--material-elevated)] p-1">
             {projects.slice(0, 4).map((proj) => (
               <Link
                 key={proj.id}
                 href={`/projects/${proj.id}`}
-                className="flex items-center justify-between gap-4 px-4 py-3 transition-colors hover:bg-[var(--interactive-hover)] rounded-lg"
+                className="flex min-w-0 items-center justify-between gap-4 rounded-lg px-4 py-3 transition-colors hover:bg-[var(--interactive-hover)]"
               >
                 <span className="truncate text-sm text-[var(--text-primary)]">{proj.name}</span>
                 <span className="text-xs text-[var(--text-muted)] shrink-0">{proj.noteCount} 篇</span>
@@ -309,93 +390,23 @@ export function TodayPage({ data, signedIn }: TodayPageProps) {
     </div>
   );
 
-  const rightRail = showRightRail ? (
-    <motion.aside className="space-y-4" variants={railSlideIn} initial="initial" animate="animate">
-      {/* Weekly Settling */}
-      {weeklySettling.created > 0 && (
-        <motion.div className="rounded-2xl border border-[var(--hairline)] bg-[var(--material-inset)] px-4 py-4" variants={cardFloatIn} whileHover={card3DHover.whileHover} whileTap={card3DHover.whileTap}>
-          <div className="flex items-center gap-2 mb-3">
-            <Sparkles size={16} className="text-[var(--text-muted)]" />
-            <span className="text-xs font-medium text-[var(--text-muted)]">本周沉淀</span>
-          </div>
-          <div className="space-y-1.5 text-sm text-[var(--text-secondary)]">
-            <p>新增 {weeklySettling.created} 篇笔记</p>
-            <p>编辑 {weeklySettling.edited} 次</p>
-            {weeklySettling.reviewed > 0 && <p>回看 {weeklySettling.reviewed} 篇旧笔记</p>}
-            {weeklySettling.memories > 0 && <p>形成 {weeklySettling.memories} 条长期记忆</p>}
-          </div>
-        </motion.div>
-      )}
-
-      {/* v1.5 Weekly Expense */}
-      {weeklyExpense.total > 0 && (
-        <motion.div className="rounded-2xl border border-[var(--hairline)] bg-[var(--material-inset)] px-4 py-4" variants={cardFloatIn} whileHover={card3DHover.whileHover} whileTap={card3DHover.whileTap}>
-          <div className="mb-3 flex items-center justify-between gap-2">
-            <div className="flex items-center gap-2">
-              <WalletCards size={16} className="text-[var(--text-muted)]" />
-              <span className="text-xs font-medium text-[var(--text-muted)]">本周开销</span>
-            </div>
-            <Link href="/ledger" className="text-xs text-[var(--primary)] hover:underline">
-              看一眼
-            </Link>
-          </div>
-          <p className="text-sm text-[var(--text-secondary)] [font-variant-numeric:tabular-nums]">
-            这周记下 {formatMoney(weeklyExpense.total)}
-          </p>
-          {weeklyExpense.topCategories.length > 0 ? (
-            <p className="mt-2 text-xs leading-5 text-[var(--text-muted)]">
-              主要花在 {weeklyExpense.topCategories.map((item) => `${item.emoji} ${item.name}`).join("、")}。
-            </p>
-          ) : null}
-        </motion.div>
-      )}
-
-      {/* Memory Flashback */}
-      {memoryFlashback && (
-        <motion.div className="rounded-2xl border border-[var(--hairline)] bg-[var(--material-inset)] px-4 py-4" variants={cardFloatIn} whileHover={card3DHover.whileHover} whileTap={card3DHover.whileTap}>
-          <div className="flex items-center gap-2 mb-3">
-            <History size={16} className="text-[var(--text-muted)]" />
-            <span className="text-xs font-medium text-[var(--text-muted)]">记忆闪回</span>
-          </div>
-          <p className="text-xs text-[var(--text-muted)] mb-2">
-            你在 {formatRelativeTime(memoryFlashback.updatedAt)}前写过：
-          </p>
-          <Link
-            href={`/notes/${memoryFlashback.id}`}
-            className="block text-sm text-[var(--text-primary)] leading-relaxed hover:text-[var(--primary)] transition-colors"
-          >
-            &ldquo;{memoryFlashback.excerpt || memoryFlashback.title}&rdquo;
-          </Link>
-          <p className="mt-2 text-xs text-[var(--text-muted)]">也许今天可以重新看一眼。</p>
-        </motion.div>
-      )}
-
-      {/* Recently Viewed */}
-      {recentlyViewed.length > 0 && (
-        <motion.div className="rounded-2xl border border-[var(--hairline)] bg-[var(--material-inset)] px-4 py-4" variants={cardFloatIn} whileHover={card3DHover.whileHover} whileTap={card3DHover.whileTap}>
-          <span className="text-xs font-medium text-[var(--text-muted)]">最近回看</span>
-          <div className="mt-3 space-y-2">
-            {recentlyViewed.map((item) => (
-              <Link
-                key={item.id}
-                href={`/notes/${item.id}`}
-                className="block text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors truncate"
-              >
-                {item.title}
-              </Link>
-            ))}
-          </div>
-        </motion.div>
-      )}
+  const desktopRightRail = showRightRail ? (
+    <motion.aside className="hidden min-w-0 space-y-4 2xl:block" variants={railSlideIn} initial="initial" animate="animate">
+      {renderRailCards()}
     </motion.aside>
+  ) : null;
+
+  const mobileRail = showRightRail ? (
+    <aside className="min-w-0 space-y-4 2xl:hidden">{renderRailCards()}</aside>
   ) : null;
 
   // Empty state
   if (counts.total === 0) {
     return (
-      <div className="space-y-8">
+      <div className="min-w-0 space-y-8">
         {heroSection}
         <QuickCapture onCreated={handleNoteCreated} />
+        {mobileRail}
         <div className="text-center py-12">
           <p className="text-sm text-[var(--text-muted)]">
             这里还很安静。写下第一条想法，它会成为你的起点。
@@ -406,9 +417,12 @@ export function TodayPage({ data, signedIn }: TodayPageProps) {
   }
 
   return (
-    <div className="grid gap-8 2xl:grid-cols-[minmax(0,1fr)_320px]">
-      <main>{mainContent}</main>
-      {rightRail}
+    <div className="grid min-w-0 gap-8 2xl:grid-cols-[minmax(0,1fr)_320px]">
+      <main className="min-w-0 space-y-8">
+        {mainContent}
+        {mobileRail}
+      </main>
+      {desktopRightRail}
     </div>
   );
 }
