@@ -228,12 +228,12 @@ export function AIChatPanel({ noteId, linkedMemories = [] }: { noteId: string; l
             <textarea
               value={question}
               onChange={(e) => setQuestion(e.target.value)}
-              onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); void ask(); } }}
+              onKeyDown={(e) => { if (e.key === "Enter" && e.shiftKey) { e.preventDefault(); void ask(); } }}
               placeholder="围绕当前笔记继续思考…"
               className="min-h-[96px] w-full resize-none bg-transparent px-2 py-2 text-sm text-[var(--text-primary)] leading-relaxed outline-none placeholder:text-[var(--text-placeholder)]"
             />
             <div className="flex items-center justify-between gap-3 px-2 pt-2">
-              <span className="text-xs text-[var(--text-muted)]">Enter 发送 · Shift+Enter 换行</span>
+              <span className="text-xs text-[var(--text-muted)]">Enter 换行 · Shift+Enter 发送</span>
               <Button variant="primary" size="sm" loading={loading === "ask"} icon={<SendHorizonal size={14} />} onClick={() => void ask()}>
                 提问
               </Button>

@@ -128,7 +128,7 @@ function QuickCapture({ onCreated }: { onCreated?: (note: QuickCaptureNote) => v
           value={value}
           onChange={(event) => setValue(event.target.value)}
           onKeyDown={(event) => {
-            if (event.key === "Enter" && !event.shiftKey) {
+            if (event.key === "Enter" && event.shiftKey) {
               event.preventDefault();
               void submit();
             }
@@ -138,7 +138,7 @@ function QuickCapture({ onCreated }: { onCreated?: (note: QuickCaptureNote) => v
           rows={1}
         />
         <div className="flex items-center justify-between px-2 pb-1">
-          <span className="text-xs text-[var(--text-muted)]">Enter 保存 · Shift + Enter 换行</span>
+          <span className="text-xs text-[var(--text-muted)]">Enter 换行 · Shift + Enter 保存</span>
           <Button size="md" onClick={submit} loading={saving} variant="primary">
             安放
           </Button>

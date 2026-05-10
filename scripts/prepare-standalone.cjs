@@ -28,4 +28,30 @@ fs.symlinkSync(
   "dir"
 );
 
+// Verify symlinks resolve correctly
+const checks = [
+  { label: "public", dir: publicDir },
+  { label: ".next/static", dir: staticDir },
+];
+let failed = false;
+for (const { label, dir } of checks) {
+  try {
+    const resolved = fs.realpathSync(dir);
+    const files = fs.readdirSync(dir);
+    if (files.length === 0) {
+      console.error(`⚠️  Symlink ${label} resolves but directory is empty!`);
+      failed = true;
+    } else {
+      console.log(`✅ ${label} → ${resolved} (${files.length} entries)`);
+    }
+  } catch (err) {
+    console.error(`❌ Symlink ${label} is broken or missing: ${err.message}`);
+    failed = true;
+  }
+}
+if (failed) {
+  console.error("Symlink verification failed. Static assets will 404 in production.");
+  process.exit(1);
+}
+
 console.log("Standalone output prepared with symlinks.");

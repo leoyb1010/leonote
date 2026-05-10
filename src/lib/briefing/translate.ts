@@ -4,7 +4,7 @@ import { decryptSecret } from "@/lib/crypto-secret";
 const AI_BASE = process.env.AI_BASE_URL || "https://api.deepseek.com";
 const AI_ENV_KEY = process.env.AI_API_KEY || process.env.OPENAI_API_KEY || "";
 const AI_MODEL = process.env.AI_MODEL || "deepseek-chat";
-const TRANSLATE_TIMEOUT_MS = Number(process.env.BRIEFING_TRANSLATE_TIMEOUT_MS || 8_000);
+const TRANSLATE_TIMEOUT_MS = Number(process.env.BRIEFING_TRANSLATE_TIMEOUT_MS || 30_000);
 const TRANSLATE_MAX_ITEMS = Number(process.env.BRIEFING_TRANSLATE_MAX_ITEMS || 12);
 
 let cachedKey = "";

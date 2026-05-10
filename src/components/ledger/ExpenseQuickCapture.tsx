@@ -71,7 +71,7 @@ export function ExpenseQuickCapture({ categories, onCreated }: Props) {
           value={value}
           onChange={(event) => setValue(event.target.value)}
           onKeyDown={(event) => {
-            if (event.key === "Enter" && !event.shiftKey) {
+            if (event.key === "Enter" && event.shiftKey) {
               event.preventDefault();
               void submit();
             }

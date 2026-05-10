@@ -135,7 +135,7 @@ export default function AIPage() {
         <input
           value={input}
           onChange={(e) => setInput(e.target.value)}
-          onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); ask(); } }}
+          onKeyDown={(e) => { if (e.key === "Enter" && e.shiftKey) { e.preventDefault(); ask(); } }}
           placeholder="向 AI 提问，比如「总结我最近一周的笔记要点」"
           className="flex-1 h-10 rounded-[var(--radius-md)] border border-[var(--border-default)] bg-[var(--surface-base)] px-4 text-sm text-[var(--text-primary)] outline-none placeholder:text-[var(--text-placeholder)] focus:border-[var(--border-focus)] transition-colors"
         />
