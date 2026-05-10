@@ -28,7 +28,7 @@ export async function GET(request: Request) {
   const category = (["all", "world", "finance", "ai_tech", "social_x"].includes(categoryParam) ? categoryParam : "all") as BriefingCategory | "all";
 
   const refreshStatus = range !== "favorites"
-    ? await ensureBriefingFreshness({ force: forceRefresh })
+    ? await ensureBriefingFreshness({ force: forceRefresh, wait: forceRefresh, timeoutMs: 12_000 })
     : { started: false, inFlight: false, skipped: true };
 
   const [digest, items, marketState, weather, meta] = await Promise.all([

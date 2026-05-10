@@ -15,6 +15,12 @@ type EnsureResult = {
   inFlight: boolean;
   skipped: boolean;
   timedOut?: boolean;
+  coldStart?: boolean;
+};
+
+type RefreshDecision = {
+  refresh: boolean;
+  coldStart: boolean;
 };
 
 let inFlight: Promise<void> | null = null;
@@ -34,10 +40,7 @@ function todayWindow() {
   };
 }
 
-async function shouldRefresh(options: EnsureOptions) {
-  if (options.force) return true;
-  if (process.env.BRIEFING_AUTO_REFRESH === "false") return false;
-
+async function getRefreshDecision(options: EnsureOptions): Promise<RefreshDecision> {
   const minItems = options.minItems ?? Number(process.env.BRIEFING_MIN_ITEMS || 12);
   const maxAgeMinutes = options.maxAgeMinutes ?? Number(process.env.BRIEFING_MAX_AGE_MINUTES || 30);
   const [itemCount, latestSource, todayDigest] = await Promise.all([
@@ -53,13 +56,24 @@ async function shouldRefresh(options: EnsureOptions) {
     }),
   ]);
 
+  if (process.env.BRIEFING_AUTO_REFRESH === "false" && !options.force) {
+    return { refresh: false, coldStart: false };
+  }
+
+  const coldStart = itemCount === 0 && !todayDigest;
+  if (options.force) return { refresh: true, coldStart };
+
   const latestFetchAt = latestSource?.lastFetchAt?.getTime() ?? 0;
   const stale = !latestFetchAt || Date.now() - latestFetchAt > maxAgeMinutes * 60_000;
-  return itemCount < minItems || stale || !todayDigest;
+  return {
+    refresh: itemCount < minItems || stale || !todayDigest,
+    coldStart,
+  };
 }
 
 export async function ensureBriefingFreshness(options: EnsureOptions = {}) {
-  if (!(await shouldRefresh(options))) {
+  const decision = await getRefreshDecision(options);
+  if (!decision.refresh) {
     return { started: false, inFlight: false, skipped: true } satisfies EnsureResult;
   }
 
@@ -83,13 +97,16 @@ export async function ensureBriefingFreshness(options: EnsureOptions = {}) {
     })();
   }
 
-  if (options.wait) {
-    const timedOut = await waitForRefresh(options.timeoutMs ?? 12_000);
+  const shouldWait = options.wait || decision.coldStart;
+
+  if (shouldWait) {
+    const timedOut = await waitForRefresh(options.timeoutMs ?? (decision.coldStart ? 18_000 : 12_000));
     return {
       started: !alreadyRunning,
       inFlight: Boolean(inFlight),
       skipped: false,
       timedOut,
+      coldStart: decision.coldStart,
     } satisfies EnsureResult;
   }
 
@@ -97,6 +114,7 @@ export async function ensureBriefingFreshness(options: EnsureOptions = {}) {
     started: !alreadyRunning,
     inFlight: true,
     skipped: false,
+    coldStart: decision.coldStart,
   } satisfies EnsureResult;
 }
 
