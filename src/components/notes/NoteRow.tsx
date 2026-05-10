@@ -52,7 +52,7 @@ export function NoteRow({ note, href, selected = false, className }: NoteRowProp
             {note.excerpt || ""}
           </p>
 
-          <div className="mt-2 flex min-w-0 items-center gap-2 text-xs text-[var(--text-faint)]">
+          <div className="mt-2 flex min-w-0 flex-wrap items-center gap-2 text-xs text-[var(--text-faint)]">
             {note.project?.name ? (
               <span className="truncate rounded-full bg-[var(--interactive-hover)] px-2 py-0.5 text-[var(--text-secondary)]">
                 {note.project.name}
@@ -68,7 +68,7 @@ export function NoteRow({ note, href, selected = false, className }: NoteRowProp
         </div>
 
         {note.updatedAt ? (
-          <time className="shrink-0 pt-0.5 text-xs text-[var(--text-faint)]">
+          <time className="hidden shrink-0 pt-0.5 text-xs text-[var(--text-faint)] sm:block">
             {formatRelativeTime(note.updatedAt)}
           </time>
         ) : null}

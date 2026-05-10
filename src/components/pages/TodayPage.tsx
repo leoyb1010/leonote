@@ -137,9 +137,9 @@ function QuickCapture({ onCreated }: { onCreated?: (note: QuickCaptureNote) => v
           className="min-h-[56px] w-full resize-none bg-transparent px-4 py-3 text-[15px] leading-relaxed outline-none placeholder:text-[var(--text-placeholder)]"
           rows={1}
         />
-        <div className="flex items-center justify-between px-2 pb-1">
+        <div className="flex flex-col items-stretch gap-2 px-2 pb-1 sm:flex-row sm:items-center sm:justify-between">
           <span className="text-xs text-[var(--text-muted)]">Enter 换行 · Shift + Enter 保存</span>
-          <Button size="md" onClick={submit} loading={saving} variant="primary">
+          <Button size="md" onClick={submit} loading={saving} variant="primary" className="w-full sm:w-auto">
             安放
           </Button>
         </div>
@@ -216,7 +216,7 @@ export function TodayPage({ data, signedIn }: TodayPageProps) {
       initial="initial"
       animate="animate"
     >
-      <div className="flex items-end justify-between gap-4">
+      <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-end">
         <div>
           <p className="text-xs text-[var(--text-muted)] tracking-wide">{dateStr}</p>
           <h1 className="mt-2 text-[1.375rem] font-semibold tracking-[-0.03em] text-[var(--text-primary)]">
@@ -228,8 +228,8 @@ export function TodayPage({ data, signedIn }: TodayPageProps) {
             </p>
           )}
         </div>
-        <Link href="/notes/new" className="shrink-0">
-          <Button size="lg">开始书写</Button>
+        <Link href="/notes/new" className="w-full shrink-0 sm:w-auto">
+          <Button size="lg" className="w-full sm:w-auto">开始书写</Button>
         </Link>
       </div>
     </motion.section>

@@ -19,6 +19,10 @@ type NoteShape = {
 
 type SaveState = "idle" | "dirty" | "saving" | "saved" | "error";
 type ViewMode = "write" | "preview" | "split";
+type SaveOptions = {
+  manual?: boolean;
+  closeAfterSave?: boolean;
+};
 
 type SummaryState = {
   status: "idle" | "loading" | "ready" | "inserting" | "error";
@@ -89,7 +93,7 @@ export function EnhancedEditor({ initialNote }: { initialNote?: NoteShape }) {
   }, []);
 
   const saveDraft = useCallback(
-    async (manual = false) => {
+    async ({ manual = false, closeAfterSave = false }: SaveOptions = {}) => {
       cancelAutoSaveTimer();
       if (savingRef.current) return;
       savingRef.current = true;
@@ -102,7 +106,10 @@ export function EnhancedEditor({ initialNote }: { initialNote?: NoteShape }) {
           currentId ? `/api/notes/${currentId}` : "/api/notes",
           {
             method: currentId ? "PATCH" : "POST",
-            headers: { "Content-Type": "application/json" },
+            headers: {
+              "Content-Type": "application/json",
+              "x-leonote-save-reason": manual ? "manual" : "auto",
+            },
             body: JSON.stringify(payload),
           },
         );
@@ -113,14 +120,19 @@ export function EnhancedEditor({ initialNote }: { initialNote?: NoteShape }) {
           return;
         }
         const id = data.note.id as string;
-        if (!currentId) {
-          setNoteId(id);
-          router.replace(`/notes/${id}`);
-        }
+        if (!currentId) setNoteId(id);
         setSaveState("saved");
         showToast();
         setMessage(manual ? saveMessages.manual : saveMessages.auto);
         router.refresh();
+        if (closeAfterSave) {
+          router.push("/notes");
+          return;
+        }
+        if (!currentId) router.replace(`/notes/${id}`);
+      } catch {
+        setSaveState("error");
+        setMessage("网络异常，这次没有保存成功，请先复制内容。");
       } finally {
         savingRef.current = false;
       }
@@ -142,7 +154,7 @@ export function EnhancedEditor({ initialNote }: { initialNote?: NoteShape }) {
     if (!autoSaveEnabled || !hasEdited || saveState !== "dirty" || isComposingRef.current) return;
     autoSaveTimerRef.current = setTimeout(() => {
       if (isComposingRef.current) return;
-      void saveDraft(false);
+      void saveDraft();
     }, 2600);
     return () => cancelAutoSaveTimer();
   }, [autoSaveEnabled, hasEdited, saveState, saveDraft]);
@@ -164,7 +176,7 @@ export function EnhancedEditor({ initialNote }: { initialNote?: NoteShape }) {
     const onKeyDown = (event: KeyboardEvent) => {
       if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "s") {
         event.preventDefault();
-        void saveDraft(true);
+        void saveDraft({ manual: true });
       }
     };
     window.addEventListener("keydown", onKeyDown);
@@ -188,7 +200,7 @@ export function EnhancedEditor({ initialNote }: { initialNote?: NoteShape }) {
     isComposingRef.current = false;
     if (autoSaveEnabled && hasEdited && saveState === "dirty") {
       cancelAutoSaveTimer();
-      autoSaveTimerRef.current = setTimeout(() => { void saveDraft(false); }, 2600);
+      autoSaveTimerRef.current = setTimeout(() => { void saveDraft(); }, 2600);
     }
   };
 
@@ -239,9 +251,8 @@ export function EnhancedEditor({ initialNote }: { initialNote?: NoteShape }) {
   return (
     <div
       className={cn(
-        "relative mx-auto w-full transition-all duration-[var(--duration-slow)]",
+        "relative mx-auto w-full min-w-0 transition-all duration-[var(--duration-slow)]",
         focusMode ? "max-w-[820px]" : "max-w-[760px]",
-        focusMode && "px-4"
       )}
     >
       {/* v1.4 Save Toast */}
@@ -295,7 +306,7 @@ export function EnhancedEditor({ initialNote }: { initialNote?: NoteShape }) {
       </AnimatePresence>
 
       {/* v1.4 Toolbar */}
-      <div className="mb-6 flex items-center justify-between gap-3 text-xs text-[var(--text-muted)]">
+      <div className="mb-6 flex flex-col items-start justify-between gap-3 text-xs text-[var(--text-muted)] sm:flex-row sm:items-center">
         <div className="flex items-center gap-2">
           <span
             className={cn(
@@ -318,7 +329,7 @@ export function EnhancedEditor({ initialNote }: { initialNote?: NoteShape }) {
           {stats.chars > 0 && <span>{stats.chars} 字</span>}
         </div>
 
-        <div className="flex items-center gap-1">
+        <div className="flex w-full flex-wrap items-center justify-end gap-1 sm:w-auto">
           {/* Focus Mode toggle */}
           <button
             onClick={() => setFocusMode(!focusMode)}
@@ -362,7 +373,12 @@ export function EnhancedEditor({ initialNote }: { initialNote?: NoteShape }) {
             <span className="hidden 2xl:inline">提炼要点</span>
           </Button>
 
-          <Button variant="secondary" size="sm" onClick={() => void saveDraft(true)}>
+          <Button
+            variant="secondary"
+            size="sm"
+            loading={saveState === "saving"}
+            onClick={() => void saveDraft({ manual: true, closeAfterSave: true })}
+          >
             保存
           </Button>
 
@@ -406,7 +422,7 @@ export function EnhancedEditor({ initialNote }: { initialNote?: NoteShape }) {
             onCompositionEnd={handleCompositionEnd}
             onChange={(event) => setTitle(event.target.value)}
             placeholder="输入标题"
-            className="w-full bg-transparent text-[28px] font-semibold leading-tight tracking-[-0.04em] text-[var(--text-primary)] outline-none placeholder:text-[var(--text-placeholder)]"
+            className="w-full bg-transparent text-2xl font-semibold leading-tight tracking-[-0.04em] text-[var(--text-primary)] outline-none placeholder:text-[var(--text-placeholder)] sm:text-[28px]"
           />
 
           {/* Metadata */}

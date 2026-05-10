@@ -1,6 +1,11 @@
 import path from "node:path";
 import type { NextConfig } from "next";
 
+const scriptSrc =
+  process.env.NODE_ENV === "production"
+    ? "script-src 'self' 'unsafe-inline'"
+    : "script-src 'self' 'unsafe-inline' 'unsafe-eval'";
+
 const nextConfig: NextConfig = {
   reactStrictMode: true,
   output: "standalone",
@@ -33,7 +38,7 @@ const nextConfig: NextConfig = {
               "default-src 'self'",
               // unsafe-inline 为 Next.js webpack 运行时和主题初始化脚本所需。
               // 未来计划：通过 middleware nonce 机制移除此豁免。
-              "script-src 'self' 'unsafe-inline'",
+              scriptSrc,
               "style-src 'self' 'unsafe-inline'",
               "img-src 'self' data: blob:",
               "media-src 'self' blob:",

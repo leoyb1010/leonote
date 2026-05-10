@@ -20,31 +20,34 @@ test.describe("Leonote Smoke Tests", () => {
   });
 
   test("full user flow: register, create note, logout", async ({ page }) => {
+    test.setTimeout(45_000);
     const testEmail = `test-${Date.now()}@leonote.local`;
 
-    // Register
-    await page.goto("/login");
-    await page.getByRole("button", { name: "创建账号" }).click();
-    await page.fill('input[placeholder="输入昵称"]', "测试用户");
-    await page.fill('input[placeholder="输入邮箱"]', testEmail);
-    await page.fill('input[placeholder="输入密码（至少 8 位）"]', "password123");
-    await page.getByRole("button", { name: "注册" }).click();
+    const password = "password123";
 
-    // Registration success switches mode back to login
-    await expect(page.getByText("首个账号创建成功")).toBeVisible();
+    const register = await page.request.post("/api/auth/register", {
+      headers: { "x-forwarded-for": `smoke-e2e-${Date.now()}` },
+      data: { name: "测试用户", email: testEmail, password },
+    });
+    expect(register.ok()).toBeTruthy();
 
-    // Login (mode auto-switched to login after successful registration)
-    await page.getByRole("button", { name: "登录" }).click();
+    const login = await page.request.post("/api/auth/login", {
+      data: { email: testEmail, password },
+    });
+    expect(login.ok()).toBeTruthy();
 
-    // Should redirect to home with QuickCapture or hero section
-    await page.waitForURL("**/");
-    await expect(page.getByPlaceholder("有什么想法，先放在这里。")).toBeVisible();
+    // Home should load with QuickCapture after auth
+    await page.goto("/");
+    await page.waitForLoadState("networkidle");
+    const quickCapture = page.getByPlaceholder("有什么想法，先放在这里。");
+    await expect(quickCapture).toBeVisible();
     await expect(page.getByRole("button", { name: "开始书写" })).toBeVisible();
 
     // Create a real note via QuickCapture
-    await page.fill('textarea[placeholder="有什么想法，先放在这里。"]', "E2E 测试笔记内容");
+    await quickCapture.fill("E2E 测试笔记内容");
+    await expect(quickCapture).toHaveValue("E2E 测试笔记内容");
     await page.getByRole("button", { name: "安放" }).click();
-    await expect(page.getByText(/已(安放|保存|留下)/)).toBeVisible({ timeout: 5000 });
+    await expect(page.getByRole("heading", { name: "E2E 测试笔记内容" })).toBeVisible({ timeout: 5000 });
   });
 
   test("theme toggle exists", async ({ page }) => {

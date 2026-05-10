@@ -94,7 +94,7 @@ export function ProjectBoard({ initialProjects, signedIn }: { initialProjects: P
       <h1 className="text-2xl font-bold text-[var(--text-primary)]">项目</h1>
 
       <GlassPanel blur="xl" className="rounded-[var(--radius-lg)] p-5">
-        <div className="flex items-center justify-between gap-3">
+        <div className="flex flex-col items-start justify-between gap-3 sm:flex-row sm:items-center">
           <div>
             <div className="text-xs font-semibold text-[var(--text-muted)]">New Project</div>
             <h2 className="mt-2 text-lg font-semibold text-[var(--text-primary)]">新建项目</h2>
@@ -104,7 +104,7 @@ export function ProjectBoard({ initialProjects, signedIn }: { initialProjects: P
         <div className="mt-4 grid gap-3 md:grid-cols-[minmax(0,1fr)_minmax(280px,0.9fr)_auto]">
           <input value={name} onChange={(e) => setName(e.target.value)} placeholder="项目名称" className="w-full h-10 rounded-[var(--radius-md)] border border-[var(--border-default)] bg-[var(--surface-base)] px-4 text-sm text-[var(--text-primary)] outline-none placeholder:text-[var(--text-placeholder)] focus:border-[var(--border-focus)] transition-colors" />
           <textarea value={description} onChange={(e) => setDescription(e.target.value)} placeholder="项目简介、目标或工作范围" className="min-h-[64px] w-full rounded-[var(--radius-md)] border border-[var(--border-default)] bg-[var(--surface-base)] px-4 py-3 text-sm text-[var(--text-primary)] outline-none placeholder:text-[var(--text-placeholder)] focus:border-[var(--border-focus)] transition-colors resize-none" />
-          <Button onClick={() => void createProject()} icon={<Plus size={16} />}>创建项目</Button>
+          <Button onClick={() => void createProject()} icon={<Plus size={16} />} className="w-full md:w-auto">创建项目</Button>
         </div>
       </GlassPanel>
 

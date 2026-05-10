@@ -80,11 +80,11 @@ export function ExpenseQuickCapture({ categories, onCreated }: Props) {
           className="min-h-[56px] w-full resize-none bg-transparent px-4 py-3 text-[15px] leading-relaxed outline-none placeholder:text-[var(--text-placeholder)]"
           rows={1}
         />
-        <div className="flex items-center justify-between gap-3 px-2 pb-1">
+        <div className="flex flex-col items-stretch justify-between gap-2 px-2 pb-1 sm:flex-row sm:items-center">
           <span className="text-xs text-[var(--text-muted)]">
             {detectedAmount ? "金额已识别 · Enter 记下" : "写一句话，末尾带上金额"}
           </span>
-          <Button size="md" onClick={submit} loading={saving} variant="primary">
+          <Button size="md" onClick={submit} loading={saving} variant="primary" className="w-full sm:w-auto">
             记下
           </Button>
         </div>

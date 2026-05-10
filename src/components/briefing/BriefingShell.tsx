@@ -10,6 +10,7 @@ import { NewsColumn } from "./NewsColumn";
 import { NewsDetailModal } from "./NewsDetailModal";
 import { DeepReadCard } from "./DeepReadCard";
 import { listStagger } from "@/lib/animations";
+import { PageContainer } from "@/components/layout/PageContainer";
 import { categoryLabel } from "@/lib/briefing/display";
 import type { BriefingCategory, BriefingDigestSummary, BriefingMetaDTO, BriefingRange, MarketSnapshotDTO, NewsItemDTO, WeatherDTO } from "@/lib/briefing/types";
 
@@ -295,7 +296,7 @@ export function BriefingShell({ initialDigest, initialItems, initialMarkets, ini
   const streamEyebrow = range === "favorites" ? "Saved" : range === "week" ? "Week" : "News flow";
 
   return (
-    <main className="mx-auto w-full max-w-[1480px] px-5 py-5 sm:px-6 xl:px-10 xl:py-8">
+    <PageContainer width="dashboard">
       <BriefingHero
         digest={digest}
         stats={stats}
@@ -396,6 +397,6 @@ export function BriefingShell({ initialDigest, initialItems, initialMarkets, ini
           onPatchItem={patchItem}
         />
       ) : null}
-    </main>
+    </PageContainer>
   );
 }

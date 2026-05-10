@@ -11,7 +11,7 @@ export function PageHeader({ title, description, actions, className }: PageHeade
   return (
     <header
       className={cn(
-        "mb-6 flex items-end justify-between gap-4 border-b border-[var(--border-subtle)] pb-5",
+        "mb-6 flex flex-col items-start justify-between gap-4 border-b border-[var(--border-subtle)] pb-5 sm:flex-row sm:items-end",
         className,
       )}
     >
@@ -25,7 +25,7 @@ export function PageHeader({ title, description, actions, className }: PageHeade
           </div>
         ) : null}
       </div>
-      {actions ? <div className="shrink-0">{actions}</div> : null}
+      {actions ? <div className="w-full shrink-0 sm:w-auto">{actions}</div> : null}
     </header>
   );
 }

@@ -37,7 +37,7 @@ const sizeStyles: Record<ButtonSize, string> = {
 
 export function buttonClass(variant: ButtonVariant, size: ButtonSize, className?: string) {
   return cn(
-    "inline-flex items-center justify-center font-medium transition-[background-color,border-color,color,opacity] duration-[var(--duration-quick)] cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed xl:min-h-[40px] 2xl:min-h-[44px]",
+    "inline-flex items-center justify-center whitespace-nowrap text-center font-medium transition-[background-color,border-color,color,opacity] duration-[var(--duration-quick)] cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed xl:min-h-[40px] 2xl:min-h-[44px]",
     variantStyles[variant],
     sizeStyles[size],
     className

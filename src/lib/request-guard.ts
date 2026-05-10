@@ -19,6 +19,7 @@ function getRequestHost(request: Request) {
 function getAllowedOriginHosts(request: Request) {
   const hosts = new Set<string>();
   const publicUrl = process.env.LEONOTE_PUBLIC_URL;
+  const requestHost = getRequestHost(request);
   if (publicUrl) {
     try {
       hosts.add(new URL(publicUrl).host.toLowerCase());
@@ -30,11 +31,20 @@ function getAllowedOriginHosts(request: Request) {
   // 仅在未配置 LEONOTE_PUBLIC_URL 时才回退到 request host。
   // 生产环境应始终配置 LEONOTE_PUBLIC_URL，避免依赖客户端可伪造的 Host 头。
   if (hosts.size === 0) {
-    const requestHost = getRequestHost(request);
     if (requestHost) hosts.add(requestHost);
   }
 
+  if (process.env.NODE_ENV !== "production" && isLocalDevHost(requestHost)) {
+    hosts.add(requestHost);
+  }
+
   return hosts;
+}
+
+function isLocalDevHost(host: string) {
+  if (host.startsWith("[::1]")) return true;
+  const normalized = host.split(":")[0];
+  return normalized === "localhost" || normalized === "127.0.0.1";
 }
 
 export function rejectCrossOrigin(request: Request) {

@@ -28,7 +28,7 @@ export function ResponsiveAppShell({ children, header }: ResponsiveAppShellProps
   }
 
   return (
-    <div className="flex min-h-screen min-h-[100dvh] bg-[var(--bg-app)]">
+    <div className="flex min-h-screen min-h-[100dvh] min-w-0 overflow-x-clip bg-[var(--bg-app)]">
       {/* Sidebar: full on desktop, icon rail on tablet. */}
       <DesktopSidebar
         currentPath={pathname}
@@ -37,10 +37,10 @@ export function ResponsiveAppShell({ children, header }: ResponsiveAppShellProps
       />
 
       {/* Content: fills remaining space */}
-      <div className="flex-1 flex flex-col min-w-0">
+      <div className="flex min-w-0 flex-1 flex-col">
         {header}
 
-        <main className="flex-1 pb-[88px] md:pb-0">
+        <main className="min-w-0 flex-1 pb-[88px] md:pb-0">
           <AnimatePresence mode="wait">
             <motion.div
               key={pathname}
@@ -48,6 +48,7 @@ export function ResponsiveAppShell({ children, header }: ResponsiveAppShellProps
               initial="initial"
               animate="animate"
               exit="exit"
+              className="min-w-0"
             >
               {children}
             </motion.div>
