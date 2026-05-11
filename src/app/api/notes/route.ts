@@ -11,7 +11,7 @@ const schema = z.object({
   excerpt: z.string().optional(),
   tags: z.array(z.string()).default([]),
   projectName: z.string().optional(),
-  projectId: z.string().optional(),
+  projectId: z.string().nullable().optional(),
   source: z.string().max(120).optional(),
 });
 

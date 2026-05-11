@@ -114,6 +114,61 @@ test("clicking the editor save button saves and closes the note", async ({ page 
   await expect(page.getByText(title)).toBeVisible({ timeout: 5000 });
 });
 
+test("desktop notes new route keeps the app shell usable", async ({ page }) => {
+  await login(page);
+  await page.setViewportSize({ width: 1440, height: 900 });
+
+  await page.goto("/notes");
+  await page.waitForLoadState("networkidle");
+  await page.getByRole("link", { name: "新建", exact: true }).click();
+
+  await expect(page).toHaveURL(/\/notes\/new$/);
+  await expect(page.getByLabel("笔记标题")).toBeVisible();
+  await expect(page.getByLabel("笔记内容")).toBeVisible();
+
+  await page.getByRole("link", { name: "项目", exact: true }).click();
+  await expect(page).toHaveURL(/\/projects$/);
+  await expect(page.getByRole("heading", { name: "项目", exact: true })).toBeVisible();
+
+  await page.getByRole("link", { name: "笔记", exact: true }).click();
+  await expect(page).toHaveURL(/\/notes$/);
+  await expect(page.getByRole("heading", { name: "全部笔记" })).toBeVisible();
+});
+
+test("editor can choose an existing project and paste an image attachment", async ({ page }) => {
+  await login(page);
+  await page.setViewportSize({ width: 1440, height: 900 });
+
+  const projectName = `项目选择 ${Date.now()}`;
+  const title = `附件笔记 ${Date.now()}`;
+  const project = await page.request.post("/api/projects", {
+    data: { name: projectName, description: "用于验证项目下拉选择" },
+  });
+  expect(project.ok()).toBeTruthy();
+
+  await page.goto("/notes/new");
+  await page.waitForLoadState("networkidle");
+  await page.getByLabel("笔记标题").fill(title);
+  await page.getByLabel("选择已有项目").selectOption({ label: projectName });
+
+  const body = page.getByLabel("笔记内容");
+  await body.fill("这里会粘贴一张图片。");
+  await body.evaluate((element) => {
+    const file = new File([new Uint8Array([137, 80, 78, 71, 13, 10, 26, 10])], "paste-image.png", { type: "image/png" });
+    const data = new DataTransfer();
+    data.items.add(file);
+    element.dispatchEvent(new ClipboardEvent("paste", { clipboardData: data, bubbles: true, cancelable: true }));
+  });
+
+  await expect(body).toHaveValue(/paste-image\.png/);
+  await expect(page.getByText("已添加 1 个附件。")).toBeVisible({ timeout: 10_000 });
+  await page.getByRole("button", { name: "保存" }).click();
+
+  await expect(page).toHaveURL(/\/notes$/);
+  await expect(page.getByText(title)).toBeVisible({ timeout: 5000 });
+  await expect(page.getByText(projectName)).toBeVisible();
+});
+
 test("today page uses compact mobile typography", async ({ page }) => {
   await login(page);
   await page.setViewportSize({ width: 320, height: 568 });

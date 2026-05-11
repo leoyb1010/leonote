@@ -16,6 +16,7 @@ model User {
   createdAt    DateTime    @default(now())
   updatedAt    DateTime    @updatedAt
   notes        Note[]
+  attachments  NoteAttachment[]
   tags         Tag[]
   dailyNotes   DailyNote[]
   projects     Project[]
@@ -45,6 +46,7 @@ model Note {
   tags         NoteTag[]
   dailyNotes   DailyNote[]
   revisions    NoteRevision[]
+  attachments  NoteAttachment[]
 
   @@index([userId, updatedAt])
   @@index([userId, deletedAt])
@@ -63,6 +65,23 @@ model NoteRevision {
   createdAt DateTime @default(now())
 
   note Note @relation(fields: [noteId], references: [id], onDelete: Cascade)
+
+  @@index([noteId, createdAt])
+  @@index([userId, createdAt])
+}
+
+model NoteAttachment {
+  id          String   @id @default(cuid())
+  noteId      String
+  userId      String
+  filename    String
+  mimeType    String
+  size        Int
+  storagePath String
+  createdAt   DateTime @default(now())
+
+  note Note @relation(fields: [noteId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([noteId, createdAt])
   @@index([userId, createdAt])

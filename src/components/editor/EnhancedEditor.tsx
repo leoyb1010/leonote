@@ -1,7 +1,20 @@
 "use client";
 
 import { AnimatePresence, motion } from "framer-motion";
-import { Check, Wand2, Sparkles, Eye, PenLine, Columns2, MoreHorizontal, Focus } from "lucide-react";
+import {
+  Check,
+  Columns2,
+  Eye,
+  FileUp,
+  Focus,
+  Image as ImageIcon,
+  MoreHorizontal,
+  Paperclip,
+  PenLine,
+  Sparkles,
+  Trash2,
+  Wand2,
+} from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
@@ -15,6 +28,7 @@ type NoteShape = {
   content?: string;
   tags?: string[];
   project?: { id: string; name: string } | null;
+  attachments?: AttachmentShape[];
 };
 
 type SaveState = "idle" | "dirty" | "saving" | "saved" | "error";
@@ -22,11 +36,25 @@ type ViewMode = "write" | "preview" | "split";
 type SaveOptions = {
   manual?: boolean;
   closeAfterSave?: boolean;
+  navigateAfterCreate?: boolean;
+  contentOverride?: string;
+  targetNoteId?: string;
 };
 
 type SummaryState = {
   status: "idle" | "loading" | "ready" | "inserting" | "error";
   text: string;
+};
+
+type ProjectOption = { id: string; name: string };
+
+type AttachmentShape = {
+  id: string;
+  noteId: string;
+  filename: string;
+  mimeType: string;
+  size: number;
+  url: string;
 };
 
 const AUTOSAVE_KEY = "leonote.autosave.enabled";
@@ -40,7 +68,12 @@ export function EnhancedEditor({ initialNote }: { initialNote?: NoteShape }) {
   const [title, setTitle] = useState(initialNote?.title ?? "");
   const [content, setContent] = useState(initialNote?.content ?? "");
   const [tagsInput, setTagsInput] = useState((initialNote?.tags ?? []).join(" "));
-  const [projectName, setProjectName] = useState(initialNote?.project?.name ?? "");
+  const [projectId, setProjectId] = useState(initialNote?.project?.id ?? "");
+  const [newProjectName, setNewProjectName] = useState("");
+  const [projects, setProjects] = useState<ProjectOption[]>([]);
+  const [attachments, setAttachments] = useState<AttachmentShape[]>(initialNote?.attachments ?? []);
+  const [uploadMessage, setUploadMessage] = useState("");
+  const [uploading, setUploading] = useState(false);
   const [message, setMessage] = useState("");
   const [saveState, setSaveState] = useState<SaveState>("idle");
   const [hasEdited, setHasEdited] = useState(false);
@@ -59,6 +92,7 @@ export function EnhancedEditor({ initialNote }: { initialNote?: NoteShape }) {
   const savingRef = useRef(false);
   const isComposingRef = useRef(false);
   const toastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const attachmentInputRef = useRef<HTMLInputElement | null>(null);
 
   const stats = useMemo(() => {
     const normalized = content.replace(/\s+/g, "").trim();
@@ -73,17 +107,18 @@ export function EnhancedEditor({ initialNote }: { initialNote?: NoteShape }) {
   };
 
   const buildPayload = useCallback(
-    () => ({
+    (contentOverride?: string) => ({
       title: title || "未命名笔记",
-      content,
-      excerpt: content.slice(0, 120) || "暂无摘要",
+      content: contentOverride ?? content,
+      excerpt: (contentOverride ?? content).slice(0, 120) || "暂无摘要",
       tags: tagsInput
         .split(/[\s,，]+/)
         .map((item) => item.trim())
         .filter(Boolean),
-      projectName: projectName.trim() || undefined,
+      projectId: newProjectName.trim() ? undefined : projectId || null,
+      projectName: newProjectName.trim() || undefined,
     }),
-    [title, content, tagsInput, projectName],
+    [title, content, tagsInput, projectId, newProjectName],
   );
 
   const showToast = useCallback(() => {
@@ -92,15 +127,50 @@ export function EnhancedEditor({ initialNote }: { initialNote?: NoteShape }) {
     toastTimerRef.current = setTimeout(() => setSaveToast(false), 1600);
   }, []);
 
+  useEffect(() => {
+    let active = true;
+    fetch("/api/projects", { cache: "no-store" })
+      .then((res) => res.json())
+      .then((data) => {
+        if (!active) return;
+        setProjects((data.projects || []).map((item: { id: string; name: string }) => ({ id: item.id, name: item.name })));
+      })
+      .catch(() => {
+        if (active) setProjects([]);
+      });
+    return () => { active = false; };
+  }, []);
+
+  useEffect(() => {
+    if (!noteId) return;
+    let active = true;
+    fetch(`/api/notes/${noteId}/attachments`, { cache: "no-store" })
+      .then((res) => res.json())
+      .then((data) => {
+        if (!active) return;
+        setAttachments(data.attachments || []);
+      })
+      .catch(() => {
+        if (active) setAttachments([]);
+      });
+    return () => { active = false; };
+  }, [noteId]);
+
   const saveDraft = useCallback(
-    async ({ manual = false, closeAfterSave = false }: SaveOptions = {}) => {
+    async ({
+      manual = false,
+      closeAfterSave = false,
+      navigateAfterCreate = true,
+      contentOverride,
+      targetNoteId,
+    }: SaveOptions = {}) => {
       cancelAutoSaveTimer();
-      if (savingRef.current) return;
+      if (savingRef.current) return targetNoteId || noteId || null;
       savingRef.current = true;
       setSaveState("saving");
       setMessage("");
-      const payload = buildPayload();
-      const currentId = noteId;
+      const payload = buildPayload(contentOverride);
+      const currentId = targetNoteId ?? noteId;
       try {
         const res = await fetch(
           currentId ? `/api/notes/${currentId}` : "/api/notes",
@@ -117,7 +187,7 @@ export function EnhancedEditor({ initialNote }: { initialNote?: NoteShape }) {
         if (!res.ok) {
           setSaveState("error");
           setMessage(data.message || "这次没有保存成功，请先复制内容");
-          return;
+          return null;
         }
         const id = data.note.id as string;
         if (!currentId) setNoteId(id);
@@ -127,12 +197,14 @@ export function EnhancedEditor({ initialNote }: { initialNote?: NoteShape }) {
         router.refresh();
         if (closeAfterSave) {
           router.push("/notes");
-          return;
+          return id;
         }
-        if (!currentId) router.replace(`/notes/${id}`);
+        if (!currentId && navigateAfterCreate) router.replace(`/notes/${id}`);
+        return id;
       } catch {
         setSaveState("error");
         setMessage("网络异常，这次没有保存成功，请先复制内容。");
+        return null;
       } finally {
         savingRef.current = false;
       }
@@ -147,7 +219,7 @@ export function EnhancedEditor({ initialNote }: { initialNote?: NoteShape }) {
     }
     setHasEdited(true);
     setSaveState("dirty");
-  }, [title, content, tagsInput, projectName]);
+  }, [title, content, tagsInput, projectId, newProjectName]);
 
   useEffect(() => {
     cancelAutoSaveTimer();
@@ -246,6 +318,80 @@ export function EnhancedEditor({ initialNote }: { initialNote?: NoteShape }) {
     const text = `\n\n## AI 整理\n${summary.text}\n`;
     setContent((value) => `${value}${text}`);
     setSummary((state) => ({ ...state, status: "ready" }));
+  };
+
+  const buildAttachmentMarkdown = (attachment: AttachmentShape) => {
+    const label = attachment.filename.replace(/[\]\[]/g, "");
+    if (attachment.mimeType.startsWith("image/")) {
+      return `![${label}](${attachment.url})`;
+    }
+    return `[${label}](${attachment.url})`;
+  };
+
+  const uploadFiles = async (files: File[]) => {
+    const selected = files.filter((file) => file.size > 0);
+    if (selected.length === 0) return;
+
+    setUploading(true);
+    setUploadMessage("正在保存笔记并上传附件…");
+    const savedId = noteId || await saveDraft({ manual: true, navigateAfterCreate: false });
+    if (!savedId) {
+      setUploading(false);
+      setUploadMessage("请先保存笔记，再添加附件。");
+      return;
+    }
+
+    const uploaded: AttachmentShape[] = [];
+    for (const file of selected) {
+      const form = new FormData();
+      form.append("file", file);
+      const res = await fetch(`/api/notes/${savedId}/attachments`, { method: "POST", body: form });
+      const data = await res.json().catch(() => ({ message: "" }));
+      if (!res.ok) {
+        setUploadMessage(data.message || `上传失败：${file.name}`);
+        setUploading(false);
+        return;
+      }
+      uploaded.push(data.attachment);
+    }
+
+    setAttachments((current) => [...current, ...uploaded]);
+    const snippet = uploaded.map(buildAttachmentMarkdown).join("\n\n");
+    const nextContent = content ? `${content}\n\n${snippet}` : snippet;
+    setContent(nextContent);
+    await saveDraft({ targetNoteId: savedId, contentOverride: nextContent, navigateAfterCreate: false });
+    setUploadMessage(`已添加 ${uploaded.length} 个附件。`);
+    setUploading(false);
+  };
+
+  const handlePaste = (event: React.ClipboardEvent<HTMLTextAreaElement>) => {
+    const files = Array.from(event.clipboardData.files || []);
+    if (files.length === 0) return;
+    event.preventDefault();
+    void uploadFiles(files);
+  };
+
+  const handleDrop = (event: React.DragEvent<HTMLTextAreaElement>) => {
+    const files = Array.from(event.dataTransfer.files || []);
+    if (files.length === 0) return;
+    event.preventDefault();
+    void uploadFiles(files);
+  };
+
+  const removeAttachment = async (attachment: AttachmentShape) => {
+    const res = await fetch(`/api/notes/${attachment.noteId}/attachments/${attachment.id}`, { method: "DELETE" });
+    if (!res.ok) {
+      setUploadMessage("删除附件失败。");
+      return;
+    }
+    setAttachments((current) => current.filter((item) => item.id !== attachment.id));
+    setUploadMessage("附件已删除，正文中的引用可按需手动移除。");
+  };
+
+  const formatFileSize = (size: number) => {
+    if (size < 1024) return `${size} B`;
+    if (size < 1024 * 1024) return `${(size / 1024).toFixed(1)} KB`;
+    return `${(size / 1024 / 1024).toFixed(1)} MB`;
   };
 
   return (
@@ -427,15 +573,34 @@ export function EnhancedEditor({ initialNote }: { initialNote?: NoteShape }) {
 
           {/* Metadata */}
           <div className="mt-4 grid gap-3 md:grid-cols-2">
-            <input
-              aria-label="所属项目"
-              value={projectName}
-              onCompositionStart={handleCompositionStart}
-              onCompositionEnd={handleCompositionEnd}
-              onChange={(event) => setProjectName(event.target.value)}
-              placeholder="所属项目"
-              className="h-9 w-full rounded-md bg-[var(--material-inset)] px-3 text-sm text-[var(--text-secondary)] outline-none ring-1 ring-[var(--hairline)] focus:ring-2 focus:ring-[var(--border-focus)] placeholder:text-[var(--text-placeholder)] transition-[box-shadow]"
-            />
+            <div className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
+              <select
+                aria-label="选择已有项目"
+                value={newProjectName.trim() ? "" : projectId}
+                onChange={(event) => {
+                  setProjectId(event.target.value);
+                  if (event.target.value) setNewProjectName("");
+                }}
+                className="h-9 w-full rounded-md bg-[var(--material-inset)] px-3 text-sm text-[var(--text-secondary)] outline-none ring-1 ring-[var(--hairline)] focus:ring-2 focus:ring-[var(--border-focus)] transition-[box-shadow]"
+              >
+                <option value="">无项目</option>
+                {projects.map((project) => (
+                  <option key={project.id} value={project.id}>{project.name}</option>
+                ))}
+              </select>
+              <input
+                aria-label="新项目名称"
+                value={newProjectName}
+                onCompositionStart={handleCompositionStart}
+                onCompositionEnd={handleCompositionEnd}
+                onChange={(event) => {
+                  setNewProjectName(event.target.value);
+                  if (event.target.value.trim()) setProjectId("");
+                }}
+                placeholder="新项目名称"
+                className="h-9 w-full rounded-md bg-[var(--material-inset)] px-3 text-sm text-[var(--text-secondary)] outline-none ring-1 ring-[var(--hairline)] focus:ring-2 focus:ring-[var(--border-focus)] placeholder:text-[var(--text-placeholder)] transition-[box-shadow]"
+              />
+            </div>
             <input
               aria-label="笔记标签"
               value={tagsInput}
@@ -454,9 +619,61 @@ export function EnhancedEditor({ initialNote }: { initialNote?: NoteShape }) {
             onCompositionStart={handleCompositionStart}
             onCompositionEnd={handleCompositionEnd}
             onChange={(event) => setContent(event.target.value)}
+            onPaste={handlePaste}
+            onDrop={handleDrop}
+            onDragOver={(event) => event.preventDefault()}
             placeholder="开始写点什么……"
             className="leonote-editor-textarea mt-6 min-h-[60vh] w-full resize-none bg-transparent py-2 outline-none placeholder:text-[var(--text-placeholder)]"
           />
+
+          <div className="mt-3 rounded-lg border border-dashed border-[var(--border-default)] bg-[var(--material-inset)] px-3 py-3 text-xs text-[var(--text-muted)]">
+            <div className="flex flex-wrap items-center gap-2">
+              <Paperclip className="h-3.5 w-3.5" />
+              <span>可直接粘贴图片/文件，或拖到正文区域。</span>
+              <button
+                type="button"
+                onClick={() => attachmentInputRef.current?.click()}
+                disabled={uploading}
+                className="ml-auto inline-flex items-center gap-1.5 rounded-md border border-[var(--hairline)] px-2 py-1 text-[var(--text-secondary)] transition hover:bg-[var(--interactive-hover)] disabled:opacity-50"
+              >
+                <FileUp className="h-3.5 w-3.5" />
+                选择附件
+              </button>
+              <input
+                ref={attachmentInputRef}
+                type="file"
+                multiple
+                className="hidden"
+                onChange={(event) => {
+                  const files = Array.from(event.target.files || []);
+                  event.target.value = "";
+                  void uploadFiles(files);
+                }}
+              />
+            </div>
+            {uploadMessage ? <div className="mt-2 text-[var(--text-secondary)]">{uploadMessage}</div> : null}
+            {attachments.length > 0 ? (
+              <div className="mt-3 grid gap-2">
+                {attachments.map((attachment) => (
+                  <div key={attachment.id} className="flex min-w-0 items-center gap-2 rounded-md border border-[var(--hairline)] bg-[var(--surface-base)] px-2.5 py-2">
+                    {attachment.mimeType.startsWith("image/") ? <ImageIcon className="h-3.5 w-3.5 shrink-0 text-[var(--primary)]" /> : <Paperclip className="h-3.5 w-3.5 shrink-0 text-[var(--text-muted)]" />}
+                    <a href={attachment.url} target="_blank" rel="noreferrer" className="min-w-0 flex-1 truncate text-[var(--text-secondary)] hover:text-[var(--text-primary)]">
+                      {attachment.filename}
+                    </a>
+                    <span className="shrink-0 text-[var(--text-faint)]">{formatFileSize(attachment.size)}</span>
+                    <button
+                      type="button"
+                      onClick={() => void removeAttachment(attachment)}
+                      className="shrink-0 rounded-md p-1 text-[var(--text-muted)] transition hover:bg-[var(--interactive-hover)] hover:text-[var(--danger)]"
+                      aria-label={`删除附件 ${attachment.filename}`}
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            ) : null}
+          </div>
         </div>
 
         {/* Split divider */}

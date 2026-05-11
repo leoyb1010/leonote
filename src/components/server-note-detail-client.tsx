@@ -17,6 +17,15 @@ type ApiNote = {
   pinned: boolean;
   archived: boolean;
   deletedAt: string | null;
+  project?: { id: string; name: string } | null;
+  attachments?: {
+    id: string;
+    noteId: string;
+    filename: string;
+    mimeType: string;
+    size: number;
+    url: string;
+  }[];
 };
 
 export function ServerNoteDetailClient({ id }: { id: string }) {

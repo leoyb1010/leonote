@@ -123,6 +123,7 @@ pm2 startup
 #!/bin/sh
 # backup-leonote.sh
 cp ./data/leonote.db "./backups/leonote-$(date +%Y%m%d-%H%M%S).db"
+tar -czf "./backups/leonote-attachments-$(date +%Y%m%d-%H%M%S).tar.gz" ./data/attachments 2>/dev/null || true
 echo "Backup complete"
 ```
 

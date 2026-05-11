@@ -1,6 +1,7 @@
 import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { searchNoteIds } from "@/lib/search";
+import { toAttachmentDTO } from "@/lib/attachments";
 
 type DbClient = typeof prisma | Prisma.TransactionClient;
 
@@ -67,6 +68,14 @@ export function toNoteDTO(note: {
   projectId?: string | null;
   project?: { id: string; name: string; slug: string } | null;
   tags: { tag: { name: string } }[];
+  attachments?: {
+    id: string;
+    noteId: string;
+    filename: string;
+    mimeType: string;
+    size: number;
+    createdAt: Date;
+  }[];
 }) {
   return {
     id: note.id,
@@ -82,6 +91,7 @@ export function toNoteDTO(note: {
     projectId: note.projectId ?? null,
     project: note.project ? { id: note.project.id, name: note.project.name, slug: note.project.slug } : null,
     tags: note.tags.map((item) => item.tag.name),
+    attachments: note.attachments?.map(toAttachmentDTO) ?? [],
   };
 }
 
@@ -132,6 +142,7 @@ export async function requireOwnedNote(id: string, userId: string) {
     include: {
       project: true,
       tags: { include: { tag: true } },
+      attachments: { orderBy: { createdAt: "asc" } },
     },
   });
 }
