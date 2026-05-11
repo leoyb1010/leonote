@@ -30,7 +30,7 @@ describe("briefing thinking insights", () => {
     vi.unstubAllEnvs();
   });
 
-  it("does not label ordinary AI or product news as a US-China agenda", async () => {
+  it("does not collapse ordinary AI or product news into geopolitics", async () => {
     vi.stubEnv("DATABASE_URL", "");
 
     const insights = await getBriefingThinkingInsights("test-user", [
@@ -66,8 +66,70 @@ describe("briefing thinking insights", () => {
       }),
     ], 5);
 
-    expect(insights.every((insight) => insight.title.startsWith("中美议程里的科技变量"))).toBe(false);
-    expect(insights.filter((insight) => insight.title.startsWith("中美议程里的科技变量"))).toHaveLength(0);
+    expect(insights.some((insight) => insight.whyItMatters.includes("地缘与制度"))).toBe(false);
+    expect(insights.some((insight) => insight.whyItMatters.includes("AI 产品入口"))).toBe(true);
+    expect(insights.some((insight) => insight.whyItMatters.includes("AI 资本与成本"))).toBe(true);
+  });
+
+  it("returns at least six high-impact AI technology thoughts when enough items exist", async () => {
+    vi.stubEnv("DATABASE_URL", "");
+
+    const insights = await getBriefingThinkingInsights("test-user", [
+      newsItem({
+        id: "openai-agent",
+        title: "OpenAI 发布新的智能体平台，开放浏览器自动化能力",
+        sourceName: "OpenAI Blog",
+        aiSummary: "OpenAI 把智能体能力推向更完整的任务执行入口。",
+        aiTags: ["AI", "智能体", "平台"],
+      }),
+      newsItem({
+        id: "gemini-reasoning",
+        title: "Google DeepMind 升级 Gemini 推理模型，多模态任务表现提升",
+        sourceName: "Google DeepMind",
+        aiSummary: "Gemini 的推理和多模态能力增强，可能影响开发者和企业应用选型。",
+        aiTags: ["Gemini", "模型"],
+      }),
+      newsItem({
+        id: "nvidia-blackwell",
+        title: "英伟达 Blackwell 服务器订单继续增加，AI 数据中心扩张提速",
+        sourceName: "CNBC",
+        aiSummary: "AI 算力需求继续外溢到芯片、服务器和云基础设施。",
+        aiTags: ["算力", "芯片"],
+      }),
+      newsItem({
+        id: "ai-funding-round",
+        title: "头部 AI 应用完成新一轮融资，估值与算力成本同时上升",
+        sourceName: "TechCrunch",
+        aiSummary: "AI 应用商业化压力继续增加，资本开始重新评估增长质量。",
+        aiTags: ["AI融资", "成本"],
+      }),
+      newsItem({
+        id: "ai-security-rule",
+        title: "企业 AI 数据泄露事件推动新的安全合规要求",
+        sourceName: "BleepingComputer",
+        aiSummary: "企业部署 AI 时的数据边界和合规风险开始成为采购前提。",
+        aiTags: ["AI安全", "合规"],
+      }),
+      newsItem({
+        id: "github-ai-code",
+        title: "GitHub 推出新的 AI 代码审查 API，开发者工作流继续变化",
+        sourceName: "GitHub Blog",
+        aiSummary: "AI 代码工具从补全进入审查和协作流程。",
+        aiTags: ["开发者", "AI工程"],
+      }),
+      newsItem({
+        id: "ai-search-shopping",
+        title: "淘宝接入千问 AI 助手，购物搜索入口开始重构",
+        sourceName: "36氪",
+        aiSummary: "电商入口接入 AI 助手，可能改变用户搜索和决策路径。",
+        aiTags: ["AI产品", "电商"],
+      }),
+    ]);
+
+    expect(insights).toHaveLength(6);
+    expect(insights.every((insight) => /^OpenAI|^Google|^英伟达|^头部|^企业|^GitHub|^淘宝/.test(insight.title))).toBe(true);
+    expect(insights.some((insight) => insight.whyItMatters.includes("前沿 AI 平台"))).toBe(true);
+    expect(insights.some((insight) => insight.whyItMatters.includes("AI 算力与芯片"))).toBe(true);
   });
 
   it("keeps the Trump China chip case as a specific strategic signal", async () => {
@@ -86,7 +148,8 @@ describe("briefing thinking insights", () => {
       }),
     ], 3);
 
-    expect(insights[0]?.title).toContain("特朗普访华与AI芯片");
+    expect(insights[0]?.title).toContain("特朗普访华");
     expect(insights[0]?.impactLabel).toBe("战略信号");
+    expect(insights[0]?.whyItMatters).toContain("AI 芯片政策边界");
   });
 });

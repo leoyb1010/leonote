@@ -66,7 +66,7 @@ const CAUTION_RE = /\b(avoid|caution|careful|stress|problem|loss|conflict|delay|
 const FALLBACK_SUMMARY: Record<HoroscopeDTO["signKey"], string> = {
   libra: "今天适合保持平衡感，先把信息看全，再做取舍。遇到分歧时，少急着定论，多留一点转圜空间。",
   pisces: "今天更适合顺着感受走，但重要沟通要落到具体行动上。把情绪照顾好，事情会更容易推进。",
-  gemini: "今天好奇心会带来新线索，适合学习、表达和探索。注意不要同时打开太多任务，保留一点专注。",
+  gemini: "今天好奇心会带来新想法，适合学习、表达和探索。注意不要同时打开太多任务，保留一点专注。",
 };
 
 function dateSeed(profile: HoroscopeProfile) {

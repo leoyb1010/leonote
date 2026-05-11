@@ -34,6 +34,7 @@ interface Props {
 
 type DetailAnchor = { x: number; y: number; top: number; left: number; width: number; height: number };
 type SelectedInsight = { insight: BriefingThinkingInsight; anchor: DetailAnchor };
+const THINKING_LABELS = ["One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight"];
 
 function ThinkingInsightBubble({
   selected,
@@ -75,7 +76,7 @@ function ThinkingInsightBubble({
       <button
         type="button"
         className="absolute inset-0 bg-[var(--overlay-scrim)] backdrop-blur-sm sm:bg-transparent sm:backdrop-blur-0"
-        aria-label="关闭思考线索详情"
+        aria-label="关闭思考详情"
         onClick={onClose}
       />
       <motion.article
@@ -144,7 +145,7 @@ function ThinkingInsightBubble({
           </div>
           {insight.habitSignals.length > 0 ? (
             <p className="mt-3 text-xs leading-6 text-[var(--text-muted)]">
-              结合你的思考线索：{insight.habitSignals.join(" / ")}
+              结合你的思考习惯：{insight.habitSignals.join(" / ")}
             </p>
           ) : null}
         </div>
@@ -174,7 +175,7 @@ function ThinkingInsightStrip({
 
       {insights.length > 0 ? (
         <div className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1 md:grid md:grid-cols-3 md:overflow-visible md:pb-0">
-          {insights.slice(0, 5).map((insight, index) => (
+          {insights.slice(0, 6).map((insight, index) => (
             <button
               key={insight.id}
               type="button"
@@ -194,7 +195,7 @@ function ThinkingInsightStrip({
               <div className="flex items-center justify-between gap-2 text-[11px] text-[var(--text-muted)]">
                 <span className="inline-flex items-center gap-1">
                   <Sparkles size={11} className="text-[var(--primary)]" />
-                  线索 {index + 1}
+                  思考 {THINKING_LABELS[index] ?? index + 1}
                 </span>
                 <span>{insight.impactLabel}</span>
               </div>
@@ -214,7 +215,7 @@ function ThinkingInsightStrip({
           disabled
           className="w-full rounded-[var(--radius-lg)] border border-[var(--hairline)] bg-[var(--material-elevated)] px-3 py-4 text-left text-sm leading-6 text-[var(--text-muted)]"
         >
-          资讯正在收集中。等有足够高价值事件后，我会整理成 3-5 条可推演线索。
+          资讯正在收集中。等有足够高价值事件后，我会整理成至少 6 条可推演思考。
         </button>
       )}
     </section>

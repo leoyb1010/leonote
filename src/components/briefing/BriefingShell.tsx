@@ -77,7 +77,7 @@ function buildMarkdown(title: string, digest: BriefingDigestSummary | null, item
   const lines = [
     `# ${title}`,
     "",
-    "## AI 思考线索",
+    "## AI 协助思考",
     ...(thinkingInsights.length ? thinkingInsights : []).map((item) => `- ${item.title}：${item.question}`),
     ...(thinkingInsights.length ? [] : (digest?.headlines?.length ? digest.headlines : items.slice(0, 3).map((item) => item.title)).map((line) => `- ${line}`)),
     "",
