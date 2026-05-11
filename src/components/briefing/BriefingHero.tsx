@@ -32,7 +32,7 @@ interface Props {
   onTitleChange: (title: string) => void;
 }
 
-type DetailAnchor = { top: number; left: number; width: number; height: number };
+type DetailAnchor = { x: number; y: number; top: number; left: number; width: number; height: number };
 type SelectedInsight = { insight: BriefingThinkingInsight; anchor: DetailAnchor };
 
 function ThinkingInsightBubble({
@@ -45,22 +45,23 @@ function ThinkingInsightBubble({
   if (!selected) return null;
   const { insight, anchor } = selected;
   const width = 430;
+  const estimatedHeight = 520;
   const margin = 14;
   const viewportWidth = typeof window === "undefined" ? 0 : window.innerWidth;
   const viewportHeight = typeof window === "undefined" ? 0 : window.innerHeight;
   const desktopStyle = viewportWidth >= 640
     ? {
         width,
-        left: Math.max(
+        left: Math.max(margin, Math.min(anchor.x - width / 2, viewportWidth - width - margin)),
+        top: Math.max(
           margin,
           Math.min(
-            anchor.left + width + margin <= viewportWidth
-              ? anchor.left + anchor.width + margin
-              : anchor.left - width - margin,
-            viewportWidth - width - margin,
+            anchor.y + estimatedHeight + margin <= viewportHeight
+              ? anchor.y + margin
+              : anchor.y - estimatedHeight - margin,
+            viewportHeight - estimatedHeight - margin,
           ),
         ),
-        top: Math.max(margin, Math.min(anchor.top - 8, viewportHeight - 520)),
       }
     : undefined;
 
@@ -78,7 +79,7 @@ function ThinkingInsightBubble({
         onClick={onClose}
       />
       <motion.article
-        className="card-premium fixed inset-x-3 bottom-[calc(0.75rem+env(safe-area-inset-bottom))] max-h-[78dvh] overflow-hidden rounded-[var(--radius-2xl)] sm:inset-x-auto sm:bottom-auto"
+        className="floating-card-premium inset-x-3 bottom-[calc(0.75rem+env(safe-area-inset-bottom))] max-h-[78dvh] rounded-[var(--radius-2xl)] sm:inset-x-auto sm:bottom-auto"
         style={desktopStyle}
         initial={{ opacity: 0, y: 18, x: 0, scale: 0.98 }}
         animate={{ opacity: 1, y: 0, x: 0, scale: 1 }}
@@ -179,7 +180,14 @@ function ThinkingInsightStrip({
               type="button"
               onClick={(event) => {
                 const rect = event.currentTarget.getBoundingClientRect();
-                onSelect(insight, { top: rect.top, left: rect.left, width: rect.width, height: rect.height });
+                onSelect(insight, {
+                  x: event.clientX || rect.left + rect.width / 2,
+                  y: event.clientY || rect.top + rect.height / 2,
+                  top: rect.top,
+                  left: rect.left,
+                  width: rect.width,
+                  height: rect.height,
+                });
               }}
               className="group min-w-[230px] rounded-[var(--radius-lg)] border border-[var(--hairline)] bg-[var(--material-elevated)] p-3 text-left transition hover:-translate-y-0.5 hover:bg-[var(--material-muted)] md:min-w-0"
             >

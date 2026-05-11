@@ -162,7 +162,7 @@ export function NewsDetailModal({ item, anchorRect, onClose, onPatchItem }: Prop
 
         <motion.div
           ref={panelRef}
-          className="card-premium fixed bottom-0 left-0 right-0 z-10 flex max-h-[calc(100dvh-8px)] w-full flex-col overflow-hidden overscroll-contain rounded-b-none sm:bottom-auto sm:right-auto sm:max-h-[calc(100dvh-36px)] sm:rounded-[var(--radius-xl)]"
+          className="floating-card-premium bottom-0 left-0 right-0 z-10 flex max-h-[calc(100dvh-8px)] w-full flex-col overscroll-contain rounded-b-none sm:bottom-auto sm:right-auto sm:max-h-[calc(100dvh-36px)] sm:rounded-[var(--radius-xl)]"
           style={{ position: "fixed", ...panelPosition }}
           initial={{ opacity: 0, scale: 0.985, y: 16 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}

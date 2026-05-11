@@ -114,7 +114,7 @@ export function GlobalAIAssistant() {
       <AnimatePresence>
         {open ? (
           <motion.div
-            className="pointer-events-none fixed inset-0 z-[80]"
+            className="pointer-events-none fixed inset-0 z-[80] flex justify-end p-0 md:items-center md:p-5"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -130,7 +130,7 @@ export function GlobalAIAssistant() {
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: 34 }}
               transition={{ duration: 0.22, ease: [0.2, 0, 0, 1] }}
-              className="card-premium pointer-events-auto fixed bottom-0 left-auto right-0 top-0 flex h-[100dvh] w-[min(100vw,430px)] max-w-full flex-col overflow-hidden rounded-none border-l border-[var(--hairline)] md:bottom-4 md:right-4 md:top-4 md:h-[calc(100dvh-2rem)] md:w-[410px] md:rounded-[var(--radius-2xl)]"
+              className="floating-card-premium pointer-events-auto bottom-0 right-0 top-0 flex h-[100dvh] w-[min(100vw,430px)] max-w-full flex-col rounded-none border-l border-[var(--hairline)] md:bottom-5 md:right-5 md:top-5 md:h-[min(760px,calc(100dvh-2.5rem))] md:w-[390px] md:rounded-[var(--radius-2xl)] lg:w-[410px]"
             >
               <header className="flex shrink-0 items-center justify-between gap-3 border-b border-[var(--hairline)] bg-[var(--material-elevated)] px-4 py-3 pt-[calc(0.75rem+env(safe-area-inset-top))] md:pt-3">
                 <div className="min-w-0">

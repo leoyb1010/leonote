@@ -187,6 +187,33 @@ select {
   pointer-events: none;
 }
 
+.floating-card-premium {
+  position: fixed;
+  overflow: hidden;
+  border-radius: var(--radius-xl);
+  background: var(--material-elevated);
+  border: 1px solid var(--hairline);
+}
+
+.floating-card-premium::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.10),
+    rgba(255, 255, 255, 0.02) 42%,
+    rgba(255, 255, 255, 0)
+  );
+  mask:
+    linear-gradient(#000, #000) content-box,
+    linear-gradient(#000, #000);
+  mask-composite: exclude;
+  pointer-events: none;
+}
+
 /* ===== Reduced Motion ===== */
 @media (prefers-reduced-motion: reduce) {
   *,

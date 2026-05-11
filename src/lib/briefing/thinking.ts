@@ -28,7 +28,7 @@ const THEMES: ThinkingTheme[] = [
   {
     id: "chip-policy",
     label: "芯片与供应链",
-    match: /芯片|半导体|英伟达|NVIDIA|GPU|算力|出口管制|制裁|关税|黄仁勋|特朗普|访华|供应链/i,
+    match: /芯片|半导体|英伟达|NVIDIA|GPU|算力|出口管制|制裁|关税|黄仁勋|供应链/i,
     impact: "高影响",
     thesis: "这类事件往往不只是公司新闻，而是在测试政策边界、供应链重新定价和技术路线切换。",
     question: "如果政策口径松动或收紧，哪些产业链环节会先反应，哪些判断需要提前修正？",
@@ -88,7 +88,7 @@ const THEMES: ThinkingTheme[] = [
   {
     id: "geopolitics",
     label: "地缘与制度",
-    match: /中国|美国|欧盟|俄罗斯|乌克兰|中东|联合国|总统|政府|外交|贸易|战争|冲突|选举|法案|监管|协议/i,
+    match: /中美|美中|欧盟|俄罗斯|乌克兰|中东|联合国|总统|政府|外交|贸易|战争|冲突|选举|法案|监管|协议|关税|制裁/i,
     impact: "制度变量",
     thesis: "地缘新闻值得看的是制度约束是否变化，以及它会不会传导到技术、资本和供应链。",
     question: "这件事会改变谁的约束条件？它会不会影响后续产业政策或市场预期？",
@@ -100,13 +100,17 @@ const THEMES: ThinkingTheme[] = [
 const HIGH_VALUE_SOURCE_RE =
   /联合国|ABC|BBC|CNBC|MarketWatch|Seeking Alpha|MIT|OpenAI|DeepMind|Google|TechCrunch|VentureBeat|InfoQ|极客公园|36氪|IT之家|Hacker News|GitHub|Cloudflare|Pragmatic|Stratechery/i;
 
+const DIPLOMACY_RE = /特朗普|Trump|习近平|Xi|总统|白宫|国务院|商务部|贸易代表|访华|会晤|峰会|谈判|外交|双边|议程/i;
+const BILATERAL_RE = /中美|美中|中方|美方|访华|北京会谈|中国.*美国|美国.*中国|China.*U\.?S\.?|U\.?S\.?.*China|US-China|U\.S\.-China/i;
+const POLICY_RE = /出口管制|制裁|关税|贸易|协议|许可|监管|法案|台湾|伊朗|核武|芯片|AI|人工智能|export control|sanction|tariff|license/i;
+
 const STRATEGIC_SIGNALS: StrategicSignal[] = [
   {
     id: "trump-china-chip",
     label: "特朗普访华与AI芯片",
     themeId: "chip-policy",
-    match: (text) => /特朗普|Trump|总统/.test(text)
-      && /访华|中国|China|北京|习近平|Xi/.test(text)
+    match: (text) => /特朗普|Trump/i.test(text)
+      && /访华|会晤|中国|China|北京|习近平|Xi/i.test(text)
       && /黄仁勋|Jensen|NVIDIA|英伟达|H200|Blackwell|Rubin|GPU|芯片|AI|人工智能|出口|许可|制裁|管制|license|export|curb/i.test(text),
     impact: "战略信号",
     thesis: "这不是单纯的外交新闻，而是外交议程、AI算力出口、企业游说和中美技术边界同时出现的复合信号。",
@@ -118,8 +122,7 @@ const STRATEGIC_SIGNALS: StrategicSignal[] = [
     id: "us-china-tech-agenda",
     label: "中美议程里的科技变量",
     themeId: "geopolitics",
-    match: (text) => /特朗普|Trump|习近平|Xi|中国|美国|访华|北京/.test(text)
-      && /贸易|关税|台湾|伊朗|AI|人工智能|核武|芯片|制裁|监管|协议/i.test(text),
+    match: (text) => DIPLOMACY_RE.test(text) && BILATERAL_RE.test(text) && POLICY_RE.test(text),
     impact: "制度变量",
     thesis: "高层会晤最重要的不是会面本身，而是哪些议题被放进谈判框架，哪些约束条件开始重新定价。",
     question: "这次议程会改变贸易、科技或地缘安全中的哪一个约束？市场和企业会先交易哪个预期？",
