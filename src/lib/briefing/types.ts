@@ -78,3 +78,17 @@ export interface WeatherDTO {
   humidity: number;
   windSpeed: number;
 }
+
+export interface HoroscopeDTO {
+  id: "leo" | "ellen" | "bubu";
+  name: string;
+  relation: string;
+  signName: string;
+  signKey: "libra" | "pisces" | "gemini";
+  stars: number;
+  summary: string;
+  sourceName: string;
+  sourceUrl: string;
+  updatedAt: string;
+  isFallback: boolean;
+}

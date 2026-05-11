@@ -113,10 +113,11 @@ RSSHUB_BASE_URL="https://rsshub.app"
 - 设置页「记账类型」入口
 - 完全软删除 + 删除类型后历史账单保留
 
-### 每日简报 (v1.6.5)
+### 每日简报 (v1.6.6)
 - 多源抓取：RSS / Tavily / CoinGecko / 新浪行情，支持 Cron 定时抓取、行情刷新与日报生成
 - AI 协助思考：每日简报 Hero 从表层三条标题升级为 3-5 条“深度影响/分析价值”线索，结合当天大事件、来源质量、长期记忆、近期笔记与标签，帮助判断政策、AI 平台、市场、安全、开发者生态和社会情绪的潜在传导
 - AI 思考区体验修正：默认只展示紧凑缩略线索，点击后再拉起轻量详情气泡，避免 Hero 区占据过多首屏空间；详情气泡保留影响判断、追问问题、来源依据和标签
+- AI 思考信号加强：新增“特朗普访华与 AI 芯片”“中美议程里的科技变量”“AI 芯片出口许可”等战略信号识别，组合判断高层会晤、黄仁勋/英伟达、H200/Blackwell、出口许可、芯片管制等复合事件，不再被单纯主题去重压掉
 - 资讯源扩容与可靠性治理：新增 IT之家、少数派、V2EX、LinuxDo、微博热搜、知乎热榜、B站排行榜、掘金热榜、GitHub Trending、The Verge、Ars Technica、WIRED、MIT Technology Review、TechCrunch、Engadget、IEEE Spectrum、OpenAI Blog、DeepMind、Google Research、Hugging Face、arXiv、Simon Willison、Ben's Bites、TLDR AI、Import AI、MarkTechPost、Hacker News、ByteByteGo、The Pragmatic Engineer、GitHub Blog、Cloudflare、Product Hunt、Stratechery、Benedict Evans、a16z、VentureBeat、BleepingComputer、KrebsOnSecurity、The Register、404 Media 等真实 RSS 源；RSSHub 域名可通过 `RSSHUB_BASE_URL` 替换
 - 首页自动补抓：简报页与刷新 API 会在内容不足、抓取过期或当日 digest 缺失时自动执行 RSS 抓取 + digest 标准化，避免 Cron 未跑或源刚恢复时出现“全部资讯空白”
 - 高频刷新：白天 RSS 抓取升级到 10 分钟粒度，默认首屏新鲜度阈值收紧到 10 分钟，最低内容量提升到 24 条
@@ -134,8 +135,8 @@ RSSHUB_BASE_URL="https://rsshub.app"
 - 严格过滤内部/技术/低价值字段：前端 DTO 不再暴露原始 `content`，避免 RSS/Tavily 原文、JSON、URL、GUID、来源调试信息进入详情
 - 一键导入 news → note / 今日简报 → note，导入内容使用同一套清洗后的展示字段
 - 全局 AI 助手：保留独立 AI 页，同时新增全局右侧/移动端底部呼出入口，自动带入当前页面路径、标题、选中文本和页面摘要，让 AI 问答与正在阅读/写作的上下文绑定
-- 全局 AI 助手交互修正：统一从右侧抽屉呼出，桌面不铺满遮罩，移动端使用完整右侧面板，顶部关闭按钮固定可见，降低遮挡和无法关闭风险
-- 今日星座运势：天气信息后增加家庭星座摘要，并为天秤座、双鱼座、双子座生成每日稳定小卡片
+- 全局 AI 助手交互修正：统一通过 body portal 从右侧抽屉呼出，避免被 AppShell 布局/transform 影响导致左侧错位；桌面不铺满遮罩，移动端使用右侧 `100dvh` 面板，顶部关闭按钮固定可见，降低遮挡和无法关闭风险
+- 今日星座运势：天气信息后增加 AstroSage RSS 每日星座运势，固定展示 Leo=我/天秤座、Ellen=老婆/双鱼座、BuBu=女儿/双子座，并以五颗星展示每日星级；RSS 失败时使用本地稳定兜底
 - 笔记正文内联附件：图片、文档通过粘贴/拖拽/选择上传后会插入当前光标位置，图片直接作为 Markdown 图片显示在正文里，附件列表继续保留管理能力
 
 ### 写作体验 (v1.4)
@@ -258,6 +259,7 @@ npm run ci           # 全链路：lint → typecheck → test → build
 
 | 版本 | 日期 | 更新内容 |
 |---|---|---|
+| **v1.6.6** | 2026-05-11 | 每日星座运势接入 AstroSage 三个独立 RSS 源：Leo=我/天秤座、Ellen=老婆/双鱼座、BuBu=女儿/双子座，天气后展示每日五颗星星级和简短运势，RSS 失败时稳定兜底；AI 协助思考详情改为按点击位置锚定弹出，桌面靠近鼠标/卡片位置，移动端继续使用底部安全面板；全局 AI 助手改用 body portal 渲染并强制右侧锚定，规避父级布局导致左侧错位/遮挡；AI 思考底层加入战略信号识别，重点覆盖特朗普访华、黄仁勋/英伟达、AI 芯片、出口许可、芯片管制等复合事件，避免高价值中美科技议题被主题去重压掉 |
 | **v1.6.5** | 2026-05-11 | 修正每日简报首屏节奏：AI 协助思考区从大面积分析卡片改为紧凑缩略线索，点击后以轻量气泡/移动端底部面板查看详情，降低首屏占比并改善移动端阅读；重新调整 Hero 信息架构，天气后增加今日星座运势，固定展示“我/天秤座、老婆/双鱼座、女儿/双子座”的每日摘要和小卡；全局 AI 悬浮窗改为始终从右侧抽屉呼出，桌面不再铺满遮罩，移动端使用 `100dvh` 右侧面板、safe-area padding、顶部固定关闭按钮和 Escape 关闭，降低遮挡、错位和无法关闭风险 |
 | **v1.6.4** | 2026-05-11 | 每日简报继续升级为“高级个人日报”：Hero 区移除表层三条资讯，新增 AI 协助思考区，按深度影响、分析价值、来源质量、时效性与个人长期记忆/近期笔记信号筛出 3-5 条分析线索，并输出影响标签、置信度、为什么重要、反问式思考问题和原始来源依据；RSS 源大扩容，加入国内科技/社区/热榜、国际科技、AI/机器学习、开发者/架构、商业战略、安全与企业 IT 等真实信息源，RSSHub 域名支持 `RSSHUB_BASE_URL` 配置；简报抓取频率提升为白天 10 分钟粒度，首页新鲜度阈值默认 10 分钟、最低内容量默认 24 条，减少“新事情看不到”的滞后；移动端资讯详情长弹窗增加安全关闭入口、底部关闭按钮、`100dvh` 与 safe-area 适配，降低无法关闭风险；笔记编辑器上传体验升级，粘贴/拖拽/选择图片或文档会插入当前正文光标位置，图片可直接内联阅读；新增全局 AI 助手浮层，桌面右侧、移动端底部呼出，并自动带入当前页面上下文；笔记更新接口返回最新标签和附件，列表 DTO 同步带附件，保持数据一致性；README 与环境变量更新到新频率和 RSSHub 配置 |
 | **v1.6.3** | 2026-05-10 | 每日简报资讯链路可靠性修复：修复首页/简报页"全部资讯空白"的根因，列表查询从单纯 `publishedAt >= today` 扩展为 `publishedAt/fetchedAt` 双窗口，并在今日内容不足时回退到近 7 天高质量内容；新增 `ensureBriefingFreshness`，页面首屏与 `/api/briefing/digest` 会在内容不足、抓取过期、digest 缺失或用户手动刷新时自动执行 RSS 抓取 + digest 标准化；`fetch-news` Cron 完成抓取后立即生成 digest，避免抓到数据但前端仍无评分/摘要；RSS 源扩容到更稳定的真实信息源，新增联合国中文/全球、CBS、ABC、CNBC、MarketWatch、Seeking Alpha、IT之家、爱范儿、钛媒体、量子位、Solidot、VentureBeat、MIT Technology Review、Google AI Blog，并默认停用不稳定 Nitter/X RSS；RSS 入库保存正文摘录 `content`，修复部分源 `author` 为对象导致整源中断的问题；翻译 pipeline 默认开启（可用 `BRIEFING_TRANSLATE_ENGLISH=false` 关闭），配置 AI Key 后英文标题/摘要/正文摘录自动改写为简体中文；无 AI Key 时仍优先展示中文源并生成摘要兜底，确保 `aiSummary/detailText/keyPoints` 不为空；详情弹窗智能摘要恢复并升级为"摘要 + 要点 + 正文摘录"的阅读卡片，正文摘录提升到 1600 字符并过滤 RSS/URL/广告/关注公众号等噪音；导入 news→note 同步使用新摘要、要点与正文摘录；**快捷键交换**：快速记录/AI聊天/记账输入框统一改为 Enter 换行、Shift+Enter 保存/发送，避免快速输入误触；**standalone 部署加固**：`prepare-standalone.cjs` 新增 symlink 校验（创建后验证 resolve + 目录非空，失败 exit(1) 阻断部署），修复静态资源 404 白屏；翻译超时从 8s 提升至 30s；继续保持 Quiet Material 与多分辨率布局兼容 |

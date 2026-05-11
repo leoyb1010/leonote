@@ -1,11 +1,11 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { useMemo, useState, type ReactNode } from "react";
-import { BrainCircuit, CalendarDays, Check, ChevronRight, CloudSun, Copy, FilePlus2, Gauge, Loader2, MoonStar, Newspaper, RefreshCw, Sparkles, Tags, X } from "lucide-react";
+import { useState, type ReactNode } from "react";
+import { BrainCircuit, CalendarDays, Check, ChevronRight, CloudSun, Copy, FilePlus2, Gauge, Loader2, MoonStar, Newspaper, RefreshCw, Sparkles, Star, Tags, X } from "lucide-react";
 import { Button } from "@/components/base/Button";
 import { cardFloatIn, heroTitleReveal } from "@/lib/animations";
-import type { BriefingDigestSummary, BriefingRange, BriefingThinkingInsight, WeatherDTO } from "@/lib/briefing/types";
+import type { BriefingDigestSummary, BriefingRange, BriefingThinkingInsight, HoroscopeDTO, WeatherDTO } from "@/lib/briefing/types";
 
 export interface BriefingHeroStats {
   total: number;
@@ -19,6 +19,7 @@ interface Props {
   stats: BriefingHeroStats;
   thinkingInsights: BriefingThinkingInsight[];
   weather: WeatherDTO | null;
+  horoscopes: HoroscopeDTO[];
   dateLabel: string;
   range: BriefingRange;
   title: string;
@@ -31,52 +32,37 @@ interface Props {
   onTitleChange: (title: string) => void;
 }
 
-type HoroscopeProfile = {
-  role: string;
-  sign: string;
-  tone: string;
-};
-
-const HOROSCOPE_PROFILES: HoroscopeProfile[] = [
-  { role: "我", sign: "天秤座", tone: "判断更准，适合做取舍" },
-  { role: "老婆", sign: "双鱼座", tone: "感受力在线，适合慢沟通" },
-  { role: "女儿", sign: "双子座", tone: "好奇心旺，适合新鲜输入" },
-];
-
-const HOROSCOPE_WORDS = [
-  "稳",
-  "清",
-  "顺",
-  "亮",
-  "缓",
-  "准",
-  "新",
-];
-
-function dailyIndex(seed: string, offset: number, mod: number) {
-  let total = offset * 17;
-  for (let index = 0; index < seed.length; index += 1) {
-    total += seed.charCodeAt(index) * (index + 3);
-  }
-  return Math.abs(total) % mod;
-}
-
-function buildHoroscopes(seed: string) {
-  return HOROSCOPE_PROFILES.map((profile, index) => ({
-    ...profile,
-    word: HOROSCOPE_WORDS[dailyIndex(seed, index, HOROSCOPE_WORDS.length)],
-    score: 76 + dailyIndex(seed, index + 5, 18),
-  }));
-}
+type DetailAnchor = { top: number; left: number; width: number; height: number };
+type SelectedInsight = { insight: BriefingThinkingInsight; anchor: DetailAnchor };
 
 function ThinkingInsightBubble({
-  insight,
+  selected,
   onClose,
 }: {
-  insight: BriefingThinkingInsight | null;
+  selected: SelectedInsight | null;
   onClose: () => void;
 }) {
-  if (!insight) return null;
+  if (!selected) return null;
+  const { insight, anchor } = selected;
+  const width = 430;
+  const margin = 14;
+  const viewportWidth = typeof window === "undefined" ? 0 : window.innerWidth;
+  const viewportHeight = typeof window === "undefined" ? 0 : window.innerHeight;
+  const desktopStyle = viewportWidth >= 640
+    ? {
+        width,
+        left: Math.max(
+          margin,
+          Math.min(
+            anchor.left + width + margin <= viewportWidth
+              ? anchor.left + anchor.width + margin
+              : anchor.left - width - margin,
+            viewportWidth - width - margin,
+          ),
+        ),
+        top: Math.max(margin, Math.min(anchor.top - 8, viewportHeight - 520)),
+      }
+    : undefined;
 
   return (
     <motion.div
@@ -92,7 +78,8 @@ function ThinkingInsightBubble({
         onClick={onClose}
       />
       <motion.article
-        className="card-premium fixed inset-x-3 bottom-[calc(0.75rem+env(safe-area-inset-bottom))] max-h-[78dvh] overflow-hidden rounded-[var(--radius-2xl)] sm:inset-x-auto sm:bottom-auto sm:right-5 sm:top-20 sm:w-[430px]"
+        className="card-premium fixed inset-x-3 bottom-[calc(0.75rem+env(safe-area-inset-bottom))] max-h-[78dvh] overflow-hidden rounded-[var(--radius-2xl)] sm:inset-x-auto sm:bottom-auto"
+        style={desktopStyle}
         initial={{ opacity: 0, y: 18, x: 0, scale: 0.98 }}
         animate={{ opacity: 1, y: 0, x: 0, scale: 1 }}
         exit={{ opacity: 0, y: 18, x: 0, scale: 0.98 }}
@@ -170,7 +157,7 @@ function ThinkingInsightStrip({
   onSelect,
 }: {
   insights: BriefingThinkingInsight[];
-  onSelect: (insight: BriefingThinkingInsight) => void;
+  onSelect: (insight: BriefingThinkingInsight, anchor: DetailAnchor) => void;
 }) {
   return (
     <section className="quiet-inset rounded-[var(--radius-xl)] p-3.5">
@@ -190,7 +177,10 @@ function ThinkingInsightStrip({
             <button
               key={insight.id}
               type="button"
-              onClick={() => onSelect(insight)}
+              onClick={(event) => {
+                const rect = event.currentTarget.getBoundingClientRect();
+                onSelect(insight, { top: rect.top, left: rect.left, width: rect.width, height: rect.height });
+              }}
               className="group min-w-[230px] rounded-[var(--radius-lg)] border border-[var(--hairline)] bg-[var(--material-elevated)] p-3 text-left transition hover:-translate-y-0.5 hover:bg-[var(--material-muted)] md:min-w-0"
             >
               <div className="flex items-center justify-between gap-2 text-[11px] text-[var(--text-muted)]">
@@ -223,8 +213,21 @@ function ThinkingInsightStrip({
   );
 }
 
-function HoroscopeStrip({ seed }: { seed: string }) {
-  const horoscopes = useMemo(() => buildHoroscopes(seed), [seed]);
+function StarRating({ value }: { value: number }) {
+  return (
+    <span className="inline-flex items-center gap-0.5" aria-label={`${value} 星`}>
+      {Array.from({ length: 5 }).map((_, index) => (
+        <Star
+          key={index}
+          size={12}
+          className={index < value ? "fill-[var(--warning)] text-[var(--warning)]" : "text-[var(--text-faint)]"}
+        />
+      ))}
+    </span>
+  );
+}
+
+function HoroscopeStrip({ horoscopes }: { horoscopes: HoroscopeDTO[] }) {
   return (
     <div className="quiet-inset rounded-[var(--radius-lg)] px-3.5 py-3">
       <div className="flex items-center gap-2 text-[11px] text-[var(--text-muted)]">
@@ -233,18 +236,23 @@ function HoroscopeStrip({ seed }: { seed: string }) {
       </div>
       <div className="mt-3 grid gap-2">
         {horoscopes.map((item) => (
-          <div key={item.role} className="flex items-center justify-between gap-3 text-xs">
-            <span className="min-w-0 truncate text-[var(--text-secondary)]">
-              {item.role} · {item.sign}
-            </span>
-            <span className="shrink-0 rounded-[var(--radius-pill)] bg-[var(--material-elevated)] px-2 py-0.5 text-[var(--text-muted)]">
-              {item.word} · {item.score}
-            </span>
+          <div key={item.id} className="rounded-[var(--radius-md)] border border-[var(--hairline)] bg-[var(--material-elevated)] px-3 py-2">
+            <div className="flex items-center justify-between gap-3 text-xs">
+              <span className="min-w-0 truncate font-medium text-[var(--text-secondary)]">
+                {item.name} · {item.relation} · {item.signName}
+              </span>
+              <span className="shrink-0">
+                <StarRating value={item.stars} />
+              </span>
+            </div>
+            <p className="mt-1.5 line-clamp-2 text-[11px] leading-5 text-[var(--text-muted)]">
+              {item.summary}
+            </p>
           </div>
         ))}
       </div>
       <p className="mt-2 text-[11px] leading-5 text-[var(--text-muted)]">
-        {horoscopes.map((item) => `${item.role}${item.tone}`).join("；")}
+        来源：{horoscopes.some((item) => !item.isFallback) ? "AstroSage RSS" : "本地兜底"} · 每日五颗星
       </p>
     </div>
   );
@@ -292,6 +300,7 @@ export function BriefingHero({
   stats,
   thinkingInsights,
   weather,
+  horoscopes,
   dateLabel,
   range,
   title,
@@ -304,8 +313,10 @@ export function BriefingHero({
   onTitleChange,
 }: Props) {
   const score = stats.averageScore == null ? null : Math.round(stats.averageScore);
-  const [selectedInsight, setSelectedInsight] = useState<BriefingThinkingInsight | null>(null);
-  const horoscopeBrief = useMemo(() => buildHoroscopes(dateLabel).map((item) => `${item.role}${item.word}`).join(" · "), [dateLabel]);
+  const [selectedInsight, setSelectedInsight] = useState<SelectedInsight | null>(null);
+  const horoscopeBrief = horoscopes.length
+    ? horoscopes.map((item) => `${item.name} ${item.stars}星`).join(" · ")
+    : "等待同步";
 
   return (
     <motion.section
@@ -351,7 +362,10 @@ export function BriefingHero({
           </motion.div>
 
           <div className="mt-5 max-w-4xl">
-            <ThinkingInsightStrip insights={thinkingInsights} onSelect={setSelectedInsight} />
+            <ThinkingInsightStrip
+              insights={thinkingInsights}
+              onSelect={(insight, anchor) => setSelectedInsight({ insight, anchor })}
+            />
           </div>
 
           <div className="mt-5 flex flex-wrap gap-2">
@@ -400,12 +414,12 @@ export function BriefingHero({
             </div>
           </div>
           <div className="col-span-2">
-            <HoroscopeStrip seed={dateLabel} />
+            <HoroscopeStrip horoscopes={horoscopes} />
           </div>
         </div>
       </div>
 
-      <ThinkingInsightBubble insight={selectedInsight} onClose={() => setSelectedInsight(null)} />
+      <ThinkingInsightBubble selected={selectedInsight} onClose={() => setSelectedInsight(null)} />
     </motion.section>
   );
 }

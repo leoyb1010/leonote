@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { getBriefingData, getBriefingMeta } from "@/lib/briefing/query";
 import { getLiveMarketSnapshots } from "@/lib/briefing/live-market";
 import { getWeather } from "@/lib/briefing/weather";
+import { getDailyHoroscopes } from "@/lib/briefing/horoscope";
 import { parseBriefingDigestSummary } from "@/lib/briefing/normalize";
 import { ensureBriefingFreshness } from "@/lib/briefing/ensure";
 import { getBriefingThinkingInsights } from "@/lib/briefing/thinking";
@@ -22,11 +23,12 @@ export default async function BriefingPage() {
 
   await ensureBriefingFreshness();
 
-  const [digest, items, marketState, weather, meta] = await Promise.all([
+  const [digest, items, marketState, weather, horoscopes, meta] = await Promise.all([
     prisma.briefingDigest.findUnique({ where: { date: startOfToday() } }),
     getBriefingData(userId, { range: "today", category: "all" }),
     getLiveMarketSnapshots(),
     getWeather().catch(() => null),
+    getDailyHoroscopes().catch(() => []),
     getBriefingMeta(),
   ]);
   const thinkingInsights = await getBriefingThinkingInsights(userId, items);
@@ -38,6 +40,7 @@ export default async function BriefingPage() {
       initialThinkingInsights={thinkingInsights}
       initialMarkets={marketState.markets}
       initialWeather={weather}
+      initialHoroscopes={horoscopes}
       initialMeta={meta}
     />
   );

@@ -12,6 +12,18 @@ type ThinkingTheme = {
   weight: number;
 };
 
+type StrategicSignal = {
+  id: string;
+  label: string;
+  themeId: string;
+  match: (text: string) => boolean;
+  impact: string;
+  thesis: string;
+  question: string;
+  tags: string[];
+  weight: number;
+};
+
 const THEMES: ThinkingTheme[] = [
   {
     id: "chip-policy",
@@ -86,7 +98,51 @@ const THEMES: ThinkingTheme[] = [
 ];
 
 const HIGH_VALUE_SOURCE_RE =
-  /联合国|CNBC|MarketWatch|Seeking Alpha|MIT|OpenAI|DeepMind|Google|TechCrunch|VentureBeat|InfoQ|极客公园|36氪|IT之家|Hacker News|GitHub|Cloudflare|Pragmatic|Stratechery/i;
+  /联合国|ABC|BBC|CNBC|MarketWatch|Seeking Alpha|MIT|OpenAI|DeepMind|Google|TechCrunch|VentureBeat|InfoQ|极客公园|36氪|IT之家|Hacker News|GitHub|Cloudflare|Pragmatic|Stratechery/i;
+
+const STRATEGIC_SIGNALS: StrategicSignal[] = [
+  {
+    id: "trump-china-chip",
+    label: "特朗普访华与AI芯片",
+    themeId: "chip-policy",
+    match: (text) => /特朗普|Trump|总统/.test(text)
+      && /访华|中国|China|北京|习近平|Xi/.test(text)
+      && /黄仁勋|Jensen|NVIDIA|英伟达|H200|Blackwell|Rubin|GPU|芯片|AI|人工智能|出口|许可|制裁|管制|license|export|curb/i.test(text),
+    impact: "战略信号",
+    thesis: "这不是单纯的外交新闻，而是外交议程、AI算力出口、企业游说和中美技术边界同时出现的复合信号。",
+    question: "如果访华议程里出现AI、芯片或出口许可口径变化，是否意味着美国对华芯片管制从“封锁”转向“可控放行”？",
+    tags: ["特朗普访华", "芯片管制", "英伟达", "中美关系"],
+    weight: 58,
+  },
+  {
+    id: "us-china-tech-agenda",
+    label: "中美议程里的科技变量",
+    themeId: "geopolitics",
+    match: (text) => /特朗普|Trump|习近平|Xi|中国|美国|访华|北京/.test(text)
+      && /贸易|关税|台湾|伊朗|AI|人工智能|核武|芯片|制裁|监管|协议/i.test(text),
+    impact: "制度变量",
+    thesis: "高层会晤最重要的不是会面本身，而是哪些议题被放进谈判框架，哪些约束条件开始重新定价。",
+    question: "这次议程会改变贸易、科技或地缘安全中的哪一个约束？市场和企业会先交易哪个预期？",
+    tags: ["中美", "外交", "科技政策", "谈判"],
+    weight: 42,
+  },
+  {
+    id: "ai-chip-license",
+    label: "AI芯片出口许可",
+    themeId: "chip-policy",
+    match: (text) => /H200|Blackwell|Rubin|NVIDIA|英伟达|黄仁勋|Jensen|GPU/i.test(text)
+      && /中国|China|出口|许可|license|制裁|管制|curb|market share|份额/i.test(text),
+    impact: "高影响",
+    thesis: "AI芯片出口许可是算力供给、美国监管、企业收入和中国国产替代之间的交叉点。",
+    question: "这条消息是在说明限制继续收紧，还是企业正在为某种豁免或新型号出口铺路？",
+    tags: ["AI芯片", "出口许可", "算力", "国产替代"],
+    weight: 46,
+  },
+];
+
+function signalForText(text: string) {
+  return STRATEGIC_SIGNALS.find((signal) => signal.match(text));
+}
 
 function normalizeText(input: string) {
   return input.replace(/\s+/g, " ").trim();
@@ -116,6 +172,15 @@ function overlapScore(text: string, habitKeywords: string[]) {
 
 function bestTheme(item: NewsItemDTO) {
   const text = `${item.title} ${item.aiSummary ?? ""} ${item.detailText} ${item.aiTags.join(" ")}`;
+  const signal = signalForText(text);
+  if (signal) {
+    return {
+      theme: THEMES.find((theme) => theme.id === signal.themeId) ?? THEMES[0],
+      matched: true,
+      signal,
+    };
+  }
+
   let selected = THEMES[THEMES.length - 1];
   let score = -Infinity;
   for (const theme of THEMES) {
@@ -126,10 +191,12 @@ function bestTheme(item: NewsItemDTO) {
       selected = theme;
     }
   }
-  return { theme: selected, matched: score > 0 };
+  return { theme: selected, matched: score > 0, signal: undefined };
 }
 
 async function getHabitSignals(userId: string) {
+  if (!process.env.DATABASE_URL) return [];
+
   const [memories, notes] = await Promise.all([
     prisma.memoryFact.findMany({
       where: { userId, isActive: true },
@@ -175,8 +242,8 @@ export async function getBriefingThinkingInsights(
 ): Promise<BriefingThinkingInsight[]> {
   const habitSignals = await getHabitSignals(userId).catch(() => []);
   const candidates = items.map((item) => {
-    const { theme } = bestTheme(item);
-    const text = `${item.title} ${item.aiSummary ?? ""} ${item.detailText} ${item.sourceName}`;
+    const text = `${item.title} ${item.aiSummary ?? ""} ${item.detailText} ${item.sourceName} ${item.aiTags.join(" ")}`;
+    const { theme, signal } = bestTheme(item);
     const base = (item.aiScore ?? 0.45) * 100;
     const depth = Math.min(16, Math.floor(item.detailText.length / 110));
     const sourceBoost = HIGH_VALUE_SOURCE_RE.test(item.sourceName) ? 10 : 0;
@@ -184,11 +251,13 @@ export async function getBriefingThinkingInsights(
     const recencyHours = Math.max(0, (Date.now() - new Date(item.publishedAt).getTime()) / 3_600_000);
     const recencyBoost = Math.max(0, 12 - recencyHours / 2);
     const themeBoost = theme.weight;
+    const signalBoost = signal?.weight ?? 0;
 
     return {
       item,
       theme,
-      score: base + depth + sourceBoost + habitBoost + recencyBoost + themeBoost,
+      signal,
+      score: base + depth + sourceBoost + habitBoost + recencyBoost + themeBoost + signalBoost,
       habitMatches: habitSignals.filter((signal) => text.toLowerCase().includes(signal.toLowerCase())).slice(0, 3),
     };
   });
@@ -200,7 +269,7 @@ export async function getBriefingThinkingInsights(
   for (const candidate of candidates.sort((a, b) => b.score - a.score)) {
     const titleKey = candidate.item.title.slice(0, 18);
     if (usedTitles.has(titleKey)) continue;
-    if (usedThemes.has(candidate.theme.id) && selected.length < 3) continue;
+    if (!candidate.signal && usedThemes.has(candidate.theme.id) && selected.length < 3) continue;
     usedThemes.add(candidate.theme.id);
     usedTitles.add(titleKey);
     selected.push(candidate);
@@ -208,21 +277,22 @@ export async function getBriefingThinkingInsights(
   }
 
   return selected.slice(0, Math.max(3, Math.min(limit, 5))).map((candidate) => {
+    const signal = candidate.signal;
     const sourceTitles = [candidate.item.title, ...candidate.item.aiKeyPoints].map((item) => shortTitle(item, 54)).slice(0, 3);
     const habitMatches = candidate.habitMatches.length > 0
       ? candidate.habitMatches
       : habitSignals.slice(0, 2);
     return {
-      id: `${candidate.theme.id}-${candidate.item.id}`,
-      title: `${candidate.theme.label}：${shortTitle(candidate.item.title, 34)}`,
-      thesis: candidate.theme.thesis,
-      question: candidate.theme.question,
-      whyItMatters: `我会把它放进“${candidate.theme.label}”这条线索里看：${shortTitle(candidate.item.aiSummary || candidate.item.detailText || candidate.item.title, 120)}`,
-      impactLabel: candidate.theme.impact,
+      id: `${signal?.id ?? candidate.theme.id}-${candidate.item.id}`,
+      title: `${signal?.label ?? candidate.theme.label}：${shortTitle(candidate.item.title, 34)}`,
+      thesis: signal?.thesis ?? candidate.theme.thesis,
+      question: signal?.question ?? candidate.theme.question,
+      whyItMatters: `我会把它放进“${signal?.label ?? candidate.theme.label}”这条线索里看：${shortTitle(candidate.item.aiSummary || candidate.item.detailText || candidate.item.title, 120)}`,
+      impactLabel: signal?.impact ?? candidate.theme.impact,
       confidence: Math.max(62, Math.min(96, Math.round(candidate.score))),
       sourceTitles,
       habitSignals: habitMatches.slice(0, 3),
-      tags: [...candidate.theme.tags, ...candidate.item.aiTags].slice(0, 5),
+      tags: [...(signal?.tags ?? candidate.theme.tags), ...candidate.item.aiTags].slice(0, 5),
     };
   });
 }

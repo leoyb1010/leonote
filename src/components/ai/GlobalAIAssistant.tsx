@@ -5,6 +5,7 @@ import { Loader2, MessageSquareText, SendHorizonal, Sparkles, X } from "lucide-r
 import Markdown from "react-markdown";
 import { usePathname } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
+import { createPortal } from "react-dom";
 import { Button } from "@/components/base/Button";
 import { cn } from "@/lib/utils";
 
@@ -27,6 +28,7 @@ function pageContext() {
 
 export function GlobalAIAssistant() {
   const pathname = usePathname();
+  const [mounted, setMounted] = useState(false);
   const [open, setOpen] = useState(false);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
@@ -42,6 +44,11 @@ export function GlobalAIAssistant() {
   }, [pathname]);
 
   useEffect(() => {
+    const frame = window.requestAnimationFrame(() => setMounted(true));
+    return () => window.cancelAnimationFrame(frame);
+  }, []);
+
+  useEffect(() => {
     if (!open) return;
     const originalOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
@@ -55,7 +62,7 @@ export function GlobalAIAssistant() {
     };
   }, [open]);
 
-  if (hidden) return null;
+  if (hidden || !mounted) return null;
 
   async function ask() {
     const question = input.trim();
@@ -89,7 +96,7 @@ export function GlobalAIAssistant() {
     }
   }
 
-  return (
+  const assistant = (
     <>
       <button
         type="button"
@@ -123,7 +130,7 @@ export function GlobalAIAssistant() {
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: 34 }}
               transition={{ duration: 0.22, ease: [0.2, 0, 0, 1] }}
-              className="card-premium pointer-events-auto fixed bottom-0 right-0 top-0 flex h-[100dvh] w-full flex-col overflow-hidden rounded-none border-l border-[var(--hairline)] md:bottom-4 md:right-4 md:top-4 md:h-[calc(100dvh-2rem)] md:w-[410px] md:rounded-[var(--radius-2xl)]"
+              className="card-premium pointer-events-auto fixed bottom-0 left-auto right-0 top-0 flex h-[100dvh] w-[min(100vw,430px)] max-w-full flex-col overflow-hidden rounded-none border-l border-[var(--hairline)] md:bottom-4 md:right-4 md:top-4 md:h-[calc(100dvh-2rem)] md:w-[410px] md:rounded-[var(--radius-2xl)]"
             >
               <header className="flex shrink-0 items-center justify-between gap-3 border-b border-[var(--hairline)] bg-[var(--material-elevated)] px-4 py-3 pt-[calc(0.75rem+env(safe-area-inset-top))] md:pt-3">
                 <div className="min-w-0">
@@ -208,4 +215,6 @@ export function GlobalAIAssistant() {
       </AnimatePresence>
     </>
   );
+
+  return createPortal(assistant, document.body);
 }

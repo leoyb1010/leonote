@@ -12,7 +12,7 @@ import { DeepReadCard } from "./DeepReadCard";
 import { listStagger } from "@/lib/animations";
 import { PageContainer } from "@/components/layout/PageContainer";
 import { categoryLabel } from "@/lib/briefing/display";
-import type { BriefingCategory, BriefingDigestSummary, BriefingMetaDTO, BriefingRange, BriefingThinkingInsight, MarketSnapshotDTO, NewsItemDTO, WeatherDTO } from "@/lib/briefing/types";
+import type { BriefingCategory, BriefingDigestSummary, BriefingMetaDTO, BriefingRange, BriefingThinkingInsight, HoroscopeDTO, MarketSnapshotDTO, NewsItemDTO, WeatherDTO } from "@/lib/briefing/types";
 
 type CategoryFilter = BriefingCategory | "all";
 type DetailAnchor = { top: number; left: number; width: number; height: number };
@@ -24,6 +24,7 @@ interface Props {
   initialThinkingInsights: BriefingThinkingInsight[];
   initialMarkets: MarketSnapshotDTO[];
   initialWeather: WeatherDTO | null;
+  initialHoroscopes: HoroscopeDTO[];
   initialMeta: BriefingMetaDTO;
 }
 
@@ -161,12 +162,13 @@ function BriefingMetaPanel({ meta }: { meta: BriefingMetaDTO }) {
   );
 }
 
-export function BriefingShell({ initialDigest, initialItems, initialThinkingInsights, initialMarkets, initialWeather, initialMeta }: Props) {
+export function BriefingShell({ initialDigest, initialItems, initialThinkingInsights, initialMarkets, initialWeather, initialHoroscopes, initialMeta }: Props) {
   const [items, setItems] = useState(initialItems);
   const [thinkingInsights, setThinkingInsights] = useState(initialThinkingInsights);
   const [digest, setDigest] = useState(initialDigest);
   const [markets, setMarkets] = useState(initialMarkets);
   const [weather, setWeather] = useState(initialWeather);
+  const [horoscopes, setHoroscopes] = useState(initialHoroscopes);
   const [meta, setMeta] = useState(initialMeta);
   const [range, setRange] = useState<BriefingRange>("today");
   const [category, setCategory] = useState<CategoryFilter>("all");
@@ -209,6 +211,7 @@ export function BriefingShell({ initialDigest, initialItems, initialThinkingInsi
         setDigest(json.digest);
         setMarkets(json.markets);
         setWeather(json.weather);
+        setHoroscopes(json.horoscopes || []);
         setMeta(json.meta);
         setMarketError(json.marketStatus?.error ?? null);
       } else {
@@ -306,6 +309,7 @@ export function BriefingShell({ initialDigest, initialItems, initialThinkingInsi
         stats={stats}
         thinkingInsights={thinkingInsights}
         weather={weather}
+        horoscopes={horoscopes}
         dateLabel={dateLabel}
         range={range}
         title={briefingTitle}
