@@ -206,7 +206,8 @@ RSSHUB_BASE_URL="https://rsshub.app"
 ```
 User (用户)
   ├── Note (笔记) → Tag (标签) via NoteTag
-  │     └── NoteRevision (版本历史)
+  │     ├── NoteRevision (版本历史)
+  │     └── NoteAttachment (附件：文件/图片)
   ├── Project (项目)
   ├── DailyNote (每日记录)
   ├── NewsSource / NewsItem / UserBriefingState (每日简报资讯与用户状态)
