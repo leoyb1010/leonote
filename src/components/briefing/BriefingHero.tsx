@@ -1,8 +1,8 @@
 "use client";
 
 import { motion } from "framer-motion";
-import type { ReactNode } from "react";
-import { BrainCircuit, CalendarDays, Check, CloudSun, Copy, FilePlus2, Gauge, Loader2, Newspaper, RefreshCw, Tags } from "lucide-react";
+import { useMemo, useState, type ReactNode } from "react";
+import { BrainCircuit, CalendarDays, Check, ChevronRight, CloudSun, Copy, FilePlus2, Gauge, Loader2, MoonStar, Newspaper, RefreshCw, Sparkles, Tags, X } from "lucide-react";
 import { Button } from "@/components/base/Button";
 import { cardFloatIn, heroTitleReveal } from "@/lib/animations";
 import type { BriefingDigestSummary, BriefingRange, BriefingThinkingInsight, WeatherDTO } from "@/lib/briefing/types";
@@ -31,55 +31,222 @@ interface Props {
   onTitleChange: (title: string) => void;
 }
 
-function ThinkingInsightCard({ insight, index }: { insight: BriefingThinkingInsight; index: number }) {
+type HoroscopeProfile = {
+  role: string;
+  sign: string;
+  tone: string;
+};
+
+const HOROSCOPE_PROFILES: HoroscopeProfile[] = [
+  { role: "我", sign: "天秤座", tone: "判断更准，适合做取舍" },
+  { role: "老婆", sign: "双鱼座", tone: "感受力在线，适合慢沟通" },
+  { role: "女儿", sign: "双子座", tone: "好奇心旺，适合新鲜输入" },
+];
+
+const HOROSCOPE_WORDS = [
+  "稳",
+  "清",
+  "顺",
+  "亮",
+  "缓",
+  "准",
+  "新",
+];
+
+function dailyIndex(seed: string, offset: number, mod: number) {
+  let total = offset * 17;
+  for (let index = 0; index < seed.length; index += 1) {
+    total += seed.charCodeAt(index) * (index + 3);
+  }
+  return Math.abs(total) % mod;
+}
+
+function buildHoroscopes(seed: string) {
+  return HOROSCOPE_PROFILES.map((profile, index) => ({
+    ...profile,
+    word: HOROSCOPE_WORDS[dailyIndex(seed, index, HOROSCOPE_WORDS.length)],
+    score: 76 + dailyIndex(seed, index + 5, 18),
+  }));
+}
+
+function ThinkingInsightBubble({
+  insight,
+  onClose,
+}: {
+  insight: BriefingThinkingInsight | null;
+  onClose: () => void;
+}) {
+  if (!insight) return null;
+
   return (
-    <article className="quiet-inset rounded-[var(--radius-lg)] p-3.5 transition-colors hover:bg-[var(--material-muted)]">
-      <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0">
-          <div className="flex flex-wrap items-center gap-1.5 text-[11px] text-[var(--text-muted)]">
-            <span className="inline-flex items-center gap-1 rounded-[var(--radius-pill)] bg-[var(--primary-soft)] px-2 py-0.5 text-[var(--primary)]">
-              <BrainCircuit size={11} />
-              推理 {index + 1}
-            </span>
-            <span>{insight.impactLabel}</span>
-            <span className="numeric-display">置信 {insight.confidence}</span>
+    <motion.div
+      className="fixed inset-0 z-[70]"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+    >
+      <button
+        type="button"
+        className="absolute inset-0 bg-[var(--overlay-scrim)] backdrop-blur-sm sm:bg-transparent sm:backdrop-blur-0"
+        aria-label="关闭思考线索详情"
+        onClick={onClose}
+      />
+      <motion.article
+        className="card-premium fixed inset-x-3 bottom-[calc(0.75rem+env(safe-area-inset-bottom))] max-h-[78dvh] overflow-hidden rounded-[var(--radius-2xl)] sm:inset-x-auto sm:bottom-auto sm:right-5 sm:top-20 sm:w-[430px]"
+        initial={{ opacity: 0, y: 18, x: 0, scale: 0.98 }}
+        animate={{ opacity: 1, y: 0, x: 0, scale: 1 }}
+        exit={{ opacity: 0, y: 18, x: 0, scale: 0.98 }}
+        transition={{ duration: 0.2, ease: [0.2, 0, 0, 1] }}
+      >
+        <header className="flex shrink-0 items-start justify-between gap-3 border-b border-[var(--hairline)] bg-[var(--material-elevated)] px-4 py-3 pt-[calc(0.75rem+env(safe-area-inset-top))] sm:pt-3">
+          <div className="min-w-0">
+            <div className="flex flex-wrap items-center gap-1.5 text-[11px] text-[var(--text-muted)]">
+              <span className="inline-flex items-center gap-1 rounded-[var(--radius-pill)] bg-[var(--primary-soft)] px-2 py-0.5 text-[var(--primary)]">
+                <BrainCircuit size={11} />
+                AI 协助思考
+              </span>
+              <span>{insight.impactLabel}</span>
+              <span className="numeric-display">置信 {insight.confidence}</span>
+            </div>
+            <h3 className="mt-2 text-base font-semibold leading-snug text-[var(--text-primary)]">
+              {insight.title}
+            </h3>
           </div>
-          <h3 className="mt-2 line-clamp-2 text-sm font-semibold leading-snug text-[var(--text-primary)]">
-            {insight.title}
-          </h3>
-        </div>
-      </div>
-      <p className="mt-2 font-[var(--font-reading)] text-sm leading-6 text-[var(--text-secondary)]">
-        {insight.whyItMatters}
-      </p>
-      <p className="mt-2 font-[var(--font-reading)] text-xs leading-5 text-[var(--text-muted)]">
-        {insight.thesis}
-      </p>
-      <p className="mt-2 rounded-[var(--radius-md)] border border-[var(--hairline)] bg-[var(--material-elevated)] px-3 py-2 font-[var(--font-reading)] text-xs leading-5 text-[var(--text-secondary)]">
-        {insight.question}
-      </p>
-      {insight.sourceTitles.length > 0 ? (
-        <div className="mt-3 space-y-1.5 border-t border-[var(--hairline)] pt-3">
-          {insight.sourceTitles.slice(0, 2).map((title) => (
-            <p key={title} className="line-clamp-1 text-[11px] leading-5 text-[var(--text-muted)]">
-              依据：{title}
+          <button
+            type="button"
+            onClick={onClose}
+            className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-xl border border-[var(--hairline)] text-[var(--text-muted)] transition hover:bg-[var(--interactive-hover)] hover:text-[var(--text-primary)]"
+            aria-label="关闭"
+          >
+            <X size={16} />
+          </button>
+        </header>
+
+        <div className="max-h-[calc(78dvh-5rem)] overflow-y-auto px-4 py-4">
+          <p className="font-[var(--font-reading)] text-sm leading-7 text-[var(--text-secondary)]">
+            {insight.whyItMatters}
+          </p>
+          <p className="mt-3 font-[var(--font-reading)] text-sm leading-7 text-[var(--text-secondary)]">
+            {insight.thesis}
+          </p>
+          <div className="mt-4 rounded-[var(--radius-lg)] border border-[var(--hairline)] bg-[var(--material-inset)] px-3.5 py-3">
+            <p className="mb-1.5 text-xs text-[var(--primary)]">今天可以追问</p>
+            <p className="font-[var(--font-reading)] text-sm leading-7 text-[var(--text-secondary)]">
+              {insight.question}
             </p>
+          </div>
+          {insight.sourceTitles.length > 0 ? (
+            <div className="mt-4">
+              <p className="mb-2 text-xs text-[var(--text-muted)]">依据来源</p>
+              <div className="space-y-2">
+                {insight.sourceTitles.map((title) => (
+                  <p key={title} className="rounded-[var(--radius-md)] border border-[var(--hairline)] bg-[var(--material-elevated)] px-3 py-2 text-xs leading-5 text-[var(--text-secondary)]">
+                    {title}
+                  </p>
+                ))}
+              </div>
+            </div>
+          ) : null}
+          <div className="mt-4 flex flex-wrap gap-1.5">
+            {insight.tags.slice(0, 5).map((tag) => (
+              <span key={tag} className="rounded-[var(--radius-pill)] border border-[var(--hairline)] px-2.5 py-1 text-xs text-[var(--text-muted)]">
+                {tag}
+              </span>
+            ))}
+          </div>
+          {insight.habitSignals.length > 0 ? (
+            <p className="mt-3 text-xs leading-6 text-[var(--text-muted)]">
+              结合你的思考线索：{insight.habitSignals.join(" / ")}
+            </p>
+          ) : null}
+        </div>
+      </motion.article>
+    </motion.div>
+  );
+}
+
+function ThinkingInsightStrip({
+  insights,
+  onSelect,
+}: {
+  insights: BriefingThinkingInsight[];
+  onSelect: (insight: BriefingThinkingInsight) => void;
+}) {
+  return (
+    <section className="quiet-inset rounded-[var(--radius-xl)] p-3.5">
+      <div className="mb-3 flex items-center justify-between gap-3">
+        <div className="flex min-w-0 items-center gap-2 text-xs text-[var(--text-muted)]">
+          <BrainCircuit size={14} className="text-[var(--primary)]" />
+          <span className="truncate">AI 协助思考 · 深度影响优先</span>
+        </div>
+        <span className="numeric-display shrink-0 rounded-[var(--radius-pill)] bg-[var(--primary-soft)] px-2 py-0.5 text-[11px] text-[var(--primary)]">
+          {insights.length || 0} 条
+        </span>
+      </div>
+
+      {insights.length > 0 ? (
+        <div className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1 md:grid md:grid-cols-3 md:overflow-visible md:pb-0">
+          {insights.slice(0, 5).map((insight, index) => (
+            <button
+              key={insight.id}
+              type="button"
+              onClick={() => onSelect(insight)}
+              className="group min-w-[230px] rounded-[var(--radius-lg)] border border-[var(--hairline)] bg-[var(--material-elevated)] p-3 text-left transition hover:-translate-y-0.5 hover:bg-[var(--material-muted)] md:min-w-0"
+            >
+              <div className="flex items-center justify-between gap-2 text-[11px] text-[var(--text-muted)]">
+                <span className="inline-flex items-center gap-1">
+                  <Sparkles size={11} className="text-[var(--primary)]" />
+                  线索 {index + 1}
+                </span>
+                <span>{insight.impactLabel}</span>
+              </div>
+              <p className="mt-2 line-clamp-2 min-h-9 text-sm font-medium leading-snug text-[var(--text-primary)]">
+                {insight.title}
+              </p>
+              <div className="mt-2 flex items-center justify-between gap-2 text-[11px] text-[var(--text-muted)]">
+                <span className="numeric-display">置信 {insight.confidence}</span>
+                <ChevronRight size={13} className="transition group-hover:translate-x-0.5" />
+              </div>
+            </button>
           ))}
         </div>
-      ) : null}
-      <div className="mt-3 flex flex-wrap gap-1.5">
-        {insight.tags.slice(0, 4).map((tag) => (
-          <span key={tag} className="rounded-[var(--radius-pill)] border border-[var(--hairline)] px-2 py-0.5 text-[11px] text-[var(--text-muted)]">
-            {tag}
-          </span>
+      ) : (
+        <button
+          type="button"
+          disabled
+          className="w-full rounded-[var(--radius-lg)] border border-[var(--hairline)] bg-[var(--material-elevated)] px-3 py-4 text-left text-sm leading-6 text-[var(--text-muted)]"
+        >
+          资讯正在收集中。等有足够高价值事件后，我会整理成 3-5 条可推演线索。
+        </button>
+      )}
+    </section>
+  );
+}
+
+function HoroscopeStrip({ seed }: { seed: string }) {
+  const horoscopes = useMemo(() => buildHoroscopes(seed), [seed]);
+  return (
+    <div className="quiet-inset rounded-[var(--radius-lg)] px-3.5 py-3">
+      <div className="flex items-center gap-2 text-[11px] text-[var(--text-muted)]">
+        <MoonStar size={13} />
+        今日星座
+      </div>
+      <div className="mt-3 grid gap-2">
+        {horoscopes.map((item) => (
+          <div key={item.role} className="flex items-center justify-between gap-3 text-xs">
+            <span className="min-w-0 truncate text-[var(--text-secondary)]">
+              {item.role} · {item.sign}
+            </span>
+            <span className="shrink-0 rounded-[var(--radius-pill)] bg-[var(--material-elevated)] px-2 py-0.5 text-[var(--text-muted)]">
+              {item.word} · {item.score}
+            </span>
+          </div>
         ))}
       </div>
-      {insight.habitSignals.length > 0 ? (
-        <p className="mt-2 text-[11px] leading-5 text-[var(--text-muted)]">
-          结合你的思考线索：{insight.habitSignals.join(" / ")}
-        </p>
-      ) : null}
-    </article>
+      <p className="mt-2 text-[11px] leading-5 text-[var(--text-muted)]">
+        {horoscopes.map((item) => `${item.role}${item.tone}`).join("；")}
+      </p>
+    </div>
   );
 }
 
@@ -104,7 +271,7 @@ function MetricCard({
 }: {
   icon: ReactNode;
   label: string;
-  value: React.ReactNode;
+  value: ReactNode;
   hint: string;
 }) {
   return (
@@ -137,6 +304,8 @@ export function BriefingHero({
   onTitleChange,
 }: Props) {
   const score = stats.averageScore == null ? null : Math.round(stats.averageScore);
+  const [selectedInsight, setSelectedInsight] = useState<BriefingThinkingInsight | null>(null);
+  const horoscopeBrief = useMemo(() => buildHoroscopes(dateLabel).map((item) => `${item.role}${item.word}`).join(" · "), [dateLabel]);
 
   return (
     <motion.section
@@ -147,7 +316,7 @@ export function BriefingHero({
     >
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_18%_0%,rgba(255,255,255,0.055),transparent_32%),radial-gradient(circle_at_92%_18%,var(--primary-soft),transparent_34%)]" />
 
-      <div className="relative z-10 grid gap-7 xl:grid-cols-[minmax(0,1fr)_430px] xl:items-end">
+      <div className="relative z-10 grid gap-6 xl:grid-cols-[minmax(0,1fr)_360px] xl:items-start">
         <div className="min-w-0">
           <div className="mb-4 flex flex-wrap items-center gap-2 text-xs text-[var(--text-muted)]">
             <span className="inline-flex items-center gap-1.5 rounded-[var(--radius-pill)] border border-[var(--hairline)] bg-[var(--material-inset)] px-2.5 py-1">
@@ -163,6 +332,10 @@ export function BriefingHero({
                 深圳 {Math.round(weather.temp)}° · {weather.weatherLabel} · 湿度 {weather.humidity}%
               </span>
             ) : null}
+            <span className="inline-flex items-center gap-1.5 rounded-[var(--radius-pill)] border border-[var(--hairline)] bg-[var(--material-inset)] px-2.5 py-1">
+              <MoonStar size={13} />
+              今日星座 · {horoscopeBrief}
+            </span>
           </div>
 
           <motion.div
@@ -178,24 +351,10 @@ export function BriefingHero({
           </motion.div>
 
           <div className="mt-5 max-w-4xl">
-            <div className="mb-3 flex items-center gap-2 text-xs text-[var(--text-muted)]">
-              <BrainCircuit size={14} className="text-[var(--primary)]" />
-              AI 协助思考 · 从深度影响和分析价值里筛选
-            </div>
-            {thinkingInsights.length > 0 ? (
-              <div className="grid gap-3 lg:grid-cols-2">
-                {thinkingInsights.slice(0, 5).map((insight, index) => (
-                  <ThinkingInsightCard key={insight.id} insight={insight} index={index} />
-                ))}
-              </div>
-            ) : (
-              <div className="quiet-inset rounded-[var(--radius-lg)] px-4 py-5 text-sm leading-6 text-[var(--text-muted)]">
-                资讯正在收集中。等有足够高价值事件后，我会把它们整理成 3-5 条可推演的思考线索。
-              </div>
-            )}
+            <ThinkingInsightStrip insights={thinkingInsights} onSelect={setSelectedInsight} />
           </div>
 
-          <div className="mt-6 flex flex-wrap gap-2">
+          <div className="mt-5 flex flex-wrap gap-2">
             <Button variant="primary" size="sm" onClick={onRefresh} disabled={loading} className="gap-1.5">
               {loading ? <Loader2 size={14} className="animate-spin" /> : <RefreshCw size={14} />}
               刷新简报
@@ -211,7 +370,7 @@ export function BriefingHero({
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-2 gap-3 xl:pt-1">
           <MetricCard
             icon={<Newspaper size={13} />}
             label="资讯"
@@ -240,8 +399,13 @@ export function BriefingHero({
               ))}
             </div>
           </div>
+          <div className="col-span-2">
+            <HoroscopeStrip seed={dateLabel} />
+          </div>
         </div>
       </div>
+
+      <ThinkingInsightBubble insight={selectedInsight} onClose={() => setSelectedInsight(null)} />
     </motion.section>
   );
 }

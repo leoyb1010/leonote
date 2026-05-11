@@ -4,7 +4,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { Loader2, MessageSquareText, SendHorizonal, Sparkles, X } from "lucide-react";
 import Markdown from "react-markdown";
 import { usePathname } from "next/navigation";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/base/Button";
 import { cn } from "@/lib/utils";
 
@@ -40,6 +40,20 @@ export function GlobalAIAssistant() {
     if (pathname.startsWith("/projects")) return "结合这个项目给我建议…";
     return "结合当前页面和我的笔记提问…";
   }, [pathname]);
+
+  useEffect(() => {
+    if (!open) return;
+    const originalOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    const handleKey = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setOpen(false);
+    };
+    window.addEventListener("keydown", handleKey);
+    return () => {
+      document.body.style.overflow = originalOverflow;
+      window.removeEventListener("keydown", handleKey);
+    };
+  }, [open]);
 
   if (hidden) return null;
 
@@ -93,25 +107,25 @@ export function GlobalAIAssistant() {
       <AnimatePresence>
         {open ? (
           <motion.div
-            className="fixed inset-0 z-[80] md:pointer-events-none"
+            className="pointer-events-none fixed inset-0 z-[80]"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
           >
             <button
               type="button"
-              className="absolute inset-0 bg-[var(--overlay-scrim)] backdrop-blur-sm md:hidden"
+              className="pointer-events-auto absolute inset-0 bg-[var(--overlay-scrim)] backdrop-blur-sm md:hidden"
               aria-label="关闭 AI 助手"
               onClick={() => setOpen(false)}
             />
             <motion.aside
-              initial={{ opacity: 0, y: 18, x: 0 }}
-              animate={{ opacity: 1, y: 0, x: 0 }}
-              exit={{ opacity: 0, y: 18, x: 0 }}
+              initial={{ opacity: 0, x: 34 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: 34 }}
               transition={{ duration: 0.22, ease: [0.2, 0, 0, 1] }}
-              className="card-premium pointer-events-auto absolute inset-x-3 bottom-[calc(0.75rem+env(safe-area-inset-bottom))] flex max-h-[82dvh] flex-col overflow-hidden rounded-[var(--radius-2xl)] md:inset-x-auto md:bottom-5 md:right-5 md:top-5 md:w-[410px] md:max-h-none"
+              className="card-premium pointer-events-auto fixed bottom-0 right-0 top-0 flex h-[100dvh] w-full flex-col overflow-hidden rounded-none border-l border-[var(--hairline)] md:bottom-4 md:right-4 md:top-4 md:h-[calc(100dvh-2rem)] md:w-[410px] md:rounded-[var(--radius-2xl)]"
             >
-              <header className="flex shrink-0 items-center justify-between gap-3 border-b border-[var(--hairline)] bg-[var(--material-elevated)] px-4 py-3">
+              <header className="flex shrink-0 items-center justify-between gap-3 border-b border-[var(--hairline)] bg-[var(--material-elevated)] px-4 py-3 pt-[calc(0.75rem+env(safe-area-inset-top))] md:pt-3">
                 <div className="min-w-0">
                   <div className="flex items-center gap-2 text-xs text-[var(--text-muted)]">
                     <MessageSquareText size={14} className="text-[var(--ai-accent)]" />
@@ -131,10 +145,10 @@ export function GlobalAIAssistant() {
                 </button>
               </header>
 
-              <div className="min-h-0 flex-1 space-y-3 overflow-y-auto px-4 py-4">
+              <div className="min-h-0 flex-1 space-y-3 overflow-y-auto overscroll-contain px-4 py-4">
                 {messages.length === 0 ? (
                   <div className="quiet-inset rounded-[var(--radius-lg)] px-4 py-5 text-sm leading-7 text-[var(--text-secondary)]">
-                    我会带上当前页面路径、可见内容和你选中的文字，再结合你的笔记库回答。适合问“这条资讯对我意味着什么？”或“这篇笔记下一步怎么展开？”
+                    我会带上当前页面路径、可见内容和你选中的文字，再结合你的笔记库回答。这个面板固定从右侧呼出，关闭按钮会一直留在顶部。
                   </div>
                 ) : null}
                 {messages.map((message) => (
@@ -168,7 +182,7 @@ export function GlobalAIAssistant() {
                 ) : null}
               </div>
 
-              <div className="shrink-0 border-t border-[var(--hairline)] bg-[var(--material-elevated)] p-3">
+              <div className="shrink-0 border-t border-[var(--hairline)] bg-[var(--material-elevated)] p-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] md:pb-3">
                 <textarea
                   value={input}
                   onChange={(event) => setInput(event.target.value)}
