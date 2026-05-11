@@ -40,6 +40,7 @@ type SaveOptions = {
   contentOverride?: string;
   targetNoteId?: string;
 };
+type InsertionRange = { start: number; end: number };
 
 type SummaryState = {
   status: "idle" | "loading" | "ready" | "inserting" | "error";
@@ -93,6 +94,7 @@ export function EnhancedEditor({ initialNote }: { initialNote?: NoteShape }) {
   const isComposingRef = useRef(false);
   const toastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const attachmentInputRef = useRef<HTMLInputElement | null>(null);
+  const textareaRef = useRef<HTMLTextAreaElement | null>(null);
 
   const stats = useMemo(() => {
     const normalized = content.replace(/\s+/g, "").trim();
@@ -328,7 +330,27 @@ export function EnhancedEditor({ initialNote }: { initialNote?: NoteShape }) {
     return `[${label}](${attachment.url})`;
   };
 
-  const uploadFiles = async (files: File[]) => {
+  const currentInsertionRange = (): InsertionRange => {
+    const target = textareaRef.current;
+    if (!target) return { start: content.length, end: content.length };
+    return { start: target.selectionStart, end: target.selectionEnd };
+  };
+
+  const insertMarkdownAtRange = (markdown: string, range: InsertionRange) => {
+    const before = content.slice(0, range.start);
+    const after = content.slice(range.end);
+    const prefix = before && !before.endsWith("\n") ? "\n\n" : "";
+    const suffix = after && !after.startsWith("\n") ? "\n\n" : "";
+    const next = `${before}${prefix}${markdown}${suffix}${after}`;
+    const cursor = before.length + prefix.length + markdown.length;
+    window.requestAnimationFrame(() => {
+      textareaRef.current?.focus();
+      textareaRef.current?.setSelectionRange(cursor, cursor);
+    });
+    return next;
+  };
+
+  const uploadFiles = async (files: File[], insertionRange = currentInsertionRange()) => {
     const selected = files.filter((file) => file.size > 0);
     if (selected.length === 0) return;
 
@@ -357,25 +379,28 @@ export function EnhancedEditor({ initialNote }: { initialNote?: NoteShape }) {
 
     setAttachments((current) => [...current, ...uploaded]);
     const snippet = uploaded.map(buildAttachmentMarkdown).join("\n\n");
-    const nextContent = content ? `${content}\n\n${snippet}` : snippet;
+    const nextContent = insertMarkdownAtRange(snippet, insertionRange);
     setContent(nextContent);
     await saveDraft({ targetNoteId: savedId, contentOverride: nextContent, navigateAfterCreate: false });
-    setUploadMessage(`已添加 ${uploaded.length} 个附件。`);
+    const imageCount = uploaded.filter((item) => item.mimeType.startsWith("image/")).length;
+    setUploadMessage(imageCount > 0 ? `已把 ${imageCount} 张图片插入正文。` : `已把 ${uploaded.length} 个附件插入正文。`);
     setUploading(false);
   };
 
   const handlePaste = (event: React.ClipboardEvent<HTMLTextAreaElement>) => {
     const files = Array.from(event.clipboardData.files || []);
     if (files.length === 0) return;
+    const range = { start: event.currentTarget.selectionStart, end: event.currentTarget.selectionEnd };
     event.preventDefault();
-    void uploadFiles(files);
+    void uploadFiles(files, range);
   };
 
   const handleDrop = (event: React.DragEvent<HTMLTextAreaElement>) => {
     const files = Array.from(event.dataTransfer.files || []);
     if (files.length === 0) return;
+    const range = currentInsertionRange();
     event.preventDefault();
-    void uploadFiles(files);
+    void uploadFiles(files, range);
   };
 
   const removeAttachment = async (attachment: AttachmentShape) => {
@@ -615,6 +640,7 @@ export function EnhancedEditor({ initialNote }: { initialNote?: NoteShape }) {
           {/* Content textarea */}
           <textarea
             aria-label="笔记内容"
+            ref={textareaRef}
             value={content}
             onCompositionStart={handleCompositionStart}
             onCompositionEnd={handleCompositionEnd}
@@ -647,7 +673,7 @@ export function EnhancedEditor({ initialNote }: { initialNote?: NoteShape }) {
                 onChange={(event) => {
                   const files = Array.from(event.target.files || []);
                   event.target.value = "";
-                  void uploadFiles(files);
+                  void uploadFiles(files, currentInsertionRange());
                 }}
               />
             </div>

@@ -6,6 +6,7 @@ import { getLiveMarketSnapshots } from "@/lib/briefing/live-market";
 import { getWeather } from "@/lib/briefing/weather";
 import { parseBriefingDigestSummary } from "@/lib/briefing/normalize";
 import { ensureBriefingFreshness } from "@/lib/briefing/ensure";
+import { getBriefingThinkingInsights } from "@/lib/briefing/thinking";
 import type { BriefingCategory, BriefingRange } from "@/lib/briefing/types";
 
 export const dynamic = "force-dynamic";
@@ -38,11 +39,13 @@ export async function GET(request: Request) {
     getWeather().catch(() => null),
     getBriefingMeta(),
   ]);
+  const thinkingInsights = await getBriefingThinkingInsights(userId, items);
 
   return NextResponse.json({
     ok: true,
     digest: parseBriefingDigestSummary(digest?.summary),
     items,
+    thinkingInsights,
     markets: marketState.markets,
     marketStatus: {
       refreshed: marketState.refreshed,

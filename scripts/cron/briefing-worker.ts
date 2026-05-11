@@ -26,10 +26,9 @@ async function callTask(path: string) {
   }
 }
 
-// RSS fetch every 30 min — PRIMARY news source
-cron.schedule("30 5 * * *", () => callTask("/api/briefing/cron/fetch-news"), { timezone: "Asia/Shanghai" });
-cron.schedule("30 6 * * *", () => callTask("/api/briefing/cron/fetch-news"), { timezone: "Asia/Shanghai" });
-cron.schedule("*/30 7-23 * * *", () => callTask("/api/briefing/cron/fetch-news"), { timezone: "Asia/Shanghai" });
+// RSS fetch is cheap and primary: keep the briefing close to live during waking hours.
+cron.schedule("0,20,40 5-6 * * *", () => callTask("/api/briefing/cron/fetch-news"), { timezone: "Asia/Shanghai" });
+cron.schedule("*/10 7-23 * * *", () => callTask("/api/briefing/cron/fetch-news"), { timezone: "Asia/Shanghai" });
 
 // Market data via Sina every 15 min during trading hours
 cron.schedule("*/15 9-16 * * 1-5", () => callTask("/api/briefing/cron/fetch-market"), { timezone: "Asia/Shanghai" });
@@ -51,4 +50,4 @@ cron.schedule("0 18 * * *", async () => {
   await callTask("/api/briefing/cron/generate-digest");
 }, { timezone: "Asia/Shanghai" });
 
-console.log("[briefing-cron] worker started — RSS every 30min, Tavily 2x/day fallback");
+console.log("[briefing-cron] worker started — RSS every 10min daytime, Tavily 2x/day fallback");

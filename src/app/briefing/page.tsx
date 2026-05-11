@@ -6,6 +6,7 @@ import { getLiveMarketSnapshots } from "@/lib/briefing/live-market";
 import { getWeather } from "@/lib/briefing/weather";
 import { parseBriefingDigestSummary } from "@/lib/briefing/normalize";
 import { ensureBriefingFreshness } from "@/lib/briefing/ensure";
+import { getBriefingThinkingInsights } from "@/lib/briefing/thinking";
 import { BriefingShell } from "@/components/briefing/BriefingShell";
 
 export const dynamic = "force-dynamic";
@@ -28,11 +29,13 @@ export default async function BriefingPage() {
     getWeather().catch(() => null),
     getBriefingMeta(),
   ]);
+  const thinkingInsights = await getBriefingThinkingInsights(userId, items);
 
   return (
     <BriefingShell
       initialDigest={parseBriefingDigestSummary(digest?.summary)}
       initialItems={items}
+      initialThinkingInsights={thinkingInsights}
       initialMarkets={marketState.markets}
       initialWeather={weather}
       initialMeta={meta}

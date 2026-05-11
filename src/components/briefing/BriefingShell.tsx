@@ -12,7 +12,7 @@ import { DeepReadCard } from "./DeepReadCard";
 import { listStagger } from "@/lib/animations";
 import { PageContainer } from "@/components/layout/PageContainer";
 import { categoryLabel } from "@/lib/briefing/display";
-import type { BriefingCategory, BriefingDigestSummary, BriefingMetaDTO, BriefingRange, MarketSnapshotDTO, NewsItemDTO, WeatherDTO } from "@/lib/briefing/types";
+import type { BriefingCategory, BriefingDigestSummary, BriefingMetaDTO, BriefingRange, BriefingThinkingInsight, MarketSnapshotDTO, NewsItemDTO, WeatherDTO } from "@/lib/briefing/types";
 
 type CategoryFilter = BriefingCategory | "all";
 type DetailAnchor = { top: number; left: number; width: number; height: number };
@@ -21,6 +21,7 @@ type SelectedDetail = { item: NewsItemDTO; anchor: DetailAnchor };
 interface Props {
   initialDigest: BriefingDigestSummary | null;
   initialItems: NewsItemDTO[];
+  initialThinkingInsights: BriefingThinkingInsight[];
   initialMarkets: MarketSnapshotDTO[];
   initialWeather: WeatherDTO | null;
   initialMeta: BriefingMetaDTO;
@@ -71,12 +72,13 @@ function buildStats(items: NewsItemDTO[]): BriefingHeroStats {
   };
 }
 
-function buildMarkdown(title: string, digest: BriefingDigestSummary | null, items: NewsItemDTO[]) {
+function buildMarkdown(title: string, digest: BriefingDigestSummary | null, items: NewsItemDTO[], thinkingInsights: BriefingThinkingInsight[]) {
   const lines = [
     `# ${title}`,
     "",
-    "## 今日要点",
-    ...(digest?.headlines?.length ? digest.headlines : items.slice(0, 3).map((item) => item.title)).map((line) => `- ${line}`),
+    "## AI 思考线索",
+    ...(thinkingInsights.length ? thinkingInsights : []).map((item) => `- ${item.title}：${item.question}`),
+    ...(thinkingInsights.length ? [] : (digest?.headlines?.length ? digest.headlines : items.slice(0, 3).map((item) => item.title)).map((line) => `- ${line}`)),
     "",
     "## 精选资讯",
     ...items.slice(0, 8).map((item) => `- ${item.title} · ${item.sourceName}${item.aiSummary ? `：${item.aiSummary}` : ""}`),
@@ -159,8 +161,9 @@ function BriefingMetaPanel({ meta }: { meta: BriefingMetaDTO }) {
   );
 }
 
-export function BriefingShell({ initialDigest, initialItems, initialMarkets, initialWeather, initialMeta }: Props) {
+export function BriefingShell({ initialDigest, initialItems, initialThinkingInsights, initialMarkets, initialWeather, initialMeta }: Props) {
   const [items, setItems] = useState(initialItems);
+  const [thinkingInsights, setThinkingInsights] = useState(initialThinkingInsights);
   const [digest, setDigest] = useState(initialDigest);
   const [markets, setMarkets] = useState(initialMarkets);
   const [weather, setWeather] = useState(initialWeather);
@@ -202,6 +205,7 @@ export function BriefingShell({ initialDigest, initialItems, initialMarkets, ini
       const json = await res.json();
       if (json.ok) {
         setItems(json.items);
+        setThinkingInsights(json.thinkingInsights || []);
         setDigest(json.digest);
         setMarkets(json.markets);
         setWeather(json.weather);
@@ -284,7 +288,7 @@ export function BriefingShell({ initialDigest, initialItems, initialMarkets, ini
   async function copySummary() {
     if (visibleItems.length === 0) return;
     try {
-      await navigator.clipboard.writeText(buildMarkdown(briefingTitle || "每日简报", digest, visibleItems));
+      await navigator.clipboard.writeText(buildMarkdown(briefingTitle || "每日简报", digest, visibleItems, thinkingInsights));
       setCopied(true);
       window.setTimeout(() => setCopied(false), 1800);
     } catch {
@@ -300,6 +304,7 @@ export function BriefingShell({ initialDigest, initialItems, initialMarkets, ini
       <BriefingHero
         digest={digest}
         stats={stats}
+        thinkingInsights={thinkingInsights}
         weather={weather}
         dateLabel={dateLabel}
         range={range}

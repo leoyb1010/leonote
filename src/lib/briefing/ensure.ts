@@ -41,8 +41,8 @@ function todayWindow() {
 }
 
 async function getRefreshDecision(options: EnsureOptions): Promise<RefreshDecision> {
-  const minItems = options.minItems ?? Number(process.env.BRIEFING_MIN_ITEMS || 12);
-  const maxAgeMinutes = options.maxAgeMinutes ?? Number(process.env.BRIEFING_MAX_AGE_MINUTES || 30);
+  const minItems = options.minItems ?? Number(process.env.BRIEFING_MIN_ITEMS || 24);
+  const maxAgeMinutes = options.maxAgeMinutes ?? Number(process.env.BRIEFING_MAX_AGE_MINUTES || 10);
   const [itemCount, latestSource, todayDigest] = await Promise.all([
     prisma.newsItem.count({ where: todayWindow() }),
     prisma.newsSource.findFirst({

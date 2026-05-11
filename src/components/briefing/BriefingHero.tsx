@@ -2,10 +2,10 @@
 
 import { motion } from "framer-motion";
 import type { ReactNode } from "react";
-import { CalendarDays, Check, CloudSun, Copy, FilePlus2, Gauge, Loader2, Newspaper, RefreshCw, Tags } from "lucide-react";
+import { BrainCircuit, CalendarDays, Check, CloudSun, Copy, FilePlus2, Gauge, Loader2, Newspaper, RefreshCw, Tags } from "lucide-react";
 import { Button } from "@/components/base/Button";
 import { cardFloatIn, heroTitleReveal } from "@/lib/animations";
-import type { BriefingDigestSummary, BriefingRange, WeatherDTO } from "@/lib/briefing/types";
+import type { BriefingDigestSummary, BriefingRange, BriefingThinkingInsight, WeatherDTO } from "@/lib/briefing/types";
 
 export interface BriefingHeroStats {
   total: number;
@@ -17,6 +17,7 @@ export interface BriefingHeroStats {
 interface Props {
   digest: BriefingDigestSummary | null;
   stats: BriefingHeroStats;
+  thinkingInsights: BriefingThinkingInsight[];
   weather: WeatherDTO | null;
   dateLabel: string;
   range: BriefingRange;
@@ -28,6 +29,58 @@ interface Props {
   onImportDigest: () => void;
   onCopySummary: () => void;
   onTitleChange: (title: string) => void;
+}
+
+function ThinkingInsightCard({ insight, index }: { insight: BriefingThinkingInsight; index: number }) {
+  return (
+    <article className="quiet-inset rounded-[var(--radius-lg)] p-3.5 transition-colors hover:bg-[var(--material-muted)]">
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <div className="flex flex-wrap items-center gap-1.5 text-[11px] text-[var(--text-muted)]">
+            <span className="inline-flex items-center gap-1 rounded-[var(--radius-pill)] bg-[var(--primary-soft)] px-2 py-0.5 text-[var(--primary)]">
+              <BrainCircuit size={11} />
+              推理 {index + 1}
+            </span>
+            <span>{insight.impactLabel}</span>
+            <span className="numeric-display">置信 {insight.confidence}</span>
+          </div>
+          <h3 className="mt-2 line-clamp-2 text-sm font-semibold leading-snug text-[var(--text-primary)]">
+            {insight.title}
+          </h3>
+        </div>
+      </div>
+      <p className="mt-2 font-[var(--font-reading)] text-sm leading-6 text-[var(--text-secondary)]">
+        {insight.whyItMatters}
+      </p>
+      <p className="mt-2 font-[var(--font-reading)] text-xs leading-5 text-[var(--text-muted)]">
+        {insight.thesis}
+      </p>
+      <p className="mt-2 rounded-[var(--radius-md)] border border-[var(--hairline)] bg-[var(--material-elevated)] px-3 py-2 font-[var(--font-reading)] text-xs leading-5 text-[var(--text-secondary)]">
+        {insight.question}
+      </p>
+      {insight.sourceTitles.length > 0 ? (
+        <div className="mt-3 space-y-1.5 border-t border-[var(--hairline)] pt-3">
+          {insight.sourceTitles.slice(0, 2).map((title) => (
+            <p key={title} className="line-clamp-1 text-[11px] leading-5 text-[var(--text-muted)]">
+              依据：{title}
+            </p>
+          ))}
+        </div>
+      ) : null}
+      <div className="mt-3 flex flex-wrap gap-1.5">
+        {insight.tags.slice(0, 4).map((tag) => (
+          <span key={tag} className="rounded-[var(--radius-pill)] border border-[var(--hairline)] px-2 py-0.5 text-[11px] text-[var(--text-muted)]">
+            {tag}
+          </span>
+        ))}
+      </div>
+      {insight.habitSignals.length > 0 ? (
+        <p className="mt-2 text-[11px] leading-5 text-[var(--text-muted)]">
+          结合你的思考线索：{insight.habitSignals.join(" / ")}
+        </p>
+      ) : null}
+    </article>
+  );
 }
 
 function rangeLabel(range: BriefingRange) {
@@ -69,8 +122,8 @@ function MetricCard({
 }
 
 export function BriefingHero({
-  digest,
   stats,
+  thinkingInsights,
   weather,
   dateLabel,
   range,
@@ -83,10 +136,6 @@ export function BriefingHero({
   onCopySummary,
   onTitleChange,
 }: Props) {
-  const fallbackHeadlines = stats.total > 0
-    ? ["今日资讯已整理完成，可以从高质量条目开始阅读。"]
-    : ["资讯正在收集中，稍后再来看看。"];
-  const headlines = digest?.headlines?.length ? digest.headlines : fallbackHeadlines;
   const score = stats.averageScore == null ? null : Math.round(stats.averageScore);
 
   return (
@@ -128,15 +177,22 @@ export function BriefingHero({
             />
           </motion.div>
 
-          <div className="mt-5 max-w-3xl space-y-2.5">
-            {headlines.slice(0, 4).map((line, index) => (
-              <div key={`${line}-${index}`} className="flex gap-3">
-                <span className="mt-2.5 h-1.5 w-1.5 shrink-0 rounded-full bg-[var(--primary)] opacity-70" />
-                <p className="font-[var(--font-reading)] text-[15px] leading-7 text-[var(--text-secondary)]">
-                  {line}
-                </p>
+          <div className="mt-5 max-w-4xl">
+            <div className="mb-3 flex items-center gap-2 text-xs text-[var(--text-muted)]">
+              <BrainCircuit size={14} className="text-[var(--primary)]" />
+              AI 协助思考 · 从深度影响和分析价值里筛选
+            </div>
+            {thinkingInsights.length > 0 ? (
+              <div className="grid gap-3 lg:grid-cols-2">
+                {thinkingInsights.slice(0, 5).map((insight, index) => (
+                  <ThinkingInsightCard key={insight.id} insight={insight} index={index} />
+                ))}
               </div>
-            ))}
+            ) : (
+              <div className="quiet-inset rounded-[var(--radius-lg)] px-4 py-5 text-sm leading-6 text-[var(--text-muted)]">
+                资讯正在收集中。等有足够高价值事件后，我会把它们整理成 3-5 条可推演的思考线索。
+              </div>
+            )}
           </div>
 
           <div className="mt-6 flex flex-wrap gap-2">

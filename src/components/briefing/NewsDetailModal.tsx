@@ -162,7 +162,7 @@ export function NewsDetailModal({ item, anchorRect, onClose, onPatchItem }: Prop
 
         <motion.div
           ref={panelRef}
-          className="card-premium fixed bottom-0 left-0 right-0 z-10 flex max-h-[calc(100dvh-14px)] w-full flex-col overflow-hidden rounded-b-none sm:bottom-auto sm:right-auto sm:rounded-[var(--radius-xl)]"
+          className="card-premium fixed bottom-0 left-0 right-0 z-10 flex max-h-[calc(100dvh-8px)] w-full flex-col overflow-hidden overscroll-contain rounded-b-none sm:bottom-auto sm:right-auto sm:max-h-[calc(100dvh-36px)] sm:rounded-[var(--radius-xl)]"
           style={{ position: "fixed", ...panelPosition }}
           initial={{ opacity: 0, scale: 0.985, y: 16 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -170,8 +170,9 @@ export function NewsDetailModal({ item, anchorRect, onClose, onPatchItem }: Prop
           transition={{ duration: 0.22, ease: [0.2, 0, 0, 1] }}
           onClick={(e) => e.stopPropagation()}
         >
-          <div className="flex shrink-0 items-center justify-between gap-3 border-b border-[var(--hairline)] bg-[var(--material-elevated)] px-4 py-3 sm:px-5">
+          <div className="flex shrink-0 items-center justify-between gap-3 border-b border-[var(--hairline)] bg-[var(--material-elevated)] px-4 py-3 pt-[calc(0.75rem+env(safe-area-inset-top))] sm:px-5 sm:pt-3">
             <div className="min-w-0">
+              <div className="mx-auto mb-2 h-1 w-10 rounded-full bg-[var(--text-faint)] sm:hidden" />
               <p className="truncate text-xs text-[var(--text-muted)]">
                 {label} · {item.sourceName} · {formatTime(item.publishedAt)}
               </p>
@@ -180,7 +181,7 @@ export function NewsDetailModal({ item, anchorRect, onClose, onPatchItem }: Prop
               type="button"
               aria-label="关闭"
               onClick={onClose}
-              className="rounded-lg border border-[var(--hairline)] p-2 text-[var(--text-muted)] transition-colors hover:bg-[var(--interactive-hover)] hover:text-[var(--text-primary)]"
+              className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-xl border border-[var(--hairline)] text-[var(--text-muted)] transition-colors hover:bg-[var(--interactive-hover)] hover:text-[var(--text-primary)]"
             >
               <X size={16} />
             </button>
@@ -279,6 +280,10 @@ export function NewsDetailModal({ item, anchorRect, onClose, onPatchItem }: Prop
                 <ArrowUpRight size={14} />
                 阅读原文
               </a>
+            </Button>
+            <Button size="sm" variant="ghost" onClick={onClose} className="ml-auto gap-1.5 sm:ml-0">
+              <X size={14} />
+              关闭
             </Button>
           </div>
         </motion.div>

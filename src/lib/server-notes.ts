@@ -130,6 +130,7 @@ export async function listNotes(userId: string, options?: { status?: string; q?:
     include: {
       project: true,
       tags: { include: { tag: true } },
+      attachments: { orderBy: { createdAt: "asc" } },
     },
     orderBy: [{ isPinned: "desc" }, { updatedAt: "desc" }],
     take,

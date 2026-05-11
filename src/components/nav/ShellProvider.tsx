@@ -4,6 +4,7 @@ import React from "react";
 import { CommandPalette } from "./CommandPalette";
 import { usePathname } from "next/navigation";
 import { ResponsiveAppShell } from "./ResponsiveAppShell";
+import { GlobalAIAssistant } from "@/components/ai/GlobalAIAssistant";
 
 export function ShellProvider({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -23,6 +24,7 @@ export function ShellProvider({ children }: { children: React.ReactNode }) {
     <>
       <ResponsiveAppShell>{children}</ResponsiveAppShell>
       <CommandPalette />
+      <GlobalAIAssistant />
     </>
   );
 }

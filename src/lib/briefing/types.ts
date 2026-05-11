@@ -13,6 +13,19 @@ export interface BriefingDigestSummary {
   headlines: string[];
 }
 
+export interface BriefingThinkingInsight {
+  id: string;
+  title: string;
+  thesis: string;
+  question: string;
+  whyItMatters: string;
+  impactLabel: string;
+  confidence: number;
+  sourceTitles: string[];
+  habitSignals: string[];
+  tags: string[];
+}
+
 export interface BriefingMetaDTO {
   generatedAt: string | null;
   latestNewsFetchAt: string | null;

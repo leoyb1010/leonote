@@ -43,7 +43,7 @@ export async function updateNoteWithRevision(
       });
     }
 
-    const updated = await tx.note.update({
+    await tx.note.update({
       where: { id: existing.id },
       data: {
         ...(data.title !== undefined && { title: data.title }),
@@ -88,6 +88,13 @@ export async function updateNoteWithRevision(
       }
     }
 
-    return updated;
+    return tx.note.findUniqueOrThrow({
+      where: { id: existing.id },
+      include: {
+        project: true,
+        tags: { include: { tag: true } },
+        attachments: { orderBy: { createdAt: "asc" } },
+      },
+    });
   });
 }
