@@ -34,6 +34,7 @@ interface Props {
 
 type DetailAnchor = { x: number; y: number; top: number; left: number; width: number; height: number };
 type SelectedInsight = { insight: BriefingThinkingInsight; anchor: DetailAnchor };
+type SelectedHoroscope = { horoscope: HoroscopeDTO; anchor: DetailAnchor };
 const THINKING_LABELS = ["One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight"];
 
 function ThinkingInsightBubble({
@@ -157,6 +158,109 @@ function ThinkingInsightBubble({
   );
 }
 
+function HoroscopeDetailBubble({
+  selected,
+  onClose,
+}: {
+  selected: SelectedHoroscope | null;
+  onClose: () => void;
+}) {
+  if (!selected) return null;
+  const { horoscope, anchor } = selected;
+  const width = 430;
+  const estimatedHeight = 440;
+  const margin = 14;
+  const viewportWidth = typeof window === "undefined" ? 0 : window.innerWidth;
+  const viewportHeight = typeof window === "undefined" ? 0 : window.innerHeight;
+  const desktopStyle = viewportWidth > 768
+    ? {
+        width,
+        left: Math.max(margin, Math.min(anchor.x - width / 2, viewportWidth - width - margin)),
+        top: Math.max(
+          margin,
+          Math.min(
+            anchor.y + estimatedHeight + margin <= viewportHeight
+              ? anchor.y + margin
+              : anchor.y - estimatedHeight - margin,
+            viewportHeight - estimatedHeight - margin,
+          ),
+        ),
+      }
+    : undefined;
+
+  return (
+    <motion.div
+      className="fixed inset-0 z-[70]"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+    >
+      <button
+        type="button"
+        className="absolute inset-0 bg-[var(--overlay-scrim)] backdrop-blur-sm min-[769px]:bg-transparent min-[769px]:backdrop-blur-0"
+        aria-label="关闭星座详情"
+        onClick={onClose}
+      />
+      <motion.article
+        className="floating-card-premium bottom-0 left-0 right-0 z-10 flex max-h-[100vh] max-h-[calc(100dvh-8px)] w-full flex-col overscroll-contain rounded-b-none min-[769px]:bottom-auto min-[769px]:left-auto min-[769px]:right-auto min-[769px]:max-h-[calc(100dvh-36px)] min-[769px]:rounded-[var(--radius-2xl)]"
+        style={{ position: "fixed", ...desktopStyle }}
+        initial={{ opacity: 0, y: 18, x: 0, scale: 0.98 }}
+        animate={{ opacity: 1, y: 0, x: 0, scale: 1 }}
+        exit={{ opacity: 0, y: 18, x: 0, scale: 0.98 }}
+        transition={{ duration: 0.2, ease: [0.2, 0, 0, 1] }}
+      >
+        <header className="shrink-0 border-b border-[var(--hairline)] bg-[var(--material-elevated)] px-4 py-3 pr-[max(1rem,env(safe-area-inset-right))] pt-[calc(0.75rem+env(safe-area-inset-top))] min-[769px]:pt-3">
+          <div className="mx-auto mb-2 h-1 w-10 rounded-full bg-[var(--text-faint)] min-[769px]:hidden" />
+          <div className="flex items-start justify-between gap-3">
+            <div className="min-w-0">
+              <div className="flex flex-wrap items-center gap-1.5 text-[11px] text-[var(--text-muted)]">
+                <span className="inline-flex items-center gap-1 rounded-[var(--radius-pill)] bg-[var(--primary-soft)] px-2 py-0.5 text-[var(--primary)]">
+                  <MoonStar size={11} />
+                  今日星座
+                </span>
+                <span>{horoscope.signName}</span>
+              </div>
+              <h3 className="mt-2 text-base font-semibold leading-snug text-[var(--text-primary)]">
+                {horoscope.name} · {horoscope.signName}
+              </h3>
+            </div>
+            <button
+              type="button"
+              onClick={onClose}
+              className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-xl border border-[var(--hairline)] text-[var(--text-muted)] transition hover:bg-[var(--interactive-hover)] hover:text-[var(--text-primary)]"
+              aria-label="关闭"
+            >
+              <X size={16} />
+            </button>
+          </div>
+        </header>
+
+        <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4">
+          <div className="mb-3 flex items-center gap-2">
+            <StarRating value={horoscope.stars} />
+            <span className="text-xs text-[var(--text-muted)]">{horoscope.stars}/5</span>
+          </div>
+          <p className="font-[var(--font-reading)] text-sm leading-7 text-[var(--text-secondary)]">
+            {horoscope.summary}
+          </p>
+          <div className="mt-4 flex flex-wrap gap-1.5 text-[11px] text-[var(--text-muted)]">
+            <span>来源：{horoscope.sourceName || "未知"}</span>
+            {horoscope.updatedAt ? (
+              <>
+                <span>·</span>
+                <span className="tabular">更新 {formatHoroscopeTime(horoscope.updatedAt)}</span>
+              </>
+            ) : null}
+          </div>
+          {horoscope.isFallback ? (
+            <p className="mt-2 text-[11px] text-[var(--text-muted)]">此为兜底内容，实时源稍后刷新。</p>
+          ) : null}
+        </div>
+      </motion.article>
+    </motion.div>
+  );
+}
+
 function ThinkingInsightStrip({
   insights,
   onSelect,
@@ -246,7 +350,7 @@ function formatHoroscopeTime(input: string | null | undefined) {
   return date.toLocaleTimeString("zh-CN", { hour: "2-digit", minute: "2-digit" });
 }
 
-function HoroscopeStrip({ horoscopes }: { horoscopes: HoroscopeDTO[] }) {
+function HoroscopeStrip({ horoscopes, onSelect }: { horoscopes: HoroscopeDTO[]; onSelect: (horoscope: HoroscopeDTO, anchor: DetailAnchor) => void }) {
   const latestUpdate = horoscopes
     .map((item) => new Date(item.updatedAt))
     .filter((date) => Number.isFinite(date.getTime()))
@@ -266,10 +370,25 @@ function HoroscopeStrip({ horoscopes }: { horoscopes: HoroscopeDTO[] }) {
           </div>
         ) : (
           horoscopes.map((item) => (
-            <div key={item.id} className="rounded-[var(--radius-md)] border border-[var(--hairline)] bg-[var(--material-elevated)] px-3 py-2">
+            <button
+              key={item.id}
+              type="button"
+              onClick={(event) => {
+                const rect = event.currentTarget.getBoundingClientRect();
+                onSelect(item, {
+                  x: event.clientX || rect.left + rect.width / 2,
+                  y: event.clientY || rect.top + rect.height / 2,
+                  top: rect.top,
+                  left: rect.left,
+                  width: rect.width,
+                  height: rect.height,
+                });
+              }}
+              className="group cursor-pointer rounded-[var(--radius-md)] border border-[var(--hairline)] bg-[var(--material-elevated)] px-3 py-2 text-left transition hover:-translate-y-0.5 hover:bg-[var(--material-muted)]"
+            >
               <div className="flex items-center justify-between gap-3 text-xs">
                 <span className="min-w-0 truncate font-medium text-[var(--text-secondary)]">
-                  {item.name} · {item.relation} · {item.signName}
+                  {item.name} · {item.signName}
                 </span>
                 <span className="shrink-0 tabular">
                   <StarRating value={item.stars} />
@@ -278,7 +397,10 @@ function HoroscopeStrip({ horoscopes }: { horoscopes: HoroscopeDTO[] }) {
               <p className="mt-1.5 line-clamp-2 text-[11px] leading-5 text-[var(--text-muted)]">
                 {item.summary}
               </p>
-            </div>
+              <div className="mt-1.5 flex items-center justify-end text-[var(--text-muted)]">
+                <ChevronRight size={11} className="transition group-hover:translate-x-0.5" />
+              </div>
+            </button>
           ))
         )}
       </div>
@@ -346,6 +468,7 @@ export function BriefingHero({
 }: Props) {
   const score = stats.averageScore == null ? null : Math.round(stats.averageScore);
   const [selectedInsight, setSelectedInsight] = useState<SelectedInsight | null>(null);
+  const [selectedHoroscope, setSelectedHoroscope] = useState<SelectedHoroscope | null>(null);
   const horoscopeBrief = horoscopes.length
     ? horoscopes.map((item) => `${item.name} ${item.stars}星`).join(" · ")
     : "等待同步";
@@ -446,12 +569,13 @@ export function BriefingHero({
             </div>
           </div>
           <div className="col-span-2">
-            <HoroscopeStrip horoscopes={horoscopes} />
+            <HoroscopeStrip horoscopes={horoscopes} onSelect={(h, anchor) => setSelectedHoroscope({ horoscope: h, anchor })} />
           </div>
         </div>
       </div>
 
       <ThinkingInsightBubble selected={selectedInsight} onClose={() => setSelectedInsight(null)} />
+      <HoroscopeDetailBubble selected={selectedHoroscope} onClose={() => setSelectedHoroscope(null)} />
     </motion.section>
   );
 }

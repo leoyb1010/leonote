@@ -35,7 +35,7 @@ let cachedDay: string | null = null;
 const PROFILES: HoroscopeProfile[] = [
   {
     id: "leo",
-    name: "袁博",
+    name: "Leo · 袁博",
     relation: "我",
     signName: "天秤座",
     signKey: "libra",
@@ -46,7 +46,7 @@ const PROFILES: HoroscopeProfile[] = [
   },
   {
     id: "ellen",
-    name: "张云",
+    name: "Ellen · 张云",
     relation: "老婆",
     signName: "双鱼座",
     signKey: "pisces",
@@ -57,7 +57,7 @@ const PROFILES: HoroscopeProfile[] = [
   },
   {
     id: "bubu",
-    name: "袁晨希",
+    name: "BuBu · 袁晨希",
     relation: "女儿",
     signName: "双子座",
     signKey: "gemini",
