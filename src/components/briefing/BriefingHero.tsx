@@ -251,7 +251,7 @@ function HoroscopeStrip({ horoscopes }: { horoscopes: HoroscopeDTO[] }) {
     .map((item) => new Date(item.updatedAt))
     .filter((date) => Number.isFinite(date.getTime()))
     .sort((a, b) => b.getTime() - a.getTime())[0];
-  const sourceLabel = horoscopes.some((item) => !item.isFallback) ? "AstroSage RSS" : "本地兜底";
+  const sourceLabel = Array.from(new Set(horoscopes.map((item) => item.sourceName))).join(" / ") || "实时源待同步";
 
   return (
     <div className="quiet-inset rounded-[var(--radius-lg)] px-3.5 py-3">
@@ -260,21 +260,27 @@ function HoroscopeStrip({ horoscopes }: { horoscopes: HoroscopeDTO[] }) {
         今日星座
       </div>
       <div className="mt-3 grid gap-2 sm:grid-cols-3 md:grid-cols-1 xl:grid-cols-1">
-        {horoscopes.map((item) => (
-          <div key={item.id} className="rounded-[var(--radius-md)] border border-[var(--hairline)] bg-[var(--material-elevated)] px-3 py-2">
-            <div className="flex items-center justify-between gap-3 text-xs">
-              <span className="min-w-0 truncate font-medium text-[var(--text-secondary)]">
-                {item.name} · {item.relation} · {item.signName}
-              </span>
-              <span className="shrink-0 tabular">
-                <StarRating value={item.stars} />
-              </span>
-            </div>
-            <p className="mt-1.5 line-clamp-2 text-[11px] leading-5 text-[var(--text-muted)]">
-              {item.summary}
-            </p>
+        {horoscopes.length === 0 ? (
+          <div className="rounded-[var(--radius-md)] border border-[var(--hairline)] bg-[var(--material-elevated)] px-3 py-5 text-center text-[11px] leading-5 text-[var(--text-muted)]">
+            实时星座源暂未返回，稍后刷新。
           </div>
-        ))}
+        ) : (
+          horoscopes.map((item) => (
+            <div key={item.id} className="rounded-[var(--radius-md)] border border-[var(--hairline)] bg-[var(--material-elevated)] px-3 py-2">
+              <div className="flex items-center justify-between gap-3 text-xs">
+                <span className="min-w-0 truncate font-medium text-[var(--text-secondary)]">
+                  {item.name} · {item.relation} · {item.signName}
+                </span>
+                <span className="shrink-0 tabular">
+                  <StarRating value={item.stars} />
+                </span>
+              </div>
+              <p className="mt-1.5 line-clamp-2 text-[11px] leading-5 text-[var(--text-muted)]">
+                {item.summary}
+              </p>
+            </div>
+          ))
+        )}
       </div>
       <div className="mt-2 flex items-center justify-between gap-2 text-[11px] leading-5 text-[var(--text-muted)]">
         <span className="min-w-0 truncate">来源：{sourceLabel}</span>

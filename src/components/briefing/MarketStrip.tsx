@@ -29,7 +29,7 @@ export function MarketStrip({ markets }: { markets: MarketSnapshotDTO[] }) {
                 </div>
                 <MarketSparkline points={item.points} positive={positive} />
               </div>
-              <p className={`numeric-display mt-2 text-xs ${positive ? "text-[var(--success)]" : "text-[var(--danger)]"}`}>
+              <p className={`numeric-display mt-2 text-xs ${positive ? "text-[var(--danger)]" : "text-[var(--success)]"}`}>
                 {positive ? "+" : ""}{item.changePct.toFixed(2)}%
               </p>
             </div>

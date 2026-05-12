@@ -72,7 +72,7 @@ function MarketRow({ item }: { item: MarketSnapshotDTO }) {
       </div>
       <div className="text-right">
         <p className="numeric-display text-sm font-semibold text-[var(--text-primary)]">{fmtPrice(item)}</p>
-        <p className={`mt-0.5 inline-flex items-center justify-end gap-0.5 text-[11px] ${up ? "text-[var(--success)]" : "text-[var(--danger)]"}`}>
+        <p className={`mt-0.5 inline-flex items-center justify-end gap-0.5 text-[11px] ${up ? "text-[var(--danger)]" : "text-[var(--success)]"}`}>
           <Icon size={11} />
           {up ? "+" : ""}{item.changePct.toFixed(2)}%
         </p>

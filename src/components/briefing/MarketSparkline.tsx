@@ -22,7 +22,7 @@ export function MarketSparkline({ points, positive }: Props) {
 
   return (
     <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} aria-hidden="true" className="overflow-visible">
-      <path d={d} fill="none" stroke={positive ? "var(--success)" : "var(--danger)"} strokeWidth="1.5" strokeLinecap="round" />
+      <path d={d} fill="none" stroke={positive ? "var(--danger)" : "var(--success)"} strokeWidth="1.5" strokeLinecap="round" />
     </svg>
   );
 }
