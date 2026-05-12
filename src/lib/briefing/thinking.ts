@@ -341,9 +341,9 @@ async function getHabitSignals(userId: string) {
 export async function getBriefingThinkingInsights(
   userId: string,
   items: NewsItemDTO[],
-  limit = 6,
+  limit = 7,
 ): Promise<BriefingThinkingInsight[]> {
-  const targetCount = Math.max(6, Math.min(limit, 8));
+  const targetCount = Math.max(7, Math.min(limit, 8));
   const habitSignals = await getHabitSignals(userId).catch(() => []);
   const candidates = items.map((item) => {
     const text = `${item.title} ${item.aiSummary ?? ""} ${item.detailText} ${item.sourceName} ${item.aiTags.join(" ")}`;

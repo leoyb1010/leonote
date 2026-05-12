@@ -272,7 +272,7 @@ function ThinkingInsightStrip({
   onSelect: (insight: BriefingThinkingInsight, anchor: DetailAnchor) => void;
 }) {
   const primaryInsight = insights[0];
-  const secondaryInsights = insights.slice(1, 6);
+  const secondaryInsights = insights.slice(1, 7);
 
   function openInsight(event: MouseEvent<HTMLButtonElement>, insight: BriefingThinkingInsight) {
     const rect = event.currentTarget.getBoundingClientRect();
@@ -370,7 +370,7 @@ function ThinkingInsightStrip({
           disabled
           className="w-full rounded-[var(--radius-lg)] border border-[var(--hairline)] bg-[var(--material-elevated)] px-3 py-4 text-left text-sm leading-6 text-[var(--text-muted)]"
         >
-          资讯正在收集中。等有足够高价值事件后，我会整理成至少 6 条可推演思考。
+          资讯正在收集中。等有足够高价值事件后，我会整理成至少 7 条可推演思考。
         </button>
       )}
     </section>

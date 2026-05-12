@@ -71,7 +71,7 @@ describe("briefing thinking insights", () => {
     expect(insights.some((insight) => insight.whyItMatters.includes("AI 资本与成本"))).toBe(true);
   });
 
-  it("returns at least six high-impact AI technology thoughts when enough items exist", async () => {
+  it("returns at least seven high-impact AI technology thoughts when enough items exist", async () => {
     vi.stubEnv("DATABASE_URL", "");
 
     const insights = await getBriefingThinkingInsights("test-user", [
@@ -126,7 +126,7 @@ describe("briefing thinking insights", () => {
       }),
     ]);
 
-    expect(insights).toHaveLength(6);
+    expect(insights).toHaveLength(7);
     expect(insights.every((insight) => /^OpenAI|^Google|^英伟达|^头部|^企业|^GitHub|^淘宝/.test(insight.title))).toBe(true);
     expect(insights.some((insight) => insight.whyItMatters.includes("前沿 AI 平台"))).toBe(true);
     expect(insights.some((insight) => insight.whyItMatters.includes("AI 算力与芯片"))).toBe(true);
