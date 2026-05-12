@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { useState, type ReactNode } from "react";
+import { useState, type MouseEvent, type ReactNode } from "react";
 import { BrainCircuit, CalendarDays, Check, ChevronRight, CloudSun, Copy, FilePlus2, Gauge, Loader2, MoonStar, Newspaper, RefreshCw, Sparkles, Star, Tags, X } from "lucide-react";
 import { Button } from "@/components/base/Button";
 import { cardFloatIn, heroTitleReveal } from "@/lib/animations";
@@ -268,8 +268,23 @@ function ThinkingInsightStrip({
   insights: BriefingThinkingInsight[];
   onSelect: (insight: BriefingThinkingInsight, anchor: DetailAnchor) => void;
 }) {
+  const primaryInsight = insights[0];
+  const secondaryInsights = insights.slice(1, 6);
+
+  function openInsight(event: MouseEvent<HTMLButtonElement>, insight: BriefingThinkingInsight) {
+    const rect = event.currentTarget.getBoundingClientRect();
+    onSelect(insight, {
+      x: event.clientX || rect.left + rect.width / 2,
+      y: event.clientY || rect.top + rect.height / 2,
+      top: rect.top,
+      left: rect.left,
+      width: rect.width,
+      height: rect.height,
+    });
+  }
+
   return (
-    <section className="quiet-inset rounded-[var(--radius-xl)] p-3.5">
+    <section className="quiet-inset rounded-[var(--radius-xl)] p-3 sm:p-3.5">
       <div className="mb-3 flex items-center justify-between gap-3">
         <div className="flex min-w-0 items-center gap-2 text-xs text-[var(--text-muted)]">
           <BrainCircuit size={14} className="text-[var(--primary)]" />
@@ -280,41 +295,71 @@ function ThinkingInsightStrip({
         </span>
       </div>
 
-      {insights.length > 0 ? (
-        <div className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1 sm:grid sm:grid-cols-2 sm:overflow-visible sm:pb-0 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-3">
-          {insights.slice(0, 6).map((insight, index) => (
-            <button
-              key={insight.id}
-              type="button"
-              onClick={(event) => {
-                const rect = event.currentTarget.getBoundingClientRect();
-                onSelect(insight, {
-                  x: event.clientX || rect.left + rect.width / 2,
-                  y: event.clientY || rect.top + rect.height / 2,
-                  top: rect.top,
-                  left: rect.left,
-                  width: rect.width,
-                  height: rect.height,
-                });
-              }}
-              className="group min-w-[220px] rounded-[var(--radius-lg)] border border-[var(--hairline)] bg-[var(--material-elevated)] p-3 text-left transition hover:-translate-y-0.5 hover:bg-[var(--material-muted)] sm:min-w-0"
-            >
-              <div className="flex items-center justify-between gap-2 text-[11px] text-[var(--text-muted)]">
-                <span className="inline-flex items-center gap-1">
-                  <Sparkles size={11} className="text-[var(--primary)]" />
-                  思考 {THINKING_LABELS[index] ?? index + 1}
-                </span>
-                <span>{insight.impactLabel}</span>
+      {primaryInsight ? (
+        <div className={`grid gap-3 ${secondaryInsights.length ? "lg:grid-cols-[minmax(0,1.02fr)_minmax(360px,0.98fr)]" : ""}`}>
+          <button
+            type="button"
+            onClick={(event) => openInsight(event, primaryInsight)}
+            className="group flex min-h-[164px] flex-col rounded-[var(--radius-lg)] border border-[var(--hairline)] bg-[var(--material-elevated)] p-3.5 text-left transition hover:-translate-y-0.5 hover:bg-[var(--material-muted)] sm:p-4 lg:min-h-[188px]"
+          >
+            <div className="flex items-center justify-between gap-3 text-[11px] text-[var(--text-muted)]">
+              <span className="inline-flex items-center gap-1">
+                <Sparkles size={12} className="text-[var(--primary)]" />
+                思考 One
+              </span>
+              <span>{primaryInsight.impactLabel}</span>
+            </div>
+            <p className="mt-3 line-clamp-2 text-base font-semibold leading-snug text-[var(--text-primary)] sm:text-[1.05rem]">
+              {primaryInsight.title}
+            </p>
+            <p className="mt-2 line-clamp-2 font-[var(--font-reading)] text-xs leading-5 text-[var(--text-muted)]">
+              {primaryInsight.whyItMatters || primaryInsight.thesis}
+            </p>
+            <div className="mt-auto flex items-end justify-between gap-3 pt-3">
+              <div className="min-w-0">
+                <p className="numeric-display text-[11px] text-[var(--text-muted)]">置信 {primaryInsight.confidence}</p>
+                <div className="mt-1.5 flex flex-wrap gap-1.5">
+                  {primaryInsight.tags.slice(0, 3).map((tag) => (
+                    <span key={tag} className="rounded-[var(--radius-pill)] border border-[var(--hairline)] px-2 py-0.5 text-[10px] text-[var(--text-muted)]">
+                      {tag}
+                    </span>
+                  ))}
+                </div>
               </div>
-              <p className="mt-2 line-clamp-2 min-h-9 text-sm font-medium leading-snug text-[var(--text-primary)]">
-                {insight.title}
-              </p>
-              <div className="mt-2 flex items-center justify-between gap-2 text-[11px] text-[var(--text-muted)]">
-                <span className="numeric-display">置信 {insight.confidence}</span>
-                <ChevronRight size={13} className="transition group-hover:translate-x-0.5" />
-              </div>
-            </button>
-          ))}
+              <ChevronRight size={15} className="shrink-0 text-[var(--text-muted)] transition group-hover:translate-x-0.5 group-hover:text-[var(--text-primary)]" />
+            </div>
+          </button>
+
+          {secondaryInsights.length > 0 ? (
+            <div className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1 lg:mx-0 lg:grid lg:grid-cols-2 lg:gap-2 lg:overflow-visible lg:px-0 lg:pb-0">
+              {secondaryInsights.map((insight, offset) => {
+                const index = offset + 1;
+                return (
+                  <button
+                    key={insight.id}
+                    type="button"
+                    onClick={(event) => openInsight(event, insight)}
+                    className="group min-w-[232px] rounded-[var(--radius-lg)] border border-[var(--hairline)] bg-[var(--material-elevated)] px-3 py-2.5 text-left transition hover:-translate-y-0.5 hover:bg-[var(--material-muted)] lg:min-w-0"
+                  >
+                    <div className="flex items-center justify-between gap-2 text-[10px] text-[var(--text-muted)]">
+                      <span className="inline-flex items-center gap-1">
+                        <Sparkles size={11} className="text-[var(--primary)]" />
+                        思考 {THINKING_LABELS[index] ?? index + 1}
+                      </span>
+                      <span>{insight.impactLabel}</span>
+                    </div>
+                    <p className="mt-1.5 line-clamp-2 text-[13px] font-medium leading-snug text-[var(--text-primary)]">
+                      {insight.title}
+                    </p>
+                    <div className="mt-1.5 flex items-center justify-between gap-2 text-[10px] text-[var(--text-muted)]">
+                      <span className="numeric-display">置信 {insight.confidence}</span>
+                      <ChevronRight size={13} className="transition group-hover:translate-x-0.5" />
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          ) : null}
         </div>
       ) : (
         <button
@@ -478,11 +523,11 @@ export function BriefingHero({
       variants={cardFloatIn}
       initial="initial"
       animate="animate"
-      className="card-premium relative overflow-hidden p-4 sm:p-5 md:p-6 lg:p-7"
+      className="card-premium relative overflow-hidden p-4 sm:p-5 md:p-6"
     >
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_18%_0%,rgba(255,255,255,0.055),transparent_32%),radial-gradient(circle_at_92%_18%,var(--primary-soft),transparent_28%)]" />
 
-      <div className="relative z-10 grid gap-6 md:grid-cols-[minmax(0,1fr)_300px] md:items-start xl:grid-cols-[minmax(0,1fr)_360px]">
+      <div className="relative z-10 grid gap-5 md:grid-cols-[minmax(0,1fr)_300px] md:items-start xl:grid-cols-[minmax(0,1fr)_360px]">
         <div className="min-w-0">
           <div className="mb-4 flex flex-wrap items-center gap-2 text-xs text-[var(--text-muted)]">
             <span className="inline-flex items-center gap-1.5 rounded-[var(--radius-pill)] border border-[var(--hairline)] bg-[var(--material-inset)] px-2.5 py-1">
@@ -516,14 +561,14 @@ export function BriefingHero({
             />
           </motion.div>
 
-          <div className="mt-5 max-w-4xl">
+          <div className="mt-4 max-w-4xl">
             <ThinkingInsightStrip
               insights={thinkingInsights}
               onSelect={(insight, anchor) => setSelectedInsight({ insight, anchor })}
             />
           </div>
 
-          <div className="mt-5 flex flex-wrap gap-2">
+          <div className="mt-4 flex flex-wrap gap-2">
             <Button variant="primary" size="sm" onClick={onRefresh} disabled={loading} className="gap-1.5">
               {loading ? <Loader2 size={14} className="animate-spin" /> : <RefreshCw size={14} />}
               刷新简报
