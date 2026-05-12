@@ -21,10 +21,9 @@ type HoroscopeRssItem = {
   isoDate?: string;
 };
 
-const CACHE_TTL = 6 * 60 * 60 * 1000;
 const FEED_TIMEOUT_MS = 12_000;
 let cachedHoroscopes: HoroscopeDTO[] | null = null;
-let cacheTime = 0;
+let cachedDay: string | null = null;
 
 const PROFILES: HoroscopeProfile[] = [
   {
@@ -69,8 +68,17 @@ const FALLBACK_SUMMARY: Record<HoroscopeDTO["signKey"], string> = {
   gemini: "今天好奇心会带来新想法，适合学习、表达和探索。注意不要同时打开太多任务，保留一点专注。",
 };
 
+function shanghaiDayKey(now = new Date()) {
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Shanghai",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(now);
+}
+
 function dateSeed(profile: HoroscopeProfile) {
-  const today = new Date().toISOString().slice(0, 10);
+  const today = shanghaiDayKey();
   return stableExternalId(`${today}-${profile.id}-${profile.signKey}`);
 }
 
@@ -131,9 +139,6 @@ async function fetchHoroscope(profile: HoroscopeProfile): Promise<HoroscopeDTO> 
     if (!item) return fallbackHoroscope(profile);
     const rawText = item.content || item.contentSnippet || item.summary || item.title || "";
     const summary = sanitizeBriefingText(rawText, 180) || FALLBACK_SUMMARY[profile.signKey];
-    const updatedAt = item.isoDate || item.pubDate;
-    const parsedDate = updatedAt ? new Date(updatedAt) : new Date();
-
     return {
       id: profile.id,
       name: profile.name,
@@ -144,7 +149,7 @@ async function fetchHoroscope(profile: HoroscopeProfile): Promise<HoroscopeDTO> 
       summary,
       sourceName: "AstroSage RSS",
       sourceUrl: item.link || profile.feedUrl,
-      updatedAt: Number.isFinite(parsedDate.getTime()) ? parsedDate.toISOString() : new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
       isFallback: false,
     };
   } catch {
@@ -152,9 +157,15 @@ async function fetchHoroscope(profile: HoroscopeProfile): Promise<HoroscopeDTO> 
   }
 }
 
-export async function getDailyHoroscopes(): Promise<HoroscopeDTO[]> {
-  if (cachedHoroscopes && Date.now() - cacheTime < CACHE_TTL) return cachedHoroscopes;
+export async function getDailyHoroscopes(force = false): Promise<HoroscopeDTO[]> {
+  const today = shanghaiDayKey();
+  if (!force && cachedHoroscopes && cachedDay === today) return cachedHoroscopes;
   cachedHoroscopes = await Promise.all(PROFILES.map(fetchHoroscope));
-  cacheTime = Date.now();
+  cachedDay = today;
   return cachedHoroscopes;
+}
+
+export function invalidateHoroscopeCache() {
+  cachedHoroscopes = null;
+  cachedDay = null;
 }

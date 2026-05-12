@@ -88,7 +88,7 @@ export function TopBar({ markets, refreshing = false, error, onRefresh }: Props)
     .sort((a, b) => Math.abs(b.changePct) - Math.abs(a.changePct))[0];
 
   return (
-    <motion.section variants={cardFloatIn} initial="initial" animate="animate" className="card-premium p-4 sm:p-5">
+    <motion.section variants={cardFloatIn} initial="initial" animate="animate" className="card-premium p-4 lg:p-5">
       <div className="mb-3 flex items-start justify-between gap-3">
         <div>
           <div className="flex items-center gap-2 text-[11px] uppercase text-[var(--text-muted)]">

@@ -9,7 +9,7 @@ interface Props {
 
 export function DeepReadCard({ item, onClick }: Props) {
   return (
-    <section className="card-premium p-4 sm:p-5">
+    <section className="card-premium p-4 lg:p-5">
       <div className="mb-3 flex items-center justify-between gap-3">
         <div>
           <div className="flex items-center gap-2 text-[11px] uppercase text-[var(--text-muted)]">

@@ -50,7 +50,7 @@ function ThinkingInsightBubble({
   const margin = 14;
   const viewportWidth = typeof window === "undefined" ? 0 : window.innerWidth;
   const viewportHeight = typeof window === "undefined" ? 0 : window.innerHeight;
-  const desktopStyle = viewportWidth >= 640
+  const desktopStyle = viewportWidth > 768
     ? {
         width,
         left: Math.max(margin, Math.min(anchor.x - width / 2, viewportWidth - width - margin)),
@@ -75,43 +75,46 @@ function ThinkingInsightBubble({
     >
       <button
         type="button"
-        className="absolute inset-0 bg-[var(--overlay-scrim)] backdrop-blur-sm sm:bg-transparent sm:backdrop-blur-0"
+        className="absolute inset-0 bg-[var(--overlay-scrim)] backdrop-blur-sm min-[769px]:bg-transparent min-[769px]:backdrop-blur-0"
         aria-label="关闭思考详情"
         onClick={onClose}
       />
       <motion.article
-        className="floating-card-premium inset-x-3 bottom-[calc(0.75rem+env(safe-area-inset-bottom))] max-h-[78dvh] rounded-[var(--radius-2xl)] sm:inset-x-auto sm:bottom-auto"
-        style={desktopStyle}
+        className="floating-card-premium bottom-0 left-0 right-0 z-10 flex max-h-[100vh] max-h-[calc(100dvh-8px)] w-full flex-col overscroll-contain rounded-b-none min-[769px]:bottom-auto min-[769px]:left-auto min-[769px]:right-auto min-[769px]:max-h-[calc(100dvh-36px)] min-[769px]:rounded-[var(--radius-2xl)]"
+        style={{ position: "fixed", ...desktopStyle }}
         initial={{ opacity: 0, y: 18, x: 0, scale: 0.98 }}
         animate={{ opacity: 1, y: 0, x: 0, scale: 1 }}
         exit={{ opacity: 0, y: 18, x: 0, scale: 0.98 }}
         transition={{ duration: 0.2, ease: [0.2, 0, 0, 1] }}
       >
-        <header className="flex shrink-0 items-start justify-between gap-3 border-b border-[var(--hairline)] bg-[var(--material-elevated)] px-4 py-3 pt-[calc(0.75rem+env(safe-area-inset-top))] sm:pt-3">
-          <div className="min-w-0">
-            <div className="flex flex-wrap items-center gap-1.5 text-[11px] text-[var(--text-muted)]">
-              <span className="inline-flex items-center gap-1 rounded-[var(--radius-pill)] bg-[var(--primary-soft)] px-2 py-0.5 text-[var(--primary)]">
-                <BrainCircuit size={11} />
-                AI 协助思考
-              </span>
-              <span>{insight.impactLabel}</span>
-              <span className="numeric-display">置信 {insight.confidence}</span>
+        <header className="shrink-0 border-b border-[var(--hairline)] bg-[var(--material-elevated)] px-4 py-3 pr-[max(1rem,env(safe-area-inset-right))] pt-[calc(0.75rem+env(safe-area-inset-top))] min-[769px]:pt-3">
+          <div className="mx-auto mb-2 h-1 w-10 rounded-full bg-[var(--text-faint)] min-[769px]:hidden" />
+          <div className="flex items-start justify-between gap-3">
+            <div className="min-w-0">
+              <div className="flex flex-wrap items-center gap-1.5 text-[11px] text-[var(--text-muted)]">
+                <span className="inline-flex items-center gap-1 rounded-[var(--radius-pill)] bg-[var(--primary-soft)] px-2 py-0.5 text-[var(--primary)]">
+                  <BrainCircuit size={11} />
+                  AI 协助思考
+                </span>
+                <span>{insight.impactLabel}</span>
+                <span className="numeric-display">置信 {insight.confidence}</span>
+              </div>
+              <h3 className="mt-2 text-base font-semibold leading-snug text-[var(--text-primary)]">
+                {insight.title}
+              </h3>
             </div>
-            <h3 className="mt-2 text-base font-semibold leading-snug text-[var(--text-primary)]">
-              {insight.title}
-            </h3>
+            <button
+              type="button"
+              onClick={onClose}
+              className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-xl border border-[var(--hairline)] text-[var(--text-muted)] transition hover:bg-[var(--interactive-hover)] hover:text-[var(--text-primary)]"
+              aria-label="关闭"
+            >
+              <X size={16} />
+            </button>
           </div>
-          <button
-            type="button"
-            onClick={onClose}
-            className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-xl border border-[var(--hairline)] text-[var(--text-muted)] transition hover:bg-[var(--interactive-hover)] hover:text-[var(--text-primary)]"
-            aria-label="关闭"
-          >
-            <X size={16} />
-          </button>
         </header>
 
-        <div className="max-h-[calc(78dvh-5rem)] overflow-y-auto px-4 py-4">
+        <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4">
           <p className="font-[var(--font-reading)] text-sm leading-7 text-[var(--text-secondary)]">
             {insight.whyItMatters}
           </p>
@@ -174,7 +177,7 @@ function ThinkingInsightStrip({
       </div>
 
       {insights.length > 0 ? (
-        <div className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1 md:grid md:grid-cols-3 md:overflow-visible md:pb-0">
+        <div className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1 sm:grid sm:grid-cols-2 sm:overflow-visible sm:pb-0 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-3">
           {insights.slice(0, 6).map((insight, index) => (
             <button
               key={insight.id}
@@ -190,7 +193,7 @@ function ThinkingInsightStrip({
                   height: rect.height,
                 });
               }}
-              className="group min-w-[230px] rounded-[var(--radius-lg)] border border-[var(--hairline)] bg-[var(--material-elevated)] p-3 text-left transition hover:-translate-y-0.5 hover:bg-[var(--material-muted)] md:min-w-0"
+              className="group min-w-[220px] rounded-[var(--radius-lg)] border border-[var(--hairline)] bg-[var(--material-elevated)] p-3 text-left transition hover:-translate-y-0.5 hover:bg-[var(--material-muted)] sm:min-w-0"
             >
               <div className="flex items-center justify-between gap-2 text-[11px] text-[var(--text-muted)]">
                 <span className="inline-flex items-center gap-1">
@@ -236,21 +239,34 @@ function StarRating({ value }: { value: number }) {
   );
 }
 
+function formatHoroscopeTime(input: string | null | undefined) {
+  if (!input) return "等待同步";
+  const date = new Date(input);
+  if (!Number.isFinite(date.getTime())) return "等待同步";
+  return date.toLocaleTimeString("zh-CN", { hour: "2-digit", minute: "2-digit" });
+}
+
 function HoroscopeStrip({ horoscopes }: { horoscopes: HoroscopeDTO[] }) {
+  const latestUpdate = horoscopes
+    .map((item) => new Date(item.updatedAt))
+    .filter((date) => Number.isFinite(date.getTime()))
+    .sort((a, b) => b.getTime() - a.getTime())[0];
+  const sourceLabel = horoscopes.some((item) => !item.isFallback) ? "AstroSage RSS" : "本地兜底";
+
   return (
     <div className="quiet-inset rounded-[var(--radius-lg)] px-3.5 py-3">
       <div className="flex items-center gap-2 text-[11px] text-[var(--text-muted)]">
         <MoonStar size={13} />
         今日星座
       </div>
-      <div className="mt-3 grid gap-2">
+      <div className="mt-3 grid gap-2 sm:grid-cols-3 md:grid-cols-1 xl:grid-cols-1">
         {horoscopes.map((item) => (
           <div key={item.id} className="rounded-[var(--radius-md)] border border-[var(--hairline)] bg-[var(--material-elevated)] px-3 py-2">
             <div className="flex items-center justify-between gap-3 text-xs">
               <span className="min-w-0 truncate font-medium text-[var(--text-secondary)]">
                 {item.name} · {item.relation} · {item.signName}
               </span>
-              <span className="shrink-0">
+              <span className="shrink-0 tabular">
                 <StarRating value={item.stars} />
               </span>
             </div>
@@ -260,9 +276,10 @@ function HoroscopeStrip({ horoscopes }: { horoscopes: HoroscopeDTO[] }) {
           </div>
         ))}
       </div>
-      <p className="mt-2 text-[11px] leading-5 text-[var(--text-muted)]">
-        来源：{horoscopes.some((item) => !item.isFallback) ? "AstroSage RSS" : "本地兜底"} · 每日五颗星
-      </p>
+      <div className="mt-2 flex items-center justify-between gap-2 text-[11px] leading-5 text-[var(--text-muted)]">
+        <span className="min-w-0 truncate">来源：{sourceLabel}</span>
+        <span className="shrink-0 tabular">更新 {formatHoroscopeTime(latestUpdate?.toISOString())}</span>
+      </div>
     </div>
   );
 }
@@ -332,11 +349,11 @@ export function BriefingHero({
       variants={cardFloatIn}
       initial="initial"
       animate="animate"
-      className="card-premium relative overflow-hidden p-5 sm:p-6 lg:p-7"
+      className="card-premium relative overflow-hidden p-4 sm:p-5 md:p-6 lg:p-7"
     >
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_18%_0%,rgba(255,255,255,0.055),transparent_32%),radial-gradient(circle_at_92%_18%,var(--primary-soft),transparent_34%)]" />
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_18%_0%,rgba(255,255,255,0.055),transparent_32%),radial-gradient(circle_at_92%_18%,var(--primary-soft),transparent_28%)]" />
 
-      <div className="relative z-10 grid gap-6 xl:grid-cols-[minmax(0,1fr)_360px] xl:items-start">
+      <div className="relative z-10 grid gap-6 md:grid-cols-[minmax(0,1fr)_300px] md:items-start xl:grid-cols-[minmax(0,1fr)_360px]">
         <div className="min-w-0">
           <div className="mb-4 flex flex-wrap items-center gap-2 text-xs text-[var(--text-muted)]">
             <span className="inline-flex items-center gap-1.5 rounded-[var(--radius-pill)] border border-[var(--hairline)] bg-[var(--material-inset)] px-2.5 py-1">
@@ -393,7 +410,7 @@ export function BriefingHero({
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-3 xl:pt-1">
+        <div className="grid grid-cols-2 gap-3 md:pt-1">
           <MetricCard
             icon={<Newspaper size={13} />}
             label="资讯"

@@ -42,12 +42,12 @@ export function NewsColumn({
       </div>
 
       {visible.length === 0 ? (
-        <div className="quiet-inset flex min-h-[180px] flex-col items-center justify-center rounded-[var(--radius-xl)] px-4 py-10 text-center">
+        <div className={`${featured ? "min-h-[120px]" : "min-h-[140px] sm:min-h-[160px]"} quiet-inset flex flex-col items-center justify-center rounded-[var(--radius-xl)] px-4 py-8 text-center`}>
           <Newspaper size={22} className="text-[var(--text-faint)]" />
           <p className="mt-3 text-sm text-[var(--text-muted)]">{emptyText}</p>
         </div>
       ) : (
-        <div className={featured ? "grid gap-3 md:grid-cols-2" : "grid gap-3"}>
+        <div className={featured ? "grid gap-3 sm:grid-cols-2 lg:grid-cols-3" : "grid gap-3 sm:grid-cols-2 xl:grid-cols-1"}>
           {visible.map((item) => (
             <NewsCard
               key={item.id}

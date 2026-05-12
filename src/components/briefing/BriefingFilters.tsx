@@ -26,8 +26,8 @@ const categories: Array<{ value: Category; label: string }> = [
 
 export function BriefingFilters({ range, category, onRangeChange, onCategoryChange }: Props) {
   return (
-    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-      <div className="inline-flex w-fit rounded-[var(--radius-pill)] border border-[var(--hairline)] bg-[var(--material-inset)] p-1">
+    <div className="flex min-w-0 flex-wrap items-center gap-2 sm:gap-3">
+      <div className="inline-flex shrink-0 rounded-[var(--radius-pill)] border border-[var(--hairline)] bg-[var(--material-inset)] p-1">
         {ranges.map((item) => (
           <button
             key={item.value}
@@ -42,7 +42,7 @@ export function BriefingFilters({ range, category, onRangeChange, onCategoryChan
         ))}
       </div>
 
-      <div className="flex flex-wrap gap-2">
+      <div className="flex min-w-0 flex-wrap gap-2">
         {categories.map((item) => (
           <button
             key={item.value}

@@ -9,14 +9,14 @@ function formatPrice(value: number) {
 export function MarketStrip({ markets }: { markets: MarketSnapshotDTO[] }) {
   if (markets.length === 0) {
     return (
-      <section className="card-premium p-4">
+      <section className="card-premium p-4 lg:p-5">
         <p className="text-sm text-[var(--text-muted)]">市场还没醒，稍后再来看看。</p>
       </section>
     );
   }
 
   return (
-    <section className="card-premium p-4">
+    <section className="card-premium p-4 lg:p-5">
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
         {markets.slice(0, 5).map((item) => {
           const positive = item.changePct >= 0;

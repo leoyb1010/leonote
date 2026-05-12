@@ -92,7 +92,7 @@ function TagInsights({ items }: { items: NewsItemDTO[] }) {
   const max = tags[0]?.count ?? 1;
 
   return (
-    <section className="card-premium p-4 sm:p-5">
+    <section className="card-premium p-4 lg:p-5">
       <div className="mb-3 flex items-center gap-2 text-[11px] uppercase text-[var(--text-muted)]">
         <Tags size={13} />
         Insights
@@ -128,7 +128,7 @@ function BriefingMetaPanel({ meta }: { meta: BriefingMetaDTO }) {
   const latestCron = meta.cron[0];
 
   return (
-    <section className="card-premium p-4 sm:p-5">
+    <section className="card-premium p-4 lg:p-5">
       <div className="mb-4 flex items-center gap-2 text-[11px] uppercase text-[var(--text-muted)]">
         <Database size={13} />
         Sources
@@ -322,7 +322,7 @@ export function BriefingShell({ initialDigest, initialItems, initialThinkingInsi
         onTitleChange={setBriefingTitle}
       />
 
-      <div className="mt-5 flex flex-col gap-3 border-b border-[var(--hairline)] pb-4 lg:flex-row lg:items-center lg:justify-between">
+      <div className="mt-5 flex flex-wrap gap-3 border-b border-[var(--hairline)] pb-4 lg:items-center lg:justify-between">
         <BriefingFilters
           range={range}
           category={category}
@@ -335,7 +335,7 @@ export function BriefingShell({ initialDigest, initialItems, initialThinkingInsi
             void refresh(range, next);
           }}
         />
-        <div className="flex min-h-6 items-center gap-2 text-xs text-[var(--text-muted)]">
+        <div className="flex min-h-6 min-w-0 items-center gap-2 text-xs text-[var(--text-muted)]">
           {loading ? (
             <>
               <Loader2 size={14} className="animate-spin" />
@@ -344,12 +344,12 @@ export function BriefingShell({ initialDigest, initialItems, initialThinkingInsi
           ) : refreshError ? (
             <>
               <AlertCircle size={14} className="text-[var(--danger)]" />
-              {refreshError}
+              <span className="truncate">{refreshError}</span>
             </>
           ) : (
             <>
               <Clock3 size={14} />
-              最近生成 {formatShortTime(meta.generatedAt)}
+              <span className="truncate">最近生成 {formatShortTime(meta.generatedAt)}</span>
             </>
           )}
         </div>
@@ -360,9 +360,9 @@ export function BriefingShell({ initialDigest, initialItems, initialThinkingInsi
         variants={listStagger}
         initial="initial"
         animate="animate"
-        className="mt-6 grid gap-6 xl:grid-cols-[minmax(0,1fr)_360px]"
+        className="mt-6 grid gap-5 lg:grid-cols-[minmax(0,1fr)_320px] lg:gap-6 xl:grid-cols-[minmax(0,1fr)_360px]"
       >
-        <div className="space-y-8">
+        <div className="space-y-6 lg:space-y-8">
           <NewsColumn
             title="今日亮点"
             eyebrow="Highlights"
@@ -385,7 +385,7 @@ export function BriefingShell({ initialDigest, initialItems, initialThinkingInsi
           />
         </div>
 
-        <aside className="space-y-5 xl:sticky xl:top-6 xl:self-start">
+        <aside className="space-y-4 lg:sticky lg:top-6 lg:self-start lg:space-y-5">
           <TopBar
             markets={markets}
             refreshing={marketRefreshing}

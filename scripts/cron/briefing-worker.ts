@@ -39,6 +39,10 @@ cron.schedule("0 9,12,15 * * 1-5", () => callTask("/api/briefing/cron/fetch-mark
 cron.schedule("0 8 * * *", () => callTask("/api/briefing/cron/fetch-tavily"), { timezone: "Asia/Shanghai" });
 cron.schedule("0 20 * * *", () => callTask("/api/briefing/cron/fetch-tavily"), { timezone: "Asia/Shanghai" });
 
+// Horoscope refresh: local-day cache invalidation at Shanghai midnight, with a morning safety retry.
+cron.schedule("1 0 * * *", () => callTask("/api/briefing/cron/refresh-horoscope"), { timezone: "Asia/Shanghai" });
+cron.schedule("30 6 * * *", () => callTask("/api/briefing/cron/refresh-horoscope"), { timezone: "Asia/Shanghai" });
+
 // Morning digest: market + digest at 7:00
 cron.schedule("5 7 * * *", async () => {
   await callTask("/api/briefing/cron/fetch-market");
@@ -50,4 +54,4 @@ cron.schedule("0 18 * * *", async () => {
   await callTask("/api/briefing/cron/generate-digest");
 }, { timezone: "Asia/Shanghai" });
 
-console.log("[briefing-cron] worker started — RSS every 10min daytime, Tavily 2x/day fallback");
+console.log("[briefing-cron] worker started — RSS every 10min daytime, Tavily 2x/day fallback, horoscope local-day refresh");
