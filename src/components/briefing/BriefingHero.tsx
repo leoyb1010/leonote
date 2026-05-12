@@ -2,6 +2,7 @@
 
 import { motion } from "framer-motion";
 import { useState, type MouseEvent, type ReactNode } from "react";
+import { createPortal } from "react-dom";
 import { BrainCircuit, CalendarDays, Check, ChevronRight, CloudSun, Copy, FilePlus2, Gauge, Loader2, MoonStar, Newspaper, RefreshCw, Sparkles, Star, Tags, X } from "lucide-react";
 import { Button } from "@/components/base/Button";
 import { cardFloatIn, heroTitleReveal } from "@/lib/animations";
@@ -67,7 +68,7 @@ function ThinkingInsightBubble({
       }
     : undefined;
 
-  return (
+  return createPortal(
     <motion.div
       className="fixed inset-0 z-[70]"
       initial={{ opacity: 0 }}
@@ -154,7 +155,8 @@ function ThinkingInsightBubble({
           ) : null}
         </div>
       </motion.article>
-    </motion.div>
+    </motion.div>,
+    document.body,
   );
 }
 
@@ -188,7 +190,7 @@ function HoroscopeDetailBubble({
       }
     : undefined;
 
-  return (
+  return createPortal(
     <motion.div
       className="fixed inset-0 z-[70]"
       initial={{ opacity: 0 }}
@@ -257,7 +259,8 @@ function HoroscopeDetailBubble({
           ) : null}
         </div>
       </motion.article>
-    </motion.div>
+    </motion.div>,
+    document.body,
   );
 }
 
