@@ -75,8 +75,8 @@ const parser = new Parser<Record<string, unknown>, HoroscopeRssItem>({
   },
 });
 
-const POSITIVE_RE = /\b(good|great|success|successful|gain|benefit|happy|happiness|favorable|positive|support|opportunity|progress|profit|romance|love|energy|confidence|luck|reward|improve|growth|achievement|creative|talent|new|learn)\b/gi;
-const CAUTION_RE = /\b(avoid|caution|careful|stress|problem|loss|conflict|delay|trouble|issue|worry|tension|argument|expense|health|pressure|risk|obstacle|dispute|necessary|difficult)\b/gi;
+const POSITIVE_RE = /\b(good|great|excellent|wonderful|amazing|best|better|success|successful|gain|benefit|beneficial|happy|happiness|joy|joyful|favorable|positive|support|supportive|opportunity|progress|profit|romance|love|energy|confidence|confident|luck|lucky|reward|improve|improvement|growth|achievement|achieve|creative|talent|talented|new|learn|strong|stronger|enjoy|enjoyable|peaceful|calm|harmony|harmonious|trust|trusted|open|clear|clarity|bright|brighter|hope|hopeful|inspire|inspired|freedom|free|smart|wise|wisdom|powerful|thriving|thrive|smooth|easier|comfortable|relax|relaxed|balanced|focus|focused|productive|accomplish|celebrate|win|winning|exciting|refresh|renewed|uplift|uplifting|boost|boosted|encourage|encouraged|fulfill|fulfilled|abundance|prosper|vitality|wellbeing|well-being)\b/gi;
+const CAUTION_RE = /\b(avoid|caution|careful|stress|stressed|problem|loss|conflict|delay|trouble|issue|worry|tension|argument|expense|health|pressure|risk|obstacle|dispute|necessary|difficult|hardship|struggle|crisis|danger|threat|harm|hurt|pain|fail|failure|exhaust|overwhelm|frustrat|anxious|anxiety|regret|disappoint|neglect|ignore|reckless|impulsive|volatile|chaos|chaotic|toxic|destructive|lonely|isolat|stuck|stagnan|decline|deteriorat|worse|worst|burden|heavy)\b/gi;
 
 const THEME_PATTERNS: Record<ThemeKey, RegExp> = {
   money: /\b(money|financial|finance|investment|invest|purchase|cost|resources|earn|income|profit|expense|budget|save|spending)\b/gi,
@@ -158,7 +158,11 @@ function scoreFromText(text: string) {
   const positive = text.match(POSITIVE_RE)?.length ?? 0;
   const caution = text.match(CAUTION_RE)?.length ?? 0;
   if (positive === 0 && caution === 0) return 3;
-  return clampStars(3 + Math.min(2, positive) * 0.75 - Math.min(2, caution) * 0.65);
+  // Positive words boost more; caution words penalize less.
+  // Net-positive text => 4-5 stars; balanced => 3 stars; net-negative => 2 stars.
+  const posScore = Math.min(5, positive) * 0.5;
+  const cautScore = Math.min(3, caution) * 0.45;
+  return clampStars(3 + posScore - cautScore);
 }
 
 function parseSourceDate(input: string | undefined) {
