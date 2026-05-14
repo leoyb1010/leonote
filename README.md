@@ -13,6 +13,18 @@
 </p>
 
 <p>
+  <a href="#产品预览">产品预览</a>
+  ·
+  <a href="#核心模块">核心模块</a>
+  ·
+  <a href="#快速开始">快速开始</a>
+  ·
+  <a href="#自托管生产部署">部署</a>
+  ·
+  <a href="#版本记录">版本记录</a>
+</p>
+
+<p>
   <img alt="Version" src="https://img.shields.io/badge/Version-v1.6.13-7B84F6?style=for-the-badge">
   <img alt="License" src="https://img.shields.io/badge/License-Personal%20Use%20Only-F26D6D?style=for-the-badge">
   <img alt="Next.js" src="https://img.shields.io/badge/Next.js-16-111111?style=for-the-badge&logo=nextdotjs">
@@ -29,6 +41,36 @@
 </div>
 
 ---
+
+## 产品预览
+
+<p align="center">
+  <img src="./docs/images/leonote-briefing-desktop.png" alt="Leonote 每日简报桌面端界面" width="100%">
+</p>
+
+<p align="center">
+  <img src="./docs/images/leonote-home-desktop.png" alt="Leonote 今日页面桌面端界面" width="49%">
+  <img src="./docs/images/leonote-notes-desktop.png" alt="Leonote 笔记编辑桌面端界面" width="49%">
+</p>
+
+<p align="center">
+  <img src="./docs/images/leonote-mobile-briefing.png" alt="Leonote 每日简报移动端界面" width="320">
+</p>
+
+<p align="center">
+  <sub>截图基于 v1.6.13 Quiet Material 界面生成，覆盖桌面端、笔记编辑与移动端简报。</sub>
+</p>
+
+## 核心模块
+
+| 模块 | 能力 |
+|---|---|
+| 笔记与长期记忆 | Markdown 写作、标签/项目、收藏/置顶/归档、版本历史、正文内联图片与附件、AI 长期记忆 |
+| 每日简报 | RSS / Tavily / CoinGecko / 新浪行情聚合，AI 中文摘要、质量评分、标签、市场温度、天气与星座 |
+| AI 协助思考 | 从当日 AI 科技、市场、政策、安全与开发者生态中筛选深度影响事件，生成 1 条主思考 + 6 条紧凑思考 |
+| 全局 AI 助手 | 从当前页面呼出，自动带入路径、标题、选中文本与页面摘要，适合边读边问、边写边整理 |
+| 轻记账 | 快速记账、分类管理、周/月统计、分布趋势、软删除与历史保留 |
+| 自托管与跨端 | SQLite 单文件、Docker / PM2 / Node 部署、PWA、Tauri WebView 壳、Mac / PC / iPad / 手机统一访问 |
 
 ## 快速开始
 
@@ -287,7 +329,7 @@ npm run ci           # 全链路：lint → typecheck → test → build
 
 | 版本 | 日期 | 更新内容 |
 |---|---|---|
-| **v1.6.13** | 2026-05-14 | 美化 GitHub 仓库 README 首屏：新增居中产品标题、双语 slogan、语言切换入口、版本号、许可、Next.js / Tauri / PWA / Quiet Material 徽章；新增英文 README，方便多语言浏览和对外介绍 |
+| **v1.6.13** | 2026-05-14 | 美化 GitHub 仓库 README 首屏：新增居中产品标题、双语 slogan、语言切换入口、版本号、许可、Next.js / Tauri / PWA / Quiet Material 徽章；新增英文 README；补充最新桌面端/移动端产品截图与核心模块总览，方便多语言浏览和对外介绍 |
 | **v1.6.12** | 2026-05-12 | 治好 AI 协助思考区的数量强迫症：默认思考生成数从 6 条提升到 7 条，Hero 展示改为“1 条主思考 + 6 条紧凑入口”；移动端继续保留横向滑动紧凑入口。同步更新回归测试，确保足量 AI 科技事件会返回 7 条思考 |
 | **v1.6.11** | 2026-05-12 | 优化每日简报 Hero 的 AI 协助思考版面：不增加无意义数量，保留 6 条高价值思考，但改为“1 条主思考 + 5 条紧凑入口”的信息架构；主卡展示标题、影响摘要、置信度和标签，右侧紧凑入口降低重复卡片高度，移动端保持横向滑动入口；同时收紧 Hero 内边距与模块间距，减少首屏大面积空白，尽量不影响其他简报组件 |
 | **v1.6.10** | 2026-05-12 | 修复每日星座运势实时性与显示命名：Leo/Ellen/BuBu 改为袁博/张云/袁晨希；星座链路改为 FreeHoroscopeAPI 今日 JSON 优先，Horoscope.com 与 Astrology.com 今日页为备选，并对 AstroSage RSS 做新鲜度校验，拒绝 2020 等过期 RSS，不再展示“本地兜底”运势。星座文案优先用已配置 AI 翻译为简体中文，无 AI Key 时按实时源文本提炼中文摘要，避免星级变化但内容不变。市场温度与 sparkline 改为中国市场习惯：红色代表上涨，绿色代表下跌 |

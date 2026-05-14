@@ -13,6 +13,18 @@
 </p>
 
 <p>
+  <a href="#preview">Preview</a>
+  ·
+  <a href="#highlights">Highlights</a>
+  ·
+  <a href="#quick-start">Quick Start</a>
+  ·
+  <a href="#production">Production</a>
+  ·
+  <a href="#version">Version</a>
+</p>
+
+<p>
   <img alt="Version" src="https://img.shields.io/badge/Version-v1.6.13-7B84F6?style=for-the-badge">
   <img alt="License" src="https://img.shields.io/badge/License-Personal%20Use%20Only-F26D6D?style=for-the-badge">
   <img alt="Next.js" src="https://img.shields.io/badge/Next.js-16-111111?style=for-the-badge&logo=nextdotjs">
@@ -29,6 +41,25 @@
 </div>
 
 ---
+
+## Preview
+
+<p align="center">
+  <img src="./docs/images/leonote-briefing-desktop.png" alt="Leonote Daily Briefing on desktop" width="100%">
+</p>
+
+<p align="center">
+  <img src="./docs/images/leonote-home-desktop.png" alt="Leonote Today page on desktop" width="49%">
+  <img src="./docs/images/leonote-notes-desktop.png" alt="Leonote note editor on desktop" width="49%">
+</p>
+
+<p align="center">
+  <img src="./docs/images/leonote-mobile-briefing.png" alt="Leonote Daily Briefing on mobile" width="320">
+</p>
+
+<p align="center">
+  <sub>Screenshots were generated from the current v1.6.13 Quiet Material UI across desktop, note editing, and mobile briefing layouts.</sub>
+</p>
 
 ## Overview
 
@@ -132,6 +163,7 @@ Current version: **v1.6.13**
 Recent release focus:
 
 - GitHub README header refresh and multilingual README support.
+- Latest desktop and mobile product screenshots for the repository landing page.
 - Daily briefing AI thinking layout: one primary thought plus six compact thoughts.
 - Live horoscope source chain and China-style market color convention.
 - Responsive daily briefing layout across desktop, tablet, and mobile.
