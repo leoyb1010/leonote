@@ -1,7 +1,32 @@
+<div align="center">
+
 # Leonote
 
-> 把想法安放成时间里的智慧 — 安静保存、温柔唤回的个人知识居所。
-> 自托管 Web 优先，PWA 支持，桌面端 WebView 壳。
+<p>
+  <em>「把想法安放成时间里的智慧。」 · "A quiet home for notes, memory, and daily intelligence."</em>
+</p>
+
+<p>
+  <a href="./README.md">简体中文</a>
+  ·
+  <a href="./README.en.md">English</a>
+</p>
+
+<p>
+  <img alt="Version" src="https://img.shields.io/badge/Version-v1.6.13-7B84F6?style=for-the-badge">
+  <img alt="License" src="https://img.shields.io/badge/License-Personal%20Use%20Only-F26D6D?style=for-the-badge">
+  <img alt="Next.js" src="https://img.shields.io/badge/Next.js-16-111111?style=for-the-badge&logo=nextdotjs">
+  <img alt="Tauri" src="https://img.shields.io/badge/Tauri-2-24C8DB?style=for-the-badge&logo=tauri">
+  <img alt="PWA" src="https://img.shields.io/badge/PWA-Ready-5EC9A8?style=for-the-badge">
+  <img alt="Quiet Material" src="https://img.shields.io/badge/Design-Quiet%20Material-8A95FF?style=for-the-badge">
+</p>
+
+<p>
+  <strong>自托管优先的个人笔记、长期记忆、每日简报与轻记账应用。</strong><br>
+  安静保存、温柔唤回，在 Mac / PC / iPad / 手机和桌面 WebView 壳之间保持同一个知识居所。
+</p>
+
+</div>
 
 ---
 
@@ -262,6 +287,7 @@ npm run ci           # 全链路：lint → typecheck → test → build
 
 | 版本 | 日期 | 更新内容 |
 |---|---|---|
+| **v1.6.13** | 2026-05-14 | 美化 GitHub 仓库 README 首屏：新增居中产品标题、双语 slogan、语言切换入口、版本号、许可、Next.js / Tauri / PWA / Quiet Material 徽章；新增英文 README，方便多语言浏览和对外介绍 |
 | **v1.6.12** | 2026-05-12 | 治好 AI 协助思考区的数量强迫症：默认思考生成数从 6 条提升到 7 条，Hero 展示改为“1 条主思考 + 6 条紧凑入口”；移动端继续保留横向滑动紧凑入口。同步更新回归测试，确保足量 AI 科技事件会返回 7 条思考 |
 | **v1.6.11** | 2026-05-12 | 优化每日简报 Hero 的 AI 协助思考版面：不增加无意义数量，保留 6 条高价值思考，但改为“1 条主思考 + 5 条紧凑入口”的信息架构；主卡展示标题、影响摘要、置信度和标签，右侧紧凑入口降低重复卡片高度，移动端保持横向滑动入口；同时收紧 Hero 内边距与模块间距，减少首屏大面积空白，尽量不影响其他简报组件 |
 | **v1.6.10** | 2026-05-12 | 修复每日星座运势实时性与显示命名：Leo/Ellen/BuBu 改为袁博/张云/袁晨希；星座链路改为 FreeHoroscopeAPI 今日 JSON 优先，Horoscope.com 与 Astrology.com 今日页为备选，并对 AstroSage RSS 做新鲜度校验，拒绝 2020 等过期 RSS，不再展示“本地兜底”运势。星座文案优先用已配置 AI 翻译为简体中文，无 AI Key 时按实时源文本提炼中文摘要，避免星级变化但内容不变。市场温度与 sparkline 改为中国市场习惯：红色代表上涨，绿色代表下跌 |
