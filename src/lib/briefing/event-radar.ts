@@ -1,5 +1,5 @@
 import { sanitizeBriefingText } from "./normalize";
-import type { BriefingEventClusterDTO, BriefingEventScope, BriefingXSignalDTO, NewsItemDTO } from "./types";
+import type { BriefingEventClusterDTO, BriefingEventScope, NewsItemDTO } from "./types";
 
 type EventTheme = {
   id: string;
@@ -15,8 +15,6 @@ type ClusterDraft = {
   theme: EventTheme;
   items: NewsItemDTO[];
 };
-
-const X_SOURCE_RE = /^X\s*[·-]/i;
 
 const THEMES: EventTheme[] = [
   {
@@ -91,14 +89,6 @@ const THEMES: EventTheme[] = [
     weight: 64,
     why: "科技产业新闻要看它是否改变入口、价格、供应链或用户行为，而不只是新品发布本身。",
   },
-  {
-    id: "x-signal",
-    scope: "x_signal",
-    label: "X 信号",
-    match: /X监控|X\s*[·-]|twitter|tweet|post|发布|宣布|thread|转发/i,
-    weight: 70,
-    why: "关键人物和机构的 X 动态常常比正式新闻更早透露产品、政策和市场情绪的变化。",
-  },
 ];
 
 const SCOPE_LABEL: Record<BriefingEventScope, string> = {
@@ -106,7 +96,6 @@ const SCOPE_LABEL: Record<BriefingEventScope, string> = {
   international: "国际",
   ai_tech: "AI 科技",
   market: "市场",
-  x_signal: "X 信号",
 };
 
 const STOP_WORDS = /^(今天|这个|那个|开始|继续|正在|最新|消息|表示|发布|宣布|公司|市场|国际|国内|中国|美国|科技|资讯|关注|可能|成为)$/;
@@ -139,7 +128,6 @@ function isDomestic(item: NewsItemDTO) {
 
 function themeFor(item: NewsItemDTO): EventTheme {
   const text = `${item.title} ${item.aiSummary ?? ""} ${item.detailText} ${item.sourceName} ${item.aiTags.join(" ")}`;
-  if (X_SOURCE_RE.test(item.sourceName)) return THEMES.find((theme) => theme.id === "x-signal") ?? THEMES[0];
   if (item.category === "finance") return THEMES.find((theme) => theme.id === "market-pricing") ?? THEMES[0];
   if (item.category === "world") {
     return isDomestic(item)
@@ -148,8 +136,8 @@ function themeFor(item: NewsItemDTO): EventTheme {
   }
 
   const matched = THEMES
-    .filter((theme) => theme.id !== "x-signal" && theme.match.test(text))
-    .sort((a, b) => b.weight - a.weight)[0];
+    .sort((a, b) => b.weight - a.weight)
+    .find((theme) => theme.match.test(text));
   if (matched) {
     if (matched.scope === "international" && isDomestic(item) && !/中美|美中|美国|欧盟|联合国|外交|关税|制裁|出口管制/i.test(text)) {
       return THEMES.find((theme) => theme.id === "domestic-public") ?? matched;
@@ -162,7 +150,6 @@ function themeFor(item: NewsItemDTO): EventTheme {
 
 function sourceWeight(sourceName: string) {
   if (/OpenAI|DeepMind|Google|NVIDIA|GitHub|Cloudflare|联合国|BBC|纽约时报|CNBC|Reuters|The Verge|TechCrunch|MIT|新华社|中国新闻网|IT之家/i.test(sourceName)) return 12;
-  if (/X\s*[·-]/i.test(sourceName)) return 10;
   return 4;
 }
 
@@ -203,7 +190,7 @@ function impactLabel(score: number) {
 }
 
 function isAiRadarScope(scope: BriefingEventScope) {
-  return scope === "ai_tech" || scope === "x_signal";
+  return scope === "ai_tech";
 }
 
 function diversifyEvents(events: BriefingEventClusterDTO[], limit: number) {
@@ -263,13 +250,12 @@ function diversifyEvents(events: BriefingEventClusterDTO[], limit: number) {
 
 export function buildBriefingEventRadar(items: NewsItemDTO[], limit = 8): BriefingEventClusterDTO[] {
   const sourceItems = items
-    .filter((item) => item.category !== "social_x" || X_SOURCE_RE.test(item.sourceName) || (item.aiScore ?? 0) >= 0.62)
     .slice(0, 120);
 
   const clusters: ClusterDraft[] = [];
 
   for (const item of sourceItems) {
-    const theme = X_SOURCE_RE.test(item.sourceName) ? THEMES.find((entry) => entry.id === "x-signal") ?? themeFor(item) : themeFor(item);
+    const theme = themeFor(item);
     const text = `${item.title} ${item.aiSummary ?? ""} ${item.aiTags.join(" ")}`;
     const existing = clusters.find((cluster) => {
       if (cluster.theme.id !== theme.id && cluster.theme.scope !== theme.scope) return false;
@@ -319,33 +305,4 @@ export function buildBriefingEventRadar(items: NewsItemDTO[], limit = 8): Briefi
     .sort((a, b) => b.impactScore - a.impactScore || new Date(b.latestAt).getTime() - new Date(a.latestAt).getTime());
 
   return diversifyEvents(ranked, limit);
-}
-
-export function buildBriefingXSignals(items: NewsItemDTO[], limit = 8): BriefingXSignalDTO[] {
-  return items
-    .filter((item) => X_SOURCE_RE.test(item.sourceName) || item.aiTags.some((tag) => /X监控|Twitter|Tweet/i.test(tag)))
-    .sort((a, b) => (b.aiScore ?? 0) - (a.aiScore ?? 0) || new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime())
-    .slice(0, limit)
-    .map((item) => {
-      let username = item.sourceName.replace(/^X\s*[·-]\s*/i, "").trim() || "x";
-      try {
-        const pathUser = new URL(item.url).pathname.split("/").filter(Boolean)[0];
-        if (pathUser) username = pathUser;
-      } catch {
-        // Keep the source label when the URL is not parseable.
-      }
-      return {
-        id: `x-${item.id}`,
-        itemId: item.id,
-        authorName: item.sourceName.replace(/^X\s*[·-]\s*/i, "").trim() || username,
-        username,
-        title: sanitizeBriefingText(item.title, 64),
-        summary: sanitizeBriefingText(item.aiSummary || item.detailText || item.excerpt, 126),
-        url: item.url,
-        publishedAt: item.publishedAt,
-        impactLabel: (item.aiScore ?? 0) >= 0.78 ? "强信号" : (item.aiScore ?? 0) >= 0.62 ? "可追踪" : "观察",
-        tags: item.aiTags.slice(0, 4),
-        score: item.aiScore,
-      } satisfies BriefingXSignalDTO;
-    });
 }

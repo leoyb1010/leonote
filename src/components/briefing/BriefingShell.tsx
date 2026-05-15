@@ -12,27 +12,23 @@ import { EventRadar } from "./EventRadar";
 import { EventDetailModal } from "./EventDetailModal";
 import { ThinkingDetailModal } from "./ThinkingDetailModal";
 import { ThinkingPanel } from "./ThinkingPanel";
-import { XSignalPanel } from "./XSignalPanel";
 import { listStagger } from "@/lib/animations";
 import { PageContainer } from "@/components/layout/PageContainer";
 import { categoryLabel } from "@/lib/briefing/display";
-import type { BriefingCategory, BriefingDigestSummary, BriefingEventClusterDTO, BriefingMetaDTO, BriefingRange, BriefingThinkingInsight, BriefingXSignalDTO, HoroscopeDTO, MarketSnapshotDTO, NewsItemDTO, WeatherDTO } from "@/lib/briefing/types";
+import type { BriefingCategory, BriefingDigestSummary, BriefingEventClusterDTO, BriefingMetaDTO, BriefingRange, BriefingThinkingInsight, HoroscopeDTO, MarketSnapshotDTO, NewsItemDTO, WeatherDTO } from "@/lib/briefing/types";
 
 type CategoryFilter = BriefingCategory | "all";
 type DetailAnchor = { top: number; left: number; width: number; height: number; x?: number; y?: number };
 type SelectedDetail = { item: NewsItemDTO; anchor: DetailAnchor };
 type SelectedThinkingDetail = { insight: BriefingThinkingInsight; anchor: DetailAnchor };
 type SelectedSignalDetail =
-  | { event: BriefingEventClusterDTO; anchor: DetailAnchor }
-  | { signal: BriefingXSignalDTO; anchor: DetailAnchor };
+  | { event: BriefingEventClusterDTO; anchor: DetailAnchor };
 
 interface Props {
   initialDigest: BriefingDigestSummary | null;
   initialItems: NewsItemDTO[];
   initialThinkingInsights: BriefingThinkingInsight[];
   initialEventClusters: BriefingEventClusterDTO[];
-  initialXSignals: BriefingXSignalDTO[];
-  initialXSignalsUpdatedAt: string | null;
   initialMarkets: MarketSnapshotDTO[];
   initialWeather: WeatherDTO | null;
   initialHoroscopes: HoroscopeDTO[];
@@ -90,7 +86,6 @@ function buildMarkdown(
   items: NewsItemDTO[],
   thinkingInsights: BriefingThinkingInsight[],
   eventClusters: BriefingEventClusterDTO[],
-  xSignals: BriefingXSignalDTO[],
 ) {
   const lines = [
     `# ${title}`,
@@ -103,11 +98,6 @@ function buildMarkdown(
     "## AI 协助思考",
     ...(thinkingInsights.length ? thinkingInsights : []).map((item) => `- ${item.title}：${item.question}`),
     ...(thinkingInsights.length ? [] : (digest?.headlines?.length ? digest.headlines : items.slice(0, 3).map((item) => item.title)).map((line) => `- ${line}`)),
-    "",
-    "## 关键人物 X 信号",
-    ...(xSignals.length
-      ? xSignals.slice(0, 6).map((signal) => `- @${signal.username}：${signal.title}`)
-      : ["- 尚未配置或暂未抓到高价值 X 动态。"]),
     "",
     "## 精选资讯",
     ...items.slice(0, 8).map((item) => `- ${item.title} · ${item.sourceName}${item.aiSummary ? `：${item.aiSummary}` : ""}`),
@@ -195,8 +185,6 @@ export function BriefingShell({
   initialItems,
   initialThinkingInsights,
   initialEventClusters,
-  initialXSignals,
-  initialXSignalsUpdatedAt,
   initialMarkets,
   initialWeather,
   initialHoroscopes,
@@ -205,8 +193,6 @@ export function BriefingShell({
   const [items, setItems] = useState(initialItems);
   const [thinkingInsights, setThinkingInsights] = useState(initialThinkingInsights);
   const [eventClusters, setEventClusters] = useState(initialEventClusters);
-  const [xSignals, setXSignals] = useState(initialXSignals);
-  const [xSignalsUpdatedAt, setXSignalsUpdatedAt] = useState(initialXSignalsUpdatedAt);
   const [digest, setDigest] = useState(initialDigest);
   const [markets, setMarkets] = useState(initialMarkets);
   const [weather, setWeather] = useState(initialWeather);
@@ -254,8 +240,6 @@ export function BriefingShell({
         setItems(json.items);
         setThinkingInsights(json.thinkingInsights || []);
         setEventClusters(json.eventClusters || []);
-        setXSignals(json.xSignals || []);
-        setXSignalsUpdatedAt(json.xSignalsUpdatedAt || null);
         setDigest(json.digest);
         setMarkets(json.markets);
         setWeather(json.weather);
@@ -339,7 +323,7 @@ export function BriefingShell({
   async function copySummary() {
     if (visibleItems.length === 0) return;
     try {
-      await navigator.clipboard.writeText(buildMarkdown(briefingTitle || "每日简报", digest, visibleItems, thinkingInsights, eventClusters, xSignals));
+      await navigator.clipboard.writeText(buildMarkdown(briefingTitle || "每日简报", digest, visibleItems, thinkingInsights, eventClusters));
       setCopied(true);
       window.setTimeout(() => setCopied(false), 1800);
     } catch {
@@ -445,11 +429,6 @@ export function BriefingShell({
           <ThinkingPanel
             insights={thinkingInsights}
             onOpen={(insight, anchor) => setSelectedThinkingDetail({ insight, anchor })}
-          />
-          <XSignalPanel
-            signals={xSignals}
-            updatedAt={xSignalsUpdatedAt}
-            onOpenSignal={(signal, anchor) => setSelectedSignalDetail({ signal, anchor })}
           />
           <DeepReadCard item={deepRead} onClick={openDeepRead} />
           <TagInsights items={visibleItems} />

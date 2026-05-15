@@ -2,21 +2,16 @@
 
 import { motion } from "framer-motion";
 import { createPortal } from "react-dom";
-import { ExternalLink, RadioTower, X } from "lucide-react";
-import type { BriefingEventClusterDTO, BriefingXSignalDTO, NewsItemDTO } from "@/lib/briefing/types";
+import { X } from "lucide-react";
+import type { BriefingEventClusterDTO, NewsItemDTO } from "@/lib/briefing/types";
 
 type DetailAnchor = { top: number; left: number; width: number; height: number; x?: number; y?: number };
 type SelectedEvent = { event: BriefingEventClusterDTO; anchor: DetailAnchor };
-type SelectedSignal = { signal: BriefingXSignalDTO; anchor: DetailAnchor };
 
 interface Props {
-  selected: SelectedEvent | SelectedSignal | null;
+  selected: SelectedEvent | null;
   items: NewsItemDTO[];
   onClose: () => void;
-}
-
-function isSignal(selected: SelectedEvent | SelectedSignal): selected is SelectedSignal {
-  return "signal" in selected;
 }
 
 function anchoredStyle(anchor: DetailAnchor) {
@@ -41,13 +36,11 @@ export function EventDetailModal({ selected, items, onClose }: Props) {
   if (!selected) return null;
 
   const style = anchoredStyle(selected.anchor);
-  const relatedItems = isSignal(selected)
-    ? items.filter((item) => item.id === selected.signal.itemId)
-    : items.filter((item) => selected.event.itemIds.includes(item.id)).slice(0, 6);
-  const title = isSignal(selected) ? selected.signal.title : selected.event.title;
-  const summary = isSignal(selected) ? selected.signal.summary : selected.event.summary;
-  const impactLabel = isSignal(selected) ? selected.signal.impactLabel : selected.event.impactLabel;
-  const tags = isSignal(selected) ? selected.signal.tags : selected.event.tags;
+  const relatedItems = items.filter((item) => selected.event.itemIds.includes(item.id)).slice(0, 6);
+  const title = selected.event.title;
+  const summary = selected.event.summary;
+  const impactLabel = selected.event.impactLabel;
+  const tags = selected.event.tags;
 
   return createPortal(
     <motion.div className="fixed inset-0 z-[75]" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
@@ -71,8 +64,7 @@ export function EventDetailModal({ selected, items, onClose }: Props) {
             <div className="min-w-0">
               <div className="flex flex-wrap items-center gap-1.5 text-[11px] text-[var(--text-muted)]">
                 <span className="inline-flex items-center gap-1 rounded-[var(--radius-pill)] bg-[var(--primary-soft)] px-2 py-0.5 text-[var(--primary)]">
-                  {isSignal(selected) ? <RadioTower size={11} /> : null}
-                  {isSignal(selected) ? "X 信号" : selected.event.scopeLabel}
+                  {selected.event.scopeLabel}
                 </span>
                 <span>{impactLabel}</span>
               </div>
@@ -94,13 +86,15 @@ export function EventDetailModal({ selected, items, onClose }: Props) {
         <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4">
           <p className="font-[var(--font-reading)] text-sm leading-7 text-[var(--text-secondary)]">{summary}</p>
 
-          {!isSignal(selected) ? (
+          {!selected.event.whyItMatters ? null : (
             <>
               <div className="mt-4 rounded-[var(--radius-lg)] border border-[var(--hairline)] bg-[var(--material-inset)] px-3.5 py-3">
                 <p className="mb-1.5 text-xs text-[var(--primary)]">为什么重要</p>
                 <p className="font-[var(--font-reading)] text-sm leading-7 text-[var(--text-secondary)]">{selected.event.whyItMatters}</p>
               </div>
-              {selected.event.facts.length > 0 ? (
+            </>
+          )}
+          {selected.event.facts.length > 0 ? (
                 <div className="mt-4">
                   <p className="mb-2 text-xs text-[var(--text-muted)]">核心事实</p>
                   <div className="space-y-2">
@@ -111,19 +105,7 @@ export function EventDetailModal({ selected, items, onClose }: Props) {
                     ))}
                   </div>
                 </div>
-              ) : null}
-            </>
-          ) : (
-            <a
-              href={selected.signal.url}
-              target="_blank"
-              rel="noreferrer"
-              className="mt-4 inline-flex items-center gap-1.5 rounded-[var(--radius-pill)] border border-[var(--hairline)] px-3 py-1.5 text-xs text-[var(--text-secondary)] transition hover:bg-[var(--interactive-hover)] hover:text-[var(--text-primary)]"
-            >
-              <ExternalLink size={13} />
-              查看 X 原文
-            </a>
-          )}
+            ) : null}
 
           <div className="mt-4 flex flex-wrap gap-1.5">
             {tags.slice(0, 6).map((tag) => (

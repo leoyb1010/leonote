@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { ChevronRight, Globe2, Landmark, RadioTower, Sparkles, TrendingUp } from "lucide-react";
+import { ChevronRight, Globe2, Landmark, Sparkles, TrendingUp } from "lucide-react";
 import { listItemFloat } from "@/lib/animations";
 import type { BriefingEventClusterDTO } from "@/lib/briefing/types";
 
@@ -15,7 +15,6 @@ const iconByScope = {
   international: Globe2,
   ai_tech: Sparkles,
   market: TrendingUp,
-  x_signal: RadioTower,
 };
 
 function timeLabel(input: string) {

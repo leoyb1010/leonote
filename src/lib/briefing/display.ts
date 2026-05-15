@@ -75,7 +75,6 @@ export const CATEGORY_LABELS: Record<BriefingCategory, string> = {
   world: "世界",
   finance: "金融",
   ai_tech: "人工智能",
-  social_x: "X 监控",
 };
 
 export const MARKET_CATEGORY_LABELS: Record<string, string> = {
@@ -118,7 +117,6 @@ export function needsChineseDisplay(input: string | null | undefined): boolean {
 }
 
 export function isDisplayableChinese(title: string, excerpt?: string | null, summary?: string | null, sourceName?: string): boolean {
-  if (sourceName?.includes("X ·")) return true; // X 监控源强制通过
   if (isLowValueBriefingTitle(title)) return false;
   // 如果已经有了中文智能摘要，标题仍含英文专有名词也允许展示。
   if (summary && hasChineseSignal(summary)) return true;
@@ -159,7 +157,6 @@ export function deriveDisplayCategory(input: {
   title: string;
   excerpt?: string | null;
 }): BriefingCategory {
-  if (input.sourceName.includes("X ·")) return "social_x";
   if (input.category === "world" || input.category === "finance") return input.category;
 
   const text = `${input.sourceName} ${input.title} ${input.excerpt ?? ""}`;

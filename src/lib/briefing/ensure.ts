@@ -1,7 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { generateBriefingDigest } from "./digest";
 import { fetchNewsSources } from "./fetchers/rss";
-import { fetchXSignals } from "./fetchers/x-api";
 
 type EnsureOptions = {
   force?: boolean;
@@ -44,23 +43,12 @@ function todayWindow() {
 async function getRefreshDecision(options: EnsureOptions): Promise<RefreshDecision> {
   const minItems = options.minItems ?? Number(process.env.BRIEFING_MIN_ITEMS || 24);
   const maxAgeMinutes = options.maxAgeMinutes ?? Number(process.env.BRIEFING_MAX_AGE_MINUTES || 5);
-  const [itemCount, latestSource, latestXSource, todayXItemCount, todayDigest] = await Promise.all([
+  const [itemCount, latestSource, todayDigest] = await Promise.all([
     prisma.newsItem.count({ where: todayWindow() }),
     prisma.newsSource.findFirst({
       where: { enabled: true, lastFetchAt: { not: null } },
       orderBy: { lastFetchAt: "desc" },
       select: { lastFetchAt: true },
-    }),
-    prisma.newsSource.findFirst({
-      where: { enabled: true, name: { startsWith: "X ·" }, lastFetchAt: { not: null } },
-      orderBy: { lastFetchAt: "desc" },
-      select: { lastFetchAt: true },
-    }),
-    prisma.newsItem.count({
-      where: {
-        ...todayWindow(),
-        source: { name: { startsWith: "X ·" } },
-      },
     }),
     prisma.briefingDigest.findUnique({
       where: { date: startOfToday() },
@@ -76,11 +64,9 @@ async function getRefreshDecision(options: EnsureOptions): Promise<RefreshDecisi
   if (options.force) return { refresh: true, coldStart };
 
   const latestFetchAt = latestSource?.lastFetchAt?.getTime() ?? 0;
-  const latestXFetchAt = latestXSource?.lastFetchAt?.getTime() ?? 0;
   const stale = !latestFetchAt || Date.now() - latestFetchAt > maxAgeMinutes * 60_000;
-  const xStale = todayXItemCount < 3 || !latestXFetchAt || Date.now() - latestXFetchAt > maxAgeMinutes * 60_000;
   return {
-    refresh: itemCount < minItems || stale || xStale || !todayDigest,
+    refresh: itemCount < minItems || stale || !todayDigest,
     coldStart,
   };
 }
@@ -99,12 +85,6 @@ export async function ensureBriefingFreshness(options: EnsureOptions = {}) {
         await fetchNewsSources();
       } catch (error) {
         console.error("[briefing] background fetch failed", error instanceof Error ? error.message : "unknown");
-      }
-
-      try {
-        await fetchXSignals();
-      } catch (error) {
-        console.error("[briefing] background X fetch failed", error instanceof Error ? error.message : "unknown");
       }
 
       try {

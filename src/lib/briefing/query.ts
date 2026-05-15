@@ -95,18 +95,14 @@ export async function getBriefingData(userId: string, options?: { range?: Briefi
     }))
     .filter((item) => category === "all" || item.displayCategory === category)
     .filter((item) => {
-      if (item.displayCategory === "social_x") {
-        return !!item.aiSummary;
-      }
       if (needsTranslation(item.title) && (!item.aiSummary || needsTranslation(item.aiSummary))) return false;
       return isDisplayableChinese(item.title, item.excerpt, item.aiSummary, item.source.name);
   });
   const rssItems = displayableItems.filter((item) => item.source.kind !== "api");
   const apiFallbackItems = displayableItems.filter((item) => item.source.kind === "api");
-  const xSignalItems = apiFallbackItems.filter((item) => item.source.name.includes("X ·"));
-  const sourceItems = rssItems.length >= 30 ? [...rssItems, ...xSignalItems] : [...rssItems, ...apiFallbackItems];
+  const sourceItems = rssItems.length >= 30 ? [...rssItems] : [...rssItems, ...apiFallbackItems];
   const items = category === "all"
-    ? (["ai_tech", "social_x", "finance", "world"] as const).flatMap((itemCategory) =>
+    ? (["ai_tech", "finance", "world"] as const).flatMap((itemCategory) =>
         sourceItems.filter((item) => item.displayCategory === itemCategory).slice(0, 30),
       )
     : sourceItems.slice(0, 90);
@@ -123,7 +119,7 @@ export async function getBriefingData(userId: string, options?: { range?: Briefi
       content: item.content,
       max: 220,
     });
-    const displayTitle = (item.displayCategory === "social_x" || needsTranslation(rawTitle)) && summary
+    const displayTitle = needsTranslation(rawTitle) && summary
       ? sanitizeBriefingText(summary, 82)
       : rawTitle;
     const normalizedSummary = displayTitle === summary
@@ -241,18 +237,4 @@ export async function getBriefingMeta(): Promise<BriefingMetaDTO> {
       endedAt: item.endedAt?.toISOString() ?? null,
     })),
   };
-}
-
-export async function getLatestXSignalFetchAt() {
-  const latest = await prisma.newsSource.findFirst({
-    where: {
-      enabled: true,
-      name: { startsWith: "X ·" },
-      lastFetchAt: { not: null },
-    },
-    orderBy: { lastFetchAt: "desc" },
-    select: { lastFetchAt: true },
-  });
-
-  return latest?.lastFetchAt?.toISOString() ?? null;
 }

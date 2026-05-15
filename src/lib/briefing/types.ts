@@ -1,4 +1,4 @@
-export type BriefingCategory = "world" | "finance" | "ai_tech" | "social_x";
+export type BriefingCategory = "world" | "finance" | "ai_tech";
 export type BriefingRange = "today" | "week" | "favorites";
 
 export interface BriefingHeadline {
@@ -26,7 +26,7 @@ export interface BriefingThinkingInsight {
   tags: string[];
 }
 
-export type BriefingEventScope = "domestic" | "international" | "ai_tech" | "market" | "x_signal";
+export type BriefingEventScope = "domestic" | "international" | "ai_tech" | "market";
 
 export interface BriefingEventClusterDTO {
   id: string;
@@ -43,20 +43,6 @@ export interface BriefingEventClusterDTO {
   latestAt: string;
   tags: string[];
   itemIds: string[];
-}
-
-export interface BriefingXSignalDTO {
-  id: string;
-  itemId: string;
-  authorName: string;
-  username: string;
-  title: string;
-  summary: string;
-  url: string;
-  publishedAt: string;
-  impactLabel: string;
-  tags: string[];
-  score: number | null;
 }
 
 export interface BriefingMetaDTO {
