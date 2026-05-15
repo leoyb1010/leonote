@@ -9,19 +9,28 @@ import { BriefingFilters } from "./BriefingFilters";
 import { NewsColumn } from "./NewsColumn";
 import { NewsDetailModal } from "./NewsDetailModal";
 import { DeepReadCard } from "./DeepReadCard";
+import { EventRadar } from "./EventRadar";
+import { EventDetailModal } from "./EventDetailModal";
+import { XSignalPanel } from "./XSignalPanel";
 import { listStagger } from "@/lib/animations";
 import { PageContainer } from "@/components/layout/PageContainer";
 import { categoryLabel } from "@/lib/briefing/display";
-import type { BriefingCategory, BriefingDigestSummary, BriefingMetaDTO, BriefingRange, BriefingThinkingInsight, HoroscopeDTO, MarketSnapshotDTO, NewsItemDTO, WeatherDTO } from "@/lib/briefing/types";
+import type { BriefingCategory, BriefingDigestSummary, BriefingEventClusterDTO, BriefingMetaDTO, BriefingRange, BriefingThinkingInsight, BriefingXSignalDTO, HoroscopeDTO, MarketSnapshotDTO, NewsItemDTO, WeatherDTO } from "@/lib/briefing/types";
 
 type CategoryFilter = BriefingCategory | "all";
-type DetailAnchor = { top: number; left: number; width: number; height: number };
+type DetailAnchor = { top: number; left: number; width: number; height: number; x?: number; y?: number };
 type SelectedDetail = { item: NewsItemDTO; anchor: DetailAnchor };
+type SelectedSignalDetail =
+  | { event: BriefingEventClusterDTO; anchor: DetailAnchor }
+  | { signal: BriefingXSignalDTO; anchor: DetailAnchor };
 
 interface Props {
   initialDigest: BriefingDigestSummary | null;
   initialItems: NewsItemDTO[];
   initialThinkingInsights: BriefingThinkingInsight[];
+  initialEventClusters: BriefingEventClusterDTO[];
+  initialXSignals: BriefingXSignalDTO[];
+  initialXSignalsUpdatedAt: string | null;
   initialMarkets: MarketSnapshotDTO[];
   initialWeather: WeatherDTO | null;
   initialHoroscopes: HoroscopeDTO[];
@@ -73,13 +82,30 @@ function buildStats(items: NewsItemDTO[]): BriefingHeroStats {
   };
 }
 
-function buildMarkdown(title: string, digest: BriefingDigestSummary | null, items: NewsItemDTO[], thinkingInsights: BriefingThinkingInsight[]) {
+function buildMarkdown(
+  title: string,
+  digest: BriefingDigestSummary | null,
+  items: NewsItemDTO[],
+  thinkingInsights: BriefingThinkingInsight[],
+  eventClusters: BriefingEventClusterDTO[],
+  xSignals: BriefingXSignalDTO[],
+) {
   const lines = [
     `# ${title}`,
+    "",
+    "## 今日大事件雷达",
+    ...(eventClusters.length
+      ? eventClusters.slice(0, 7).map((event) => `- ${event.title}｜${event.impactLabel}：${event.summary}`)
+      : ["- 正在等待足够清晰的大事件信号。"]),
     "",
     "## AI 协助思考",
     ...(thinkingInsights.length ? thinkingInsights : []).map((item) => `- ${item.title}：${item.question}`),
     ...(thinkingInsights.length ? [] : (digest?.headlines?.length ? digest.headlines : items.slice(0, 3).map((item) => item.title)).map((line) => `- ${line}`)),
+    "",
+    "## 关键人物 X 信号",
+    ...(xSignals.length
+      ? xSignals.slice(0, 6).map((signal) => `- @${signal.username}：${signal.title}`)
+      : ["- 尚未配置或暂未抓到高价值 X 动态。"]),
     "",
     "## 精选资讯",
     ...items.slice(0, 8).map((item) => `- ${item.title} · ${item.sourceName}${item.aiSummary ? `：${item.aiSummary}` : ""}`),
@@ -162,9 +188,23 @@ function BriefingMetaPanel({ meta }: { meta: BriefingMetaDTO }) {
   );
 }
 
-export function BriefingShell({ initialDigest, initialItems, initialThinkingInsights, initialMarkets, initialWeather, initialHoroscopes, initialMeta }: Props) {
+export function BriefingShell({
+  initialDigest,
+  initialItems,
+  initialThinkingInsights,
+  initialEventClusters,
+  initialXSignals,
+  initialXSignalsUpdatedAt,
+  initialMarkets,
+  initialWeather,
+  initialHoroscopes,
+  initialMeta,
+}: Props) {
   const [items, setItems] = useState(initialItems);
   const [thinkingInsights, setThinkingInsights] = useState(initialThinkingInsights);
+  const [eventClusters, setEventClusters] = useState(initialEventClusters);
+  const [xSignals, setXSignals] = useState(initialXSignals);
+  const [xSignalsUpdatedAt, setXSignalsUpdatedAt] = useState(initialXSignalsUpdatedAt);
   const [digest, setDigest] = useState(initialDigest);
   const [markets, setMarkets] = useState(initialMarkets);
   const [weather, setWeather] = useState(initialWeather);
@@ -174,6 +214,7 @@ export function BriefingShell({ initialDigest, initialItems, initialThinkingInsi
   const [category, setCategory] = useState<CategoryFilter>("all");
   const [briefingTitle, setBriefingTitle] = useState("每日简报");
   const [selectedDetail, setSelectedDetail] = useState<SelectedDetail | null>(null);
+  const [selectedSignalDetail, setSelectedSignalDetail] = useState<SelectedSignalDetail | null>(null);
   const [loading, setLoading] = useState(false);
   const [importingDigest, setImportingDigest] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -190,7 +231,8 @@ export function BriefingShell({ initialDigest, initialItems, initialThinkingInsi
   }, [items, category]);
 
   const stats = useMemo(() => buildStats(visibleItems), [visibleItems]);
-  const featuredItems = useMemo(() => visibleItems.slice(0, category === "all" ? 6 : 4), [visibleItems, category]);
+  const eventItemIds = useMemo(() => new Set(eventClusters.flatMap((event) => event.itemIds)), [eventClusters]);
+  const featuredItems = useMemo(() => visibleItems.filter((item) => !eventItemIds.has(item.id)).slice(0, category === "all" ? 4 : 3), [eventItemIds, visibleItems, category]);
   const featuredIds = useMemo(() => new Set(featuredItems.map((item) => item.id)), [featuredItems]);
   const streamItems = useMemo(() => visibleItems.filter((item) => !featuredIds.has(item.id)), [featuredIds, visibleItems]);
   const deepRead = useMemo(() => (
@@ -208,6 +250,9 @@ export function BriefingShell({ initialDigest, initialItems, initialThinkingInsi
       if (json.ok) {
         setItems(json.items);
         setThinkingInsights(json.thinkingInsights || []);
+        setEventClusters(json.eventClusters || []);
+        setXSignals(json.xSignals || []);
+        setXSignalsUpdatedAt(json.xSignalsUpdatedAt || null);
         setDigest(json.digest);
         setMarkets(json.markets);
         setWeather(json.weather);
@@ -291,7 +336,7 @@ export function BriefingShell({ initialDigest, initialItems, initialThinkingInsi
   async function copySummary() {
     if (visibleItems.length === 0) return;
     try {
-      await navigator.clipboard.writeText(buildMarkdown(briefingTitle || "每日简报", digest, visibleItems, thinkingInsights));
+      await navigator.clipboard.writeText(buildMarkdown(briefingTitle || "每日简报", digest, visibleItems, thinkingInsights, eventClusters, xSignals));
       setCopied(true);
       window.setTimeout(() => setCopied(false), 1800);
     } catch {
@@ -300,14 +345,13 @@ export function BriefingShell({ initialDigest, initialItems, initialThinkingInsi
   }
 
   const streamTitle = category === "all" ? "全部资讯" : `${categoryLabel(category)}资讯`;
-  const streamEyebrow = range === "favorites" ? "Saved" : range === "week" ? "Week" : "News flow";
+  const streamEyebrow = range === "favorites" ? "Saved" : range === "week" ? "Week" : "Evidence";
 
   return (
     <PageContainer width="dashboard">
       <BriefingHero
         digest={digest}
         stats={stats}
-        thinkingInsights={thinkingInsights}
         weather={weather}
         horoscopes={horoscopes}
         dateLabel={dateLabel}
@@ -363,22 +407,64 @@ export function BriefingShell({ initialDigest, initialItems, initialThinkingInsi
         className="mt-6 grid gap-5 lg:grid-cols-[minmax(0,1fr)_320px] lg:gap-6 xl:grid-cols-[minmax(0,1fr)_360px]"
       >
         <div className="space-y-6 lg:space-y-8">
+          <EventRadar
+            events={eventClusters}
+            onOpenEvent={(event, anchor) => setSelectedSignalDetail({ event, anchor })}
+          />
+
+          {thinkingInsights.length > 0 ? (
+            <section className="rounded-[var(--radius-2xl)] border border-[var(--hairline)] bg-[var(--material-elevated)] p-4 shadow-[var(--shadow-sm)] sm:p-5">
+              <div className="mb-4 flex items-center justify-between gap-3">
+                <div>
+                  <p className="text-[11px] uppercase tracking-wide text-[var(--text-muted)]">Think Further</p>
+                  <h2 className="mt-1 text-lg font-semibold text-[var(--text-primary)]">今天值得继续想</h2>
+                </div>
+                <span className="rounded-[var(--radius-pill)] bg-[var(--primary-soft)] px-3 py-1 text-xs text-[var(--primary)]">
+                  {thinkingInsights.length} 条
+                </span>
+              </div>
+              <div className="grid gap-3 sm:grid-cols-2">
+                {thinkingInsights.slice(0, 6).map((insight, index) => (
+                  <article key={insight.id} className="rounded-[var(--radius-lg)] border border-[var(--hairline)] bg-[var(--material-inset)] p-3.5">
+                    <div className="flex items-center justify-between gap-2 text-[11px] text-[var(--text-muted)]">
+                      <span>思考 {index + 1}</span>
+                      <span>{insight.impactLabel}</span>
+                    </div>
+                    <h3 className="mt-2 line-clamp-2 text-sm font-semibold leading-5 text-[var(--text-primary)]">
+                      {insight.title}
+                    </h3>
+                    <p className="mt-2 line-clamp-3 font-[var(--font-reading)] text-xs leading-5 text-[var(--text-secondary)]">
+                      {insight.question}
+                    </p>
+                    <div className="mt-3 flex flex-wrap gap-1.5">
+                      {insight.tags.slice(0, 3).map((tag) => (
+                        <span key={tag} className="rounded-[var(--radius-pill)] border border-[var(--hairline)] px-2 py-0.5 text-[11px] text-[var(--text-muted)]">
+                          {tag}
+                        </span>
+                      ))}
+                    </div>
+                  </article>
+                ))}
+              </div>
+            </section>
+          ) : null}
+
           <NewsColumn
-            title="今日亮点"
-            eyebrow="Highlights"
+            title="精选证据"
+            eyebrow="Evidence picks"
             items={featuredItems}
-            limit={category === "all" ? 6 : 4}
+            limit={category === "all" ? 4 : 3}
             featured
-            emptyText="今日还没有足够清晰的亮点。"
+            emptyText="大事件之外暂时没有更多高质量证据。"
             onPatchItem={patchItem}
             onClick={openDetail}
           />
 
           <NewsColumn
-            title={streamTitle}
+            title={`${streamTitle}证据库`}
             eyebrow={streamEyebrow}
             items={streamItems}
-            limit={range === "week" ? 36 : 24}
+            limit={range === "week" ? 36 : 18}
             emptyText="当前筛选下没有更多资讯。"
             onPatchItem={patchItem}
             onClick={openDetail}
@@ -391,6 +477,11 @@ export function BriefingShell({ initialDigest, initialItems, initialThinkingInsi
             refreshing={marketRefreshing}
             error={marketError}
             onRefresh={() => void refreshMarkets(true)}
+          />
+          <XSignalPanel
+            signals={xSignals}
+            updatedAt={xSignalsUpdatedAt}
+            onOpenSignal={(signal, anchor) => setSelectedSignalDetail({ signal, anchor })}
           />
           <DeepReadCard item={deepRead} onClick={openDeepRead} />
           <TagInsights items={visibleItems} />
@@ -406,6 +497,11 @@ export function BriefingShell({ initialDigest, initialItems, initialThinkingInsi
           onPatchItem={patchItem}
         />
       ) : null}
+      <EventDetailModal
+        selected={selectedSignalDetail}
+        items={items}
+        onClose={() => setSelectedSignalDetail(null)}
+      />
     </PageContainer>
   );
 }

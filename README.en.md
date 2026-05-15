@@ -25,7 +25,7 @@
 </p>
 
 <p>
-  <img alt="Version" src="https://img.shields.io/badge/Version-v1.6.13-7B84F6?style=for-the-badge">
+  <img alt="Version" src="https://img.shields.io/badge/Version-v1.6.14-7B84F6?style=for-the-badge">
   <img alt="License" src="https://img.shields.io/badge/License-Personal%20Use%20Only-F26D6D?style=for-the-badge">
   <img alt="Next.js" src="https://img.shields.io/badge/Next.js-16-111111?style=for-the-badge&logo=nextdotjs">
   <img alt="Tauri" src="https://img.shields.io/badge/Tauri-2-24C8DB?style=for-the-badge&logo=tauri">
@@ -58,7 +58,7 @@
 </p>
 
 <p align="center">
-  <sub>Screenshots were generated from the current v1.6.13 Quiet Material UI across desktop, note editing, and mobile briefing layouts.</sub>
+  <sub>Screenshots are maintained for the current v1.6.14 Quiet Material UI across desktop, note editing, and mobile briefing layouts.</sub>
 </p>
 
 ## Overview
@@ -69,9 +69,9 @@ The product follows a **Quiet Material** design language: restrained surfaces, s
 
 ## Highlights
 
-- **Personal notes**: Markdown editor, safe live preview, tags, projects, favorites, archive, trash, and version history.
-- **Daily briefing**: RSS / Tavily / CoinGecko / Sina market data, AI summaries, quality scores, Chinese normalization, market strip, weather, horoscope, and note import.
-- **AI-assisted thinking**: seven high-impact daily thoughts, shown as one primary thought plus six compact entries.
+- **Personal notes**: Markdown editor, safe live preview, tags, projects, favorites, archive, trash, version history, inline images, attachments, and camera capture into the note body.
+- **Daily briefing**: RSS / Tavily / official X API / CoinGecko / Sina market data, AI summaries, quality scores, Chinese normalization, market strip, weather, horoscope, and note import.
+- **AI-assisted thinking**: an event radar for domestic/international/AI-tech/market/X signals plus seven high-impact thoughts.
 - **Global AI assistant**: a context-aware AI panel that can be opened from the current page.
 - **Inline attachments**: paste or drag images and documents directly into note content.
 - **Lightweight ledger**: fast expense capture, category management, weekly/monthly summary, and soft delete.
@@ -130,9 +130,11 @@ AI_FALLBACK_MODEL="deepseek-v4-pro"
 BRIEFING_CRON_TOKEN="change-me-long-random-token"
 BRIEFING_AUTO_REFRESH="true"
 BRIEFING_MIN_ITEMS="24"
-BRIEFING_MAX_AGE_MINUTES="10"
+BRIEFING_MAX_AGE_MINUTES="5"
 BRIEFING_TRANSLATE_ENGLISH="true"
 RSSHUB_BASE_URL="https://rsshub.app"
+X_BEARER_TOKEN=""
+BRIEFING_X_USERS="OpenAI:OpenAI:96,AnthropicAI:Anthropic:94,GoogleDeepMind:DeepMind:94,sama:Sam Altman:92,nvidia:NVIDIA:90,karpathy:Andrej Karpathy:88,github:GitHub:84"
 ```
 
 ## Tech Stack
@@ -158,15 +160,15 @@ RSSHUB_BASE_URL="https://rsshub.app"
 
 ## Version
 
-Current version: **v1.6.13**
+Current version: **v1.6.14**
 
 Recent release focus:
 
-- GitHub README header refresh and multilingual README support.
-- Latest desktop and mobile product screenshots for the repository landing page.
-- Daily briefing AI thinking layout: one primary thought plus six compact thoughts.
-- Live horoscope source chain and China-style market color convention.
-- Responsive daily briefing layout across desktop, tablet, and mobile.
+- Daily briefing event radar with one primary event and six compact high-impact entries.
+- Official X API signal ingestion for important AI/tech people and organizations.
+- Five-minute daytime RSS/X refresh cadence and five-minute market refresh during trading hours.
+- Camera capture in the note editor, inserted directly into Markdown content.
+- README, environment examples, and version metadata refreshed for v1.6.14.
 
 For the full Chinese changelog, see [README.md](README.md#版本记录).
 

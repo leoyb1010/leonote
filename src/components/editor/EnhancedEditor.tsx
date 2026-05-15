@@ -2,18 +2,22 @@
 
 import { AnimatePresence, motion } from "framer-motion";
 import {
+  Camera,
+  CameraOff,
   Check,
   Columns2,
   Eye,
   FileUp,
   Focus,
   Image as ImageIcon,
+  Loader2,
   MoreHorizontal,
   Paperclip,
   PenLine,
   Sparkles,
   Trash2,
   Wand2,
+  X,
 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -83,6 +87,10 @@ export function EnhancedEditor({ initialNote }: { initialNote?: NoteShape }) {
   const [summary, setSummary] = useState<SummaryState>({ status: "idle", text: "" });
   const [saveToast, setSaveToast] = useState(false);
   const [focusMode, setFocusMode] = useState(false);
+  const [cameraOpen, setCameraOpen] = useState(false);
+  const [cameraStream, setCameraStream] = useState<MediaStream | null>(null);
+  const [cameraLoading, setCameraLoading] = useState(false);
+  const [cameraError, setCameraError] = useState("");
   const [autoSaveEnabled, setAutoSaveEnabled] = useState(() => {
     if (typeof window === "undefined") return false;
     return window.localStorage.getItem(AUTOSAVE_KEY) === "1";
@@ -94,6 +102,10 @@ export function EnhancedEditor({ initialNote }: { initialNote?: NoteShape }) {
   const isComposingRef = useRef(false);
   const toastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const attachmentInputRef = useRef<HTMLInputElement | null>(null);
+  const cameraInputRef = useRef<HTMLInputElement | null>(null);
+  const cameraVideoRef = useRef<HTMLVideoElement | null>(null);
+  const cameraCanvasRef = useRef<HTMLCanvasElement | null>(null);
+  const pendingCameraRangeRef = useRef<InsertionRange | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
 
   const stats = useMemo(() => {
@@ -234,6 +246,18 @@ export function EnhancedEditor({ initialNote }: { initialNote?: NoteShape }) {
   }, [autoSaveEnabled, hasEdited, saveState, saveDraft]);
 
   useEffect(() => () => cancelAutoSaveTimer(), []);
+
+  useEffect(() => {
+    if (!cameraStream || !cameraVideoRef.current) return;
+    cameraVideoRef.current.srcObject = cameraStream;
+    void cameraVideoRef.current.play().catch(() => {
+      setCameraError("摄像头已打开，但预览启动失败，请重试。");
+    });
+  }, [cameraStream]);
+
+  useEffect(() => () => {
+    cameraStream?.getTracks().forEach((track) => track.stop());
+  }, [cameraStream]);
 
   useEffect(() => {
     const onBeforeUnload = (event: BeforeUnloadEvent) => {
@@ -387,6 +411,73 @@ export function EnhancedEditor({ initialNote }: { initialNote?: NoteShape }) {
     setUploading(false);
   };
 
+  const closeCamera = () => {
+    setCameraStream((stream) => {
+      stream?.getTracks().forEach((track) => track.stop());
+      return null;
+    });
+    setCameraOpen(false);
+    setCameraLoading(false);
+    setCameraError("");
+  };
+
+  const openCamera = async () => {
+    pendingCameraRangeRef.current = currentInsertionRange();
+    setCameraError("");
+    if (!navigator.mediaDevices?.getUserMedia) {
+      cameraInputRef.current?.click();
+      return;
+    }
+
+    setCameraOpen(true);
+    setCameraLoading(true);
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        audio: false,
+        video: {
+          facingMode: { ideal: "environment" },
+          width: { ideal: 1600 },
+          height: { ideal: 1200 },
+        },
+      });
+      setCameraStream(stream);
+    } catch (error) {
+      setCameraError(error instanceof Error ? error.message : "无法打开摄像头，请检查浏览器权限。");
+    } finally {
+      setCameraLoading(false);
+    }
+  };
+
+  const captureCameraPhoto = async () => {
+    const video = cameraVideoRef.current;
+    const canvas = cameraCanvasRef.current;
+    if (!video || !canvas || video.videoWidth === 0 || video.videoHeight === 0) {
+      setCameraError("摄像头画面还没有准备好，请稍等一秒再拍。");
+      return;
+    }
+
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    const context = canvas.getContext("2d");
+    if (!context) {
+      setCameraError("无法读取摄像头画面。");
+      return;
+    }
+    context.drawImage(video, 0, 0, canvas.width, canvas.height);
+    const blob = await new Promise<Blob | null>((resolve) => {
+      canvas.toBlob(resolve, "image/jpeg", 0.92);
+    });
+    if (!blob) {
+      setCameraError("照片生成失败，请重试。");
+      return;
+    }
+
+    const file = new File([blob], `camera-${new Date().toISOString().replace(/[:.]/g, "-")}.jpg`, { type: "image/jpeg" });
+    const insertionRange = pendingCameraRangeRef.current ?? currentInsertionRange();
+    closeCamera();
+    await uploadFiles([file], insertionRange);
+  };
+
   const handlePaste = (event: React.ClipboardEvent<HTMLTextAreaElement>) => {
     const files = Array.from(event.clipboardData.files || []);
     if (files.length === 0) return;
@@ -441,6 +532,94 @@ export function EnhancedEditor({ initialNote }: { initialNote?: NoteShape }) {
             </span>
           </motion.div>
         )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {cameraOpen ? (
+          <motion.div
+            className="fixed inset-0 z-[80] flex items-end justify-center bg-[var(--overlay-scrim)] px-3 pb-3 pt-[calc(1rem+env(safe-area-inset-top))] backdrop-blur-sm sm:items-center sm:p-6"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+          >
+            <motion.section
+              className="floating-card-premium flex max-h-[calc(100dvh-24px)] w-full max-w-2xl flex-col overflow-hidden rounded-[var(--radius-2xl)]"
+              initial={{ opacity: 0, y: 18, scale: 0.98 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 18, scale: 0.98 }}
+              transition={{ duration: 0.2, ease: [0.2, 0, 0, 1] }}
+            >
+              <header className="flex shrink-0 items-center justify-between gap-3 border-b border-[var(--hairline)] px-4 py-3">
+                <div>
+                  <div className="flex items-center gap-1.5 text-xs text-[var(--text-muted)]">
+                    <Camera className="h-3.5 w-3.5" />
+                    系统摄像头
+                  </div>
+                  <h3 className="mt-1 text-sm font-medium text-[var(--text-primary)]">拍照并插入正文</h3>
+                </div>
+                <button
+                  type="button"
+                  onClick={closeCamera}
+                  className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-[var(--hairline)] text-[var(--text-muted)] transition hover:bg-[var(--interactive-hover)] hover:text-[var(--text-primary)]"
+                  aria-label="关闭摄像头"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </header>
+              <div className="min-h-0 flex-1 overflow-y-auto p-4">
+                <div className="relative overflow-hidden rounded-[var(--radius-xl)] border border-[var(--hairline)] bg-black">
+                  <video ref={cameraVideoRef} muted playsInline autoPlay className="aspect-[4/3] w-full object-cover" />
+                  {cameraLoading ? (
+                    <div className="absolute inset-0 flex items-center justify-center bg-black/70 text-sm text-white">
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      正在打开摄像头
+                    </div>
+                  ) : null}
+                  {!cameraStream && !cameraLoading ? (
+                    <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/70 px-6 text-center text-sm leading-6 text-white/80">
+                      <CameraOff className="mb-2 h-5 w-5" />
+                      {cameraError || "摄像头尚未连接。"}
+                    </div>
+                  ) : null}
+                </div>
+                {cameraError ? (
+                  <p className="mt-3 rounded-[var(--radius-lg)] border border-[var(--danger-soft)] bg-[var(--material-inset)] px-3 py-2 text-xs leading-5 text-[var(--text-secondary)]">
+                    {cameraError}
+                  </p>
+                ) : null}
+                <canvas ref={cameraCanvasRef} className="hidden" />
+              </div>
+              <footer className="flex shrink-0 flex-wrap items-center justify-between gap-2 border-t border-[var(--hairline)] px-4 py-3">
+                <button
+                  type="button"
+                  onClick={() => cameraInputRef.current?.click()}
+                  className="rounded-full border border-[var(--hairline)] px-3 py-2 text-xs text-[var(--text-secondary)] transition hover:bg-[var(--interactive-hover)]"
+                >
+                  选择照片
+                </button>
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={openCamera}
+                    disabled={cameraLoading}
+                    className="rounded-full border border-[var(--hairline)] px-3 py-2 text-xs text-[var(--text-secondary)] transition hover:bg-[var(--interactive-hover)] disabled:opacity-50"
+                  >
+                    重新打开
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => void captureCameraPhoto()}
+                    disabled={!cameraStream || uploading}
+                    className="inline-flex items-center gap-1.5 rounded-full bg-[var(--text-primary)] px-4 py-2 text-xs font-medium text-[var(--surface-base)] transition hover:opacity-90 disabled:opacity-50"
+                  >
+                    {uploading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Camera className="h-3.5 w-3.5" />}
+                    插入正文
+                  </button>
+                </div>
+              </footer>
+            </motion.section>
+          </motion.div>
+        ) : null}
       </AnimatePresence>
 
       {/* v1.4 AI Summary Panel */}
@@ -658,9 +837,18 @@ export function EnhancedEditor({ initialNote }: { initialNote?: NoteShape }) {
               <span>可直接粘贴图片/文件，或拖到正文区域。</span>
               <button
                 type="button"
-                onClick={() => attachmentInputRef.current?.click()}
+                onClick={() => void openCamera()}
                 disabled={uploading}
                 className="ml-auto inline-flex items-center gap-1.5 rounded-md border border-[var(--hairline)] px-2 py-1 text-[var(--text-secondary)] transition hover:bg-[var(--interactive-hover)] disabled:opacity-50"
+              >
+                <Camera className="h-3.5 w-3.5" />
+                拍照插入
+              </button>
+              <button
+                type="button"
+                onClick={() => attachmentInputRef.current?.click()}
+                disabled={uploading}
+                className="inline-flex items-center gap-1.5 rounded-md border border-[var(--hairline)] px-2 py-1 text-[var(--text-secondary)] transition hover:bg-[var(--interactive-hover)] disabled:opacity-50"
               >
                 <FileUp className="h-3.5 w-3.5" />
                 选择附件
@@ -674,6 +862,19 @@ export function EnhancedEditor({ initialNote }: { initialNote?: NoteShape }) {
                   const files = Array.from(event.target.files || []);
                   event.target.value = "";
                   void uploadFiles(files, currentInsertionRange());
+                }}
+              />
+              <input
+                ref={cameraInputRef}
+                type="file"
+                accept="image/*"
+                capture="environment"
+                className="hidden"
+                onChange={(event) => {
+                  const files = Array.from(event.target.files || []);
+                  event.target.value = "";
+                  closeCamera();
+                  void uploadFiles(files, pendingCameraRangeRef.current ?? currentInsertionRange());
                 }}
               />
             </div>

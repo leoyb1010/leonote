@@ -25,7 +25,7 @@
 </p>
 
 <p>
-  <img alt="Version" src="https://img.shields.io/badge/Version-v1.6.13-7B84F6?style=for-the-badge">
+  <img alt="Version" src="https://img.shields.io/badge/Version-v1.6.14-7B84F6?style=for-the-badge">
   <img alt="License" src="https://img.shields.io/badge/License-Personal%20Use%20Only-F26D6D?style=for-the-badge">
   <img alt="Next.js" src="https://img.shields.io/badge/Next.js-16-111111?style=for-the-badge&logo=nextdotjs">
   <img alt="Tauri" src="https://img.shields.io/badge/Tauri-2-24C8DB?style=for-the-badge&logo=tauri">
@@ -58,16 +58,16 @@
 </p>
 
 <p align="center">
-  <sub>截图基于 v1.6.13 Quiet Material 界面生成，覆盖桌面端、笔记编辑与移动端简报。</sub>
+  <sub>截图随 v1.6.14 Quiet Material 文档维护，覆盖桌面端、笔记编辑与移动端简报。</sub>
 </p>
 
 ## 核心模块
 
 | 模块 | 能力 |
 |---|---|
-| 笔记与长期记忆 | Markdown 写作、标签/项目、收藏/置顶/归档、版本历史、正文内联图片与附件、AI 长期记忆 |
-| 每日简报 | RSS / Tavily / CoinGecko / 新浪行情聚合，AI 中文摘要、质量评分、标签、市场温度、天气与星座 |
-| AI 协助思考 | 从当日 AI 科技、市场、政策、安全与开发者生态中筛选深度影响事件，生成 1 条主思考 + 6 条紧凑思考 |
+| 笔记与长期记忆 | Markdown 写作、标签/项目、收藏/置顶/归档、版本历史、正文内联图片/附件、系统摄像头拍照插入正文、AI 长期记忆 |
+| 每日简报 | RSS / Tavily / X 官方 API / CoinGecko / 新浪行情聚合，AI 中文摘要、质量评分、标签、市场温度、天气与星座 |
+| AI 协助思考 | 从国内外当日大事件、AI 科技行业与关键人物 X 动态中筛选深度影响事件，形成大事件雷达 + 7 条可继续推演的思考 |
 | 全局 AI 助手 | 从当前页面呼出，自动带入路径、标题、选中文本与页面摘要，适合边读边问、边写边整理 |
 | 轻记账 | 快速记账、分类管理、周/月统计、分布趋势、软删除与历史保留 |
 | 自托管与跨端 | SQLite 单文件、Docker / PM2 / Node 部署、PWA、Tauri WebView 壳、Mac / PC / iPad / 手机统一访问 |
@@ -154,11 +154,13 @@ AI_FALLBACK_MODEL="deepseek-v4-pro"
 BRIEFING_CRON_TOKEN="change-me-long-random-token"
 BRIEFING_AUTO_REFRESH="true"
 BRIEFING_MIN_ITEMS="24"
-BRIEFING_MAX_AGE_MINUTES="10"
+BRIEFING_MAX_AGE_MINUTES="5"
 BRIEFING_TRANSLATE_ENGLISH="true"
 BRIEFING_TRANSLATE_MAX_ITEMS="12"
 BRIEFING_TRANSLATE_TIMEOUT_MS="30000"
 RSSHUB_BASE_URL="https://rsshub.app"
+X_BEARER_TOKEN=""
+BRIEFING_X_USERS="OpenAI:OpenAI:96,AnthropicAI:Anthropic:94,GoogleDeepMind:DeepMind:94,sama:Sam Altman:92,nvidia:NVIDIA:90,karpathy:Andrej Karpathy:88,github:GitHub:84"
 ```
 
 ---
@@ -180,7 +182,13 @@ RSSHUB_BASE_URL="https://rsshub.app"
 - 设置页「记账类型」入口
 - 完全软删除 + 删除类型后历史账单保留
 
-### 每日简报 (v1.6.12)
+### 每日简报 (v1.6.14)
+- 大事件雷达：简报首屏从“资讯卡片堆叠”升级为“今日大事件雷达”，优先呈现国际/国内/AI 科技/市场/X 信号中真正有深远影响的事件；1 条主事件 + 6 条紧凑事件入口，点击后在鼠标位置或移动端底部安全面板查看详情
+- 关键人物 X 信号：新增 X 官方 API 抓取链路，支持 `X_BEARER_TOKEN` 与 `BRIEFING_X_USERS` 配置，默认关注 OpenAI、Anthropic、DeepMind、Sam Altman、NVIDIA、Andrej Karpathy、GitHub 等 AI/科技账号；未配置时不兜底造假，前端明确显示待配置状态
+- 高频资讯刷新：白天 RSS/X 抓取提升到 5 分钟粒度，清晨 10 分钟粒度；首屏自动补抓默认新鲜度阈值收紧到 5 分钟；市场行情交易时段 5 分钟同步，Tavily 作为 4 个时间点的补充兜底
+- 首页 IA 重排：Hero 保留日期、天气、星座、质量指标和操作按钮；大事件雷达成为主阅读入口，精选资讯改为“证据库”，减少无效空白和重复阅读成本
+- 复制摘要升级：复制/存笔记内容纳入大事件雷达、AI 协助思考、X 信号和精选资讯，输出更接近“个人日报”而不是普通新闻列表
+- 笔记拍照插入：编辑器新增系统摄像头拍照面板，桌面端通过 `getUserMedia` 调用摄像头，移动端支持 `capture=environment` 兜底；拍摄后自动上传为附件并插入当前正文光标位置
 - 多源抓取：RSS / Tavily / CoinGecko / 新浪行情，支持 Cron 定时抓取、行情刷新与日报生成
 - AI 协助思考：每日简报 Hero 从表层标题升级为不少于 7 条“深度影响/分析价值”思考，优先筛选国内外实时发生的 AI 科技大事件，并结合来源质量、长期记忆、近期笔记与标签判断模型平台、算力芯片、产品入口、资本成本、安全治理、开发者生态和社会情绪的潜在传导
 - AI 思考区版面优化：保留 7 条思考信息，从“六张等权卡片”调整为“1 条主思考 + 6 条紧凑入口”，降低首屏空白和卡片重复感，让 Hero 更像今日判断入口而不是信息堆叠
@@ -329,6 +337,7 @@ npm run ci           # 全链路：lint → typecheck → test → build
 
 | 版本 | 日期 | 更新内容 |
 |---|---|---|
+| **v1.6.14** | 2026-05-15 | 每日简报升级为大事件雷达 + 证据库结构：Hero 保留日期/天气/星座/指标与操作按钮，主阅读区突出 1 条主大事件 + 6 条紧凑事件入口，点击后按鼠标位置或移动端底部安全面板查看详情；新增关键人物 X 官方 API 信号抓取与 Sidebar 展示，支持 `X_BEARER_TOKEN` / `BRIEFING_X_USERS`，未配置时明确显示待配置；RSS/X 白天刷新提升到 5 分钟粒度，市场行情交易时段 5 分钟同步，Tavily 补充到每日 4 次；复制摘要纳入大事件雷达、AI 思考、X 信号和精选资讯；笔记编辑器新增系统摄像头拍照插入正文能力，移动端使用相机 capture 兜底；README / `.env.example` / 版本号同步更新 |
 | **v1.6.13** | 2026-05-14 | 美化 GitHub 仓库 README 首屏：新增居中产品标题、双语 slogan、语言切换入口、版本号、许可、Next.js / Tauri / PWA / Quiet Material 徽章；新增英文 README；补充最新桌面端/移动端产品截图与核心模块总览，方便多语言浏览和对外介绍 |
 | **v1.6.12** | 2026-05-12 | 治好 AI 协助思考区的数量强迫症：默认思考生成数从 6 条提升到 7 条，Hero 展示改为“1 条主思考 + 6 条紧凑入口”；移动端继续保留横向滑动紧凑入口。同步更新回归测试，确保足量 AI 科技事件会返回 7 条思考 |
 | **v1.6.11** | 2026-05-12 | 优化每日简报 Hero 的 AI 协助思考版面：不增加无意义数量，保留 6 条高价值思考，但改为“1 条主思考 + 5 条紧凑入口”的信息架构；主卡展示标题、影响摘要、置信度和标签，右侧紧凑入口降低重复卡片高度，移动端保持横向滑动入口；同时收紧 Hero 内边距与模块间距，减少首屏大面积空白，尽量不影响其他简报组件 |

@@ -27,16 +27,18 @@ async function callTask(path: string) {
 }
 
 // RSS fetch is cheap and primary: keep the briefing close to live during waking hours.
-cron.schedule("0,20,40 5-6 * * *", () => callTask("/api/briefing/cron/fetch-news"), { timezone: "Asia/Shanghai" });
-cron.schedule("*/10 7-23 * * *", () => callTask("/api/briefing/cron/fetch-news"), { timezone: "Asia/Shanghai" });
+cron.schedule("*/10 5-6 * * *", () => callTask("/api/briefing/cron/fetch-news"), { timezone: "Asia/Shanghai" });
+cron.schedule("*/5 7-23 * * *", () => callTask("/api/briefing/cron/fetch-news"), { timezone: "Asia/Shanghai" });
 
-// Market data via Sina every 15 min during trading hours
-cron.schedule("*/15 9-16 * * 1-5", () => callTask("/api/briefing/cron/fetch-market"), { timezone: "Asia/Shanghai" });
+// Market data via Sina every 5 min during trading hours.
+cron.schedule("*/5 9-16 * * 1-5", () => callTask("/api/briefing/cron/fetch-market"), { timezone: "Asia/Shanghai" });
 // Market snapshots at open/close
 cron.schedule("0 9,12,15 * * 1-5", () => callTask("/api/briefing/cron/fetch-market"), { timezone: "Asia/Shanghai" });
 
-// Tavily fallback: only twice a day (morning + evening), only if RSS didn't fill
+// Tavily fallback: four daily checkpoints, only if RSS didn't fill.
 cron.schedule("0 8 * * *", () => callTask("/api/briefing/cron/fetch-tavily"), { timezone: "Asia/Shanghai" });
+cron.schedule("0 12 * * *", () => callTask("/api/briefing/cron/fetch-tavily"), { timezone: "Asia/Shanghai" });
+cron.schedule("0 16 * * *", () => callTask("/api/briefing/cron/fetch-tavily"), { timezone: "Asia/Shanghai" });
 cron.schedule("0 20 * * *", () => callTask("/api/briefing/cron/fetch-tavily"), { timezone: "Asia/Shanghai" });
 
 // Horoscope refresh: local-day cache invalidation at Shanghai midnight, with a morning safety retry.
@@ -54,4 +56,4 @@ cron.schedule("0 18 * * *", async () => {
   await callTask("/api/briefing/cron/generate-digest");
 }, { timezone: "Asia/Shanghai" });
 
-console.log("[briefing-cron] worker started — RSS every 10min daytime, Tavily 2x/day fallback, horoscope local-day refresh");
+console.log("[briefing-cron] worker started — RSS/X every 5min daytime, Tavily 4x/day fallback, horoscope local-day refresh");

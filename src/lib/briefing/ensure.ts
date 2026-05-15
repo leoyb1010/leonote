@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { generateBriefingDigest } from "./digest";
 import { fetchNewsSources } from "./fetchers/rss";
+import { fetchXSignals } from "./fetchers/x-api";
 
 type EnsureOptions = {
   force?: boolean;
@@ -42,7 +43,7 @@ function todayWindow() {
 
 async function getRefreshDecision(options: EnsureOptions): Promise<RefreshDecision> {
   const minItems = options.minItems ?? Number(process.env.BRIEFING_MIN_ITEMS || 24);
-  const maxAgeMinutes = options.maxAgeMinutes ?? Number(process.env.BRIEFING_MAX_AGE_MINUTES || 10);
+  const maxAgeMinutes = options.maxAgeMinutes ?? Number(process.env.BRIEFING_MAX_AGE_MINUTES || 5);
   const [itemCount, latestSource, todayDigest] = await Promise.all([
     prisma.newsItem.count({ where: todayWindow() }),
     prisma.newsSource.findFirst({
@@ -85,6 +86,12 @@ export async function ensureBriefingFreshness(options: EnsureOptions = {}) {
         await fetchNewsSources();
       } catch (error) {
         console.error("[briefing] background fetch failed", error instanceof Error ? error.message : "unknown");
+      }
+
+      try {
+        await fetchXSignals();
+      } catch (error) {
+        console.error("[briefing] background X fetch failed", error instanceof Error ? error.message : "unknown");
       }
 
       try {

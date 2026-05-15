@@ -1,12 +1,12 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { useState, type MouseEvent, type ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
-import { BrainCircuit, CalendarDays, Check, ChevronRight, CloudSun, Copy, FilePlus2, Gauge, Loader2, MoonStar, Newspaper, RefreshCw, Sparkles, Star, Tags, X } from "lucide-react";
+import { CalendarDays, Check, ChevronRight, CloudSun, Copy, FilePlus2, Gauge, Loader2, MoonStar, Newspaper, RefreshCw, Star, Tags, X } from "lucide-react";
 import { Button } from "@/components/base/Button";
 import { cardFloatIn, heroTitleReveal } from "@/lib/animations";
-import type { BriefingDigestSummary, BriefingRange, BriefingThinkingInsight, HoroscopeDTO, WeatherDTO } from "@/lib/briefing/types";
+import type { BriefingDigestSummary, BriefingRange, HoroscopeDTO, WeatherDTO } from "@/lib/briefing/types";
 
 export interface BriefingHeroStats {
   total: number;
@@ -18,7 +18,6 @@ export interface BriefingHeroStats {
 interface Props {
   digest: BriefingDigestSummary | null;
   stats: BriefingHeroStats;
-  thinkingInsights: BriefingThinkingInsight[];
   weather: WeatherDTO | null;
   horoscopes: HoroscopeDTO[];
   dateLabel: string;
@@ -34,132 +33,7 @@ interface Props {
 }
 
 type DetailAnchor = { x: number; y: number; top: number; left: number; width: number; height: number };
-type SelectedInsight = { insight: BriefingThinkingInsight; anchor: DetailAnchor };
 type SelectedHoroscope = { horoscope: HoroscopeDTO; anchor: DetailAnchor };
-const THINKING_LABELS = ["One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight"];
-
-function ThinkingInsightBubble({
-  selected,
-  onClose,
-}: {
-  selected: SelectedInsight | null;
-  onClose: () => void;
-}) {
-  if (!selected) return null;
-  const { insight, anchor } = selected;
-  const width = 430;
-  const estimatedHeight = 520;
-  const margin = 14;
-  const viewportWidth = typeof window === "undefined" ? 0 : window.innerWidth;
-  const viewportHeight = typeof window === "undefined" ? 0 : window.innerHeight;
-  const desktopStyle = viewportWidth > 768
-    ? {
-        width,
-        left: Math.max(margin, Math.min(anchor.x - width / 2, viewportWidth - width - margin)),
-        top: Math.max(
-          margin,
-          Math.min(
-            anchor.y + estimatedHeight + margin <= viewportHeight
-              ? anchor.y + margin
-              : anchor.y - estimatedHeight - margin,
-            viewportHeight - estimatedHeight - margin,
-          ),
-        ),
-      }
-    : undefined;
-
-  return createPortal(
-    <motion.div
-      className="fixed inset-0 z-[70]"
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-    >
-      <button
-        type="button"
-        className="absolute inset-0 bg-[var(--overlay-scrim)] backdrop-blur-sm min-[769px]:bg-transparent min-[769px]:backdrop-blur-0"
-        aria-label="关闭思考详情"
-        onClick={onClose}
-      />
-      <motion.article
-        className="floating-card-premium bottom-0 left-0 right-0 z-10 flex max-h-[100vh] max-h-[calc(100dvh-8px)] w-full flex-col overscroll-contain rounded-b-none min-[769px]:bottom-auto min-[769px]:left-auto min-[769px]:right-auto min-[769px]:max-h-[calc(100dvh-36px)] min-[769px]:rounded-[var(--radius-2xl)]"
-        style={{ position: "fixed", ...desktopStyle }}
-        initial={{ opacity: 0, y: 18, x: 0, scale: 0.98 }}
-        animate={{ opacity: 1, y: 0, x: 0, scale: 1 }}
-        exit={{ opacity: 0, y: 18, x: 0, scale: 0.98 }}
-        transition={{ duration: 0.2, ease: [0.2, 0, 0, 1] }}
-      >
-        <header className="shrink-0 border-b border-[var(--hairline)] bg-[var(--material-elevated)] px-4 py-3 pr-[max(1rem,env(safe-area-inset-right))] pt-[calc(0.75rem+env(safe-area-inset-top))] min-[769px]:pt-3">
-          <div className="mx-auto mb-2 h-1 w-10 rounded-full bg-[var(--text-faint)] min-[769px]:hidden" />
-          <div className="flex items-start justify-between gap-3">
-            <div className="min-w-0">
-              <div className="flex flex-wrap items-center gap-1.5 text-[11px] text-[var(--text-muted)]">
-                <span className="inline-flex items-center gap-1 rounded-[var(--radius-pill)] bg-[var(--primary-soft)] px-2 py-0.5 text-[var(--primary)]">
-                  <BrainCircuit size={11} />
-                  AI 协助思考
-                </span>
-                <span>{insight.impactLabel}</span>
-                <span className="numeric-display">置信 {insight.confidence}</span>
-              </div>
-              <h3 className="mt-2 text-base font-semibold leading-snug text-[var(--text-primary)]">
-                {insight.title}
-              </h3>
-            </div>
-            <button
-              type="button"
-              onClick={onClose}
-              className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-xl border border-[var(--hairline)] text-[var(--text-muted)] transition hover:bg-[var(--interactive-hover)] hover:text-[var(--text-primary)]"
-              aria-label="关闭"
-            >
-              <X size={16} />
-            </button>
-          </div>
-        </header>
-
-        <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4">
-          <p className="font-[var(--font-reading)] text-sm leading-7 text-[var(--text-secondary)]">
-            {insight.whyItMatters}
-          </p>
-          <p className="mt-3 font-[var(--font-reading)] text-sm leading-7 text-[var(--text-secondary)]">
-            {insight.thesis}
-          </p>
-          <div className="mt-4 rounded-[var(--radius-lg)] border border-[var(--hairline)] bg-[var(--material-inset)] px-3.5 py-3">
-            <p className="mb-1.5 text-xs text-[var(--primary)]">今天可以追问</p>
-            <p className="font-[var(--font-reading)] text-sm leading-7 text-[var(--text-secondary)]">
-              {insight.question}
-            </p>
-          </div>
-          {insight.sourceTitles.length > 0 ? (
-            <div className="mt-4">
-              <p className="mb-2 text-xs text-[var(--text-muted)]">依据来源</p>
-              <div className="space-y-2">
-                {insight.sourceTitles.map((title) => (
-                  <p key={title} className="rounded-[var(--radius-md)] border border-[var(--hairline)] bg-[var(--material-elevated)] px-3 py-2 text-xs leading-5 text-[var(--text-secondary)]">
-                    {title}
-                  </p>
-                ))}
-              </div>
-            </div>
-          ) : null}
-          <div className="mt-4 flex flex-wrap gap-1.5">
-            {insight.tags.slice(0, 5).map((tag) => (
-              <span key={tag} className="rounded-[var(--radius-pill)] border border-[var(--hairline)] px-2.5 py-1 text-xs text-[var(--text-muted)]">
-                {tag}
-              </span>
-            ))}
-          </div>
-          {insight.habitSignals.length > 0 ? (
-            <p className="mt-3 text-xs leading-6 text-[var(--text-muted)]">
-              结合你的思考习惯：{insight.habitSignals.join(" / ")}
-            </p>
-          ) : null}
-        </div>
-      </motion.article>
-    </motion.div>,
-    document.body,
-  );
-}
-
 function HoroscopeDetailBubble({
   selected,
   onClose,
@@ -174,6 +48,7 @@ function HoroscopeDetailBubble({
   const margin = 14;
   const viewportWidth = typeof window === "undefined" ? 0 : window.innerWidth;
   const viewportHeight = typeof window === "undefined" ? 0 : window.innerHeight;
+  const hasRoomBelow = anchor.y + margin + estimatedHeight <= viewportHeight;
   const desktopStyle = viewportWidth > 768
     ? {
         width,
@@ -181,9 +56,7 @@ function HoroscopeDetailBubble({
         top: Math.max(
           margin,
           Math.min(
-            anchor.y + estimatedHeight + margin <= viewportHeight
-              ? anchor.y + margin
-              : anchor.y - estimatedHeight - margin,
+            hasRoomBelow ? anchor.y + margin : anchor.y - estimatedHeight - margin,
             viewportHeight - estimatedHeight - margin,
           ),
         ),
@@ -261,119 +134,6 @@ function HoroscopeDetailBubble({
       </motion.article>
     </motion.div>,
     document.body,
-  );
-}
-
-function ThinkingInsightStrip({
-  insights,
-  onSelect,
-}: {
-  insights: BriefingThinkingInsight[];
-  onSelect: (insight: BriefingThinkingInsight, anchor: DetailAnchor) => void;
-}) {
-  const primaryInsight = insights[0];
-  const secondaryInsights = insights.slice(1, 7);
-
-  function openInsight(event: MouseEvent<HTMLButtonElement>, insight: BriefingThinkingInsight) {
-    const rect = event.currentTarget.getBoundingClientRect();
-    onSelect(insight, {
-      x: event.clientX || rect.left + rect.width / 2,
-      y: event.clientY || rect.top + rect.height / 2,
-      top: rect.top,
-      left: rect.left,
-      width: rect.width,
-      height: rect.height,
-    });
-  }
-
-  return (
-    <section className="quiet-inset rounded-[var(--radius-xl)] p-3 sm:p-3.5">
-      <div className="mb-3 flex items-center justify-between gap-3">
-        <div className="flex min-w-0 items-center gap-2 text-xs text-[var(--text-muted)]">
-          <BrainCircuit size={14} className="text-[var(--primary)]" />
-          <span className="truncate">AI 协助思考 · 深度影响优先</span>
-        </div>
-        <span className="numeric-display shrink-0 rounded-[var(--radius-pill)] bg-[var(--primary-soft)] px-2 py-0.5 text-[11px] text-[var(--primary)]">
-          {insights.length || 0} 条
-        </span>
-      </div>
-
-      {primaryInsight ? (
-        <div className={`grid gap-3 ${secondaryInsights.length ? "lg:grid-cols-[minmax(0,1.02fr)_minmax(360px,0.98fr)]" : ""}`}>
-          <button
-            type="button"
-            onClick={(event) => openInsight(event, primaryInsight)}
-            className="group flex min-h-[164px] flex-col rounded-[var(--radius-lg)] border border-[var(--hairline)] bg-[var(--material-elevated)] p-3.5 text-left transition hover:-translate-y-0.5 hover:bg-[var(--material-muted)] sm:p-4 lg:min-h-[188px]"
-          >
-            <div className="flex items-center justify-between gap-3 text-[11px] text-[var(--text-muted)]">
-              <span className="inline-flex items-center gap-1">
-                <Sparkles size={12} className="text-[var(--primary)]" />
-                思考 One
-              </span>
-              <span>{primaryInsight.impactLabel}</span>
-            </div>
-            <p className="mt-3 line-clamp-2 text-base font-semibold leading-snug text-[var(--text-primary)] sm:text-[1.05rem]">
-              {primaryInsight.title}
-            </p>
-            <p className="mt-2 line-clamp-2 font-[var(--font-reading)] text-xs leading-5 text-[var(--text-muted)]">
-              {primaryInsight.whyItMatters || primaryInsight.thesis}
-            </p>
-            <div className="mt-auto flex items-end justify-between gap-3 pt-3">
-              <div className="min-w-0">
-                <p className="numeric-display text-[11px] text-[var(--text-muted)]">置信 {primaryInsight.confidence}</p>
-                <div className="mt-1.5 flex flex-wrap gap-1.5">
-                  {primaryInsight.tags.slice(0, 3).map((tag) => (
-                    <span key={tag} className="rounded-[var(--radius-pill)] border border-[var(--hairline)] px-2 py-0.5 text-[10px] text-[var(--text-muted)]">
-                      {tag}
-                    </span>
-                  ))}
-                </div>
-              </div>
-              <ChevronRight size={15} className="shrink-0 text-[var(--text-muted)] transition group-hover:translate-x-0.5 group-hover:text-[var(--text-primary)]" />
-            </div>
-          </button>
-
-          {secondaryInsights.length > 0 ? (
-            <div className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1 lg:mx-0 lg:grid lg:grid-cols-2 lg:gap-2 lg:overflow-visible lg:px-0 lg:pb-0">
-              {secondaryInsights.map((insight, offset) => {
-                const index = offset + 1;
-                return (
-                  <button
-                    key={insight.id}
-                    type="button"
-                    onClick={(event) => openInsight(event, insight)}
-                    className="group min-w-[232px] rounded-[var(--radius-lg)] border border-[var(--hairline)] bg-[var(--material-elevated)] px-3 py-2.5 text-left transition hover:-translate-y-0.5 hover:bg-[var(--material-muted)] lg:min-w-0"
-                  >
-                    <div className="flex items-center justify-between gap-2 text-[10px] text-[var(--text-muted)]">
-                      <span className="inline-flex items-center gap-1">
-                        <Sparkles size={11} className="text-[var(--primary)]" />
-                        思考 {THINKING_LABELS[index] ?? index + 1}
-                      </span>
-                      <span>{insight.impactLabel}</span>
-                    </div>
-                    <p className="mt-1.5 line-clamp-2 text-[13px] font-medium leading-snug text-[var(--text-primary)]">
-                      {insight.title}
-                    </p>
-                    <div className="mt-1.5 flex items-center justify-between gap-2 text-[10px] text-[var(--text-muted)]">
-                      <span className="numeric-display">置信 {insight.confidence}</span>
-                      <ChevronRight size={13} className="transition group-hover:translate-x-0.5" />
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
-          ) : null}
-        </div>
-      ) : (
-        <button
-          type="button"
-          disabled
-          className="w-full rounded-[var(--radius-lg)] border border-[var(--hairline)] bg-[var(--material-elevated)] px-3 py-4 text-left text-sm leading-6 text-[var(--text-muted)]"
-        >
-          资讯正在收集中。等有足够高价值事件后，我会整理成至少 7 条可推演思考。
-        </button>
-      )}
-    </section>
   );
 }
 
@@ -500,7 +260,6 @@ function MetricCard({
 
 export function BriefingHero({
   stats,
-  thinkingInsights,
   weather,
   horoscopes,
   dateLabel,
@@ -515,7 +274,6 @@ export function BriefingHero({
   onTitleChange,
 }: Props) {
   const score = stats.averageScore == null ? null : Math.round(stats.averageScore);
-  const [selectedInsight, setSelectedInsight] = useState<SelectedInsight | null>(null);
   const [selectedHoroscope, setSelectedHoroscope] = useState<SelectedHoroscope | null>(null);
   const horoscopeBrief = horoscopes.length
     ? horoscopes.map((item) => `${item.name} ${item.stars}星`).join(" · ")
@@ -563,13 +321,6 @@ export function BriefingHero({
               placeholder="每日简报"
             />
           </motion.div>
-
-          <div className="mt-4 max-w-4xl">
-            <ThinkingInsightStrip
-              insights={thinkingInsights}
-              onSelect={(insight, anchor) => setSelectedInsight({ insight, anchor })}
-            />
-          </div>
 
           <div className="mt-4 flex flex-wrap gap-2">
             <Button variant="primary" size="sm" onClick={onRefresh} disabled={loading} className="gap-1.5">
@@ -622,7 +373,6 @@ export function BriefingHero({
         </div>
       </div>
 
-      <ThinkingInsightBubble selected={selectedInsight} onClose={() => setSelectedInsight(null)} />
       <HoroscopeDetailBubble selected={selectedHoroscope} onClose={() => setSelectedHoroscope(null)} />
     </motion.section>
   );

@@ -1,13 +1,14 @@
 import { NextResponse } from "next/server";
 import { getSessionUserId } from "@/lib/session";
 import { prisma } from "@/lib/prisma";
-import { getBriefingData, getBriefingMeta } from "@/lib/briefing/query";
+import { getBriefingData, getBriefingMeta, getLatestXSignalFetchAt } from "@/lib/briefing/query";
 import { getLiveMarketSnapshots } from "@/lib/briefing/live-market";
 import { getWeather } from "@/lib/briefing/weather";
 import { getDailyHoroscopes } from "@/lib/briefing/horoscope";
 import { parseBriefingDigestSummary } from "@/lib/briefing/normalize";
 import { ensureBriefingFreshness } from "@/lib/briefing/ensure";
 import { getBriefingThinkingInsights } from "@/lib/briefing/thinking";
+import { buildBriefingEventRadar, buildBriefingXSignals } from "@/lib/briefing/event-radar";
 import type { BriefingCategory, BriefingRange } from "@/lib/briefing/types";
 
 export const dynamic = "force-dynamic";
@@ -33,21 +34,27 @@ export async function GET(request: Request) {
     ? await ensureBriefingFreshness({ force: forceRefresh, wait: forceRefresh, timeoutMs: 12_000 })
     : { started: false, inFlight: false, skipped: true };
 
-  const [digest, items, marketState, weather, horoscopes, meta] = await Promise.all([
+  const [digest, items, marketState, weather, horoscopes, meta, xSignalsUpdatedAt] = await Promise.all([
     prisma.briefingDigest.findUnique({ where: { date: startOfToday() } }),
     getBriefingData(userId, { range, category }),
     getLiveMarketSnapshots(),
     getWeather().catch(() => null),
     getDailyHoroscopes().catch(() => []),
     getBriefingMeta(),
+    getLatestXSignalFetchAt(),
   ]);
   const thinkingInsights = await getBriefingThinkingInsights(userId, items);
+  const eventClusters = buildBriefingEventRadar(items);
+  const xSignals = buildBriefingXSignals(items);
 
   return NextResponse.json({
     ok: true,
     digest: parseBriefingDigestSummary(digest?.summary),
     items,
     thinkingInsights,
+    eventClusters,
+    xSignals,
+    xSignalsUpdatedAt,
     markets: marketState.markets,
     marketStatus: {
       refreshed: marketState.refreshed,

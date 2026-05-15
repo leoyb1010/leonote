@@ -26,6 +26,39 @@ export interface BriefingThinkingInsight {
   tags: string[];
 }
 
+export type BriefingEventScope = "domestic" | "international" | "ai_tech" | "market" | "x_signal";
+
+export interface BriefingEventClusterDTO {
+  id: string;
+  title: string;
+  scope: BriefingEventScope;
+  scopeLabel: string;
+  impactLabel: string;
+  impactScore: number;
+  summary: string;
+  whyItMatters: string;
+  facts: string[];
+  sourceNames: string[];
+  sourceCount: number;
+  latestAt: string;
+  tags: string[];
+  itemIds: string[];
+}
+
+export interface BriefingXSignalDTO {
+  id: string;
+  itemId: string;
+  authorName: string;
+  username: string;
+  title: string;
+  summary: string;
+  url: string;
+  publishedAt: string;
+  impactLabel: string;
+  tags: string[];
+  score: number | null;
+}
+
 export interface BriefingMetaDTO {
   generatedAt: string | null;
   latestNewsFetchAt: string | null;
