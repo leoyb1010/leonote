@@ -20,4 +20,20 @@ describe("briefing display rules", () => {
     expect(deriveDisplayCategory({ category: "ai_tech", sourceName: "36氪", title: "南向资金净买入额达100亿港元" })).toBe("finance");
     expect(deriveDisplayCategory({ category: "ai_tech", sourceName: "36氪", title: "千问AI眼镜升级主动服务能力" })).toBe("ai_tech");
   });
+
+  it("filters informal community help threads from briefing display", () => {
+    expect(isDisplayableChinese(
+      "Claude 延迟求助",
+      "大佬们这个延迟为什么这么高啊？1 个帖子 - 1 位参与者",
+      "大佬们这个延迟为什么这么高啊？1 个帖子 - 1 位参与者",
+      "LinuxDo 最新",
+    )).toBe(false);
+
+    expect(isDisplayableChinese(
+      "OpenAI 发布新的智能体平台",
+      "OpenAI 把智能体能力推向更完整的任务执行入口。",
+      "OpenAI 把智能体能力推向更完整的任务执行入口。",
+      "OpenAI Blog",
+    )).toBe(true);
+  });
 });

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { buildBriefingEventRadar, buildBriefingXSignals } from "@/lib/briefing/event-radar";
+import { buildBriefingEventRadar } from "@/lib/briefing/event-radar";
 import type { NewsItemDTO } from "@/lib/briefing/types";
 
 function newsItem(overrides: Partial<NewsItemDTO>): NewsItemDTO {
@@ -58,25 +58,6 @@ describe("briefing event radar", () => {
     expect(events[0]?.scope).toBe("ai_tech");
     expect(events.every((event) => !event.title.includes("中美议程"))).toBe(true);
     expect(events.some((event) => event.scopeLabel === "AI 科技")).toBe(true);
-  });
-
-  it("extracts official X signal cards from monitored account posts", () => {
-    const signals = buildBriefingXSignals([
-      newsItem({
-        id: "x-openai",
-        title: "We launched a new agent capability for developers",
-        url: "https://x.com/OpenAI/status/123",
-        sourceName: "X · OpenAI",
-        aiSummary: "来自 X · OpenAI：OpenAI 发布新的开发者智能体能力。",
-        aiTags: ["X监控", "OpenAI", "人工智能"],
-        aiScore: 0.92,
-      }),
-    ]);
-
-    expect(signals).toHaveLength(1);
-    expect(signals[0]?.username).toBe("OpenAI");
-    expect(signals[0]?.impactLabel).toBe("强信号");
-    expect(signals[0]?.summary).toContain("OpenAI");
   });
 
   it("keeps domestic, international, market, and AI events visible when all buckets exist", () => {
@@ -221,7 +202,7 @@ describe("briefing event radar", () => {
 
     const internationalCount = events.filter((event) => event.scope === "international").length;
     const domesticCount = events.filter((event) => event.scope === "domestic").length;
-    const aiTechCount = events.filter((event) => event.scope === "ai_tech" || event.scope === "x_signal").length;
+    const aiTechCount = events.filter((event) => event.scope === "ai_tech").length;
 
     expect(events).toHaveLength(8);
     expect(internationalCount).toBeGreaterThanOrEqual(1);
@@ -230,5 +211,33 @@ describe("briefing event radar", () => {
     expect(domesticCount).toBeLessThanOrEqual(2);
     expect(aiTechCount).toBeGreaterThanOrEqual(3);
     expect(aiTechCount).toBeLessThanOrEqual(5);
+  });
+
+  it("filters informal community help threads out of the event radar", () => {
+    const events = buildBriefingEventRadar([
+      newsItem({
+        id: "linuxdo-latency",
+        title: "Claude 延迟求助",
+        sourceName: "LinuxDo 最新",
+        aiSummary: "大佬们这个延迟为什么这么高啊？1 个帖子 - 1 位参与者",
+        aiKeyPoints: [
+          "大佬们这个延迟为什么这么高啊？1 个帖子 - 1 位参与者",
+          "公司强制使用的是 gemini cli 进行 code，但是体验下来不是很好有些降智 2 个帖子 - 1 位参与者",
+        ],
+        aiTags: ["人工智能", "LinuxDo 最新"],
+        aiScore: 0.95,
+      }),
+      newsItem({
+        id: "openai-agent",
+        title: "OpenAI 发布新的智能体平台，开放浏览器自动化能力",
+        sourceName: "OpenAI Blog",
+        aiSummary: "OpenAI 把智能体能力推向更完整的任务执行入口。",
+        aiTags: ["人工智能", "智能体"],
+        aiScore: 0.9,
+      }),
+    ]);
+
+    expect(events.map((event) => event.title)).not.toContain("Claude 延迟求助");
+    expect(events.some((event) => event.title.includes("OpenAI"))).toBe(true);
   });
 });

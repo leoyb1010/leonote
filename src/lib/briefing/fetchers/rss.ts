@@ -4,7 +4,7 @@ import http from "node:http";
 import { HttpsProxyAgent } from "https-proxy-agent";
 import { prisma } from "@/lib/prisma";
 import { PRESET_NEWS_SOURCES } from "../sources";
-import { deriveDisplayCategory } from "../display";
+import { deriveDisplayCategory, isLowValueCommunityItem } from "../display";
 import { extractImageUrl, stableExternalId, stripHtml, truncate } from "../normalize";
 import type { BriefingCategory } from "../types";
 
@@ -153,6 +153,7 @@ export async function fetchNewsSources() {
 
         const publishedAt = safePublishedAt(item.isoDate, item.pubDate);
         const { excerpt, content } = itemText(item as Record<string, unknown>);
+        if (isLowValueCommunityItem({ sourceName: source.name, title, excerpt, detailText: content })) continue;
         const externalId = item.guid || stableExternalId(url);
         const imageUrl = extractImageUrl(item as Record<string, unknown>);
         const category = inferCategory(source.category as BriefingCategory, source.name, title, excerpt);

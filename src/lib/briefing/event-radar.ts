@@ -1,4 +1,5 @@
 import { sanitizeBriefingText } from "./normalize";
+import { isLowValueCommunityItem } from "./display";
 import type { BriefingEventClusterDTO, BriefingEventScope, NewsItemDTO } from "./types";
 
 type EventTheme = {
@@ -250,6 +251,13 @@ function diversifyEvents(events: BriefingEventClusterDTO[], limit: number) {
 
 export function buildBriefingEventRadar(items: NewsItemDTO[], limit = 8): BriefingEventClusterDTO[] {
   const sourceItems = items
+    .filter((item) => !isLowValueCommunityItem({
+      sourceName: item.sourceName,
+      title: item.title,
+      excerpt: item.excerpt,
+      summary: item.aiSummary,
+      detailText: item.detailText,
+    }))
     .slice(0, 120);
 
   const clusters: ClusterDraft[] = [];

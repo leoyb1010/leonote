@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/prisma";
-import { categoryLabel, deriveDisplayCategory, isDisplayableChinese } from "./display";
+import { categoryLabel, deriveDisplayCategory, isDisplayableChinese, isLowValueCommunityItem } from "./display";
 import { buildBriefingKeyPoints, buildBriefingSummary, normalizeBriefingTags, parseJsonStringArray, sanitizeBriefingText } from "./normalize";
 import { needsTranslation, translateBatch } from "./translate";
 
@@ -102,7 +102,10 @@ export async function generateBriefingDigest() {
     include: { source: true },
     orderBy: [{ fetchedAt: "desc" }, { publishedAt: "desc" }],
     take: 500,
-  })).filter((item) => isDisplayableChinese(item.title, item.excerpt, item.aiSummary, item.source.name));
+  })).filter((item) =>
+    !isLowValueCommunityItem({ sourceName: item.source.name, title: item.title, excerpt: item.excerpt, summary: item.aiSummary, detailText: item.content }) &&
+    isDisplayableChinese(item.title, item.excerpt, item.aiSummary, item.source.name),
+  );
   const rssItems = displayableItems.filter((item) => item.source.kind !== "api");
   const items = rssItems.length >= 10 ? rssItems : displayableItems;
 

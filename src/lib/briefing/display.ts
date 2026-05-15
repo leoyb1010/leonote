@@ -70,6 +70,9 @@ const MARKET_NAME_MAP: Record<string, string> = {
 
 const AI_NEWS_KEYWORDS = /人工智能|大模型|AI|芯片|算力|机器人|自动驾驶|半导体|软件|云计算|数据中心|算法|OpenAI|DeepSeek|模型|智能体/i;
 const FINANCE_NEWS_KEYWORDS = /股|证券|基金|债|央行|利率|人民币|美元|黄金|白银|原油|期货|财报|营收|利润|上市|并购|融资|投资|银行|保险|房地产|车企|公司|产业|经济|消费|订单|价格|指数|新能源|港元|减持|增资|工厂|市场|零售|批发/;
+const COMMUNITY_SOURCE_RE = /LinuxDo|V2EX|微博热搜|知乎热榜|B站排行榜|掘金热榜/i;
+const LOW_VALUE_COMMUNITY_RE = /求助|请教|大佬|有没有|怎么|为什么|报错|无法|不能|延迟|卡顿|掉线|账号|额度|邀请码|水一贴|吐槽|1\s*个帖子|[0-9]+\s*个帖子|[0-9]+\s*位参与者|帖子\s*-\s*[0-9]+\s*位参与者/i;
+const HIGH_IMPACT_SIGNAL_RE = /发布|推出|上线|升级|开源|融资|收购|并购|监管|政策|法案|禁令|出口|许可|漏洞|攻击|泄露|突破|财报|营收|上市|合作|投资|大规模|宣布|公开|报告|研究|标准|国标|上线/i;
 
 export const CATEGORY_LABELS: Record<BriefingCategory, string> = {
   world: "世界",
@@ -108,6 +111,21 @@ export function isLowValueBriefingTitle(input: string | null | undefined): boole
   );
 }
 
+export function isLowValueCommunityItem(input: {
+  sourceName?: string | null;
+  title?: string | null;
+  excerpt?: string | null;
+  summary?: string | null;
+  detailText?: string | null;
+}): boolean {
+  const sourceName = input.sourceName ?? "";
+  if (!COMMUNITY_SOURCE_RE.test(sourceName)) return false;
+
+  const text = `${input.title ?? ""} ${input.excerpt ?? ""} ${input.summary ?? ""} ${input.detailText ?? ""}`;
+  if (!LOW_VALUE_COMMUNITY_RE.test(text)) return false;
+  return !HIGH_IMPACT_SIGNAL_RE.test(text);
+}
+
 export function needsChineseDisplay(input: string | null | undefined): boolean {
   const text = input?.trim() ?? "";
   if (!text) return false;
@@ -117,6 +135,7 @@ export function needsChineseDisplay(input: string | null | undefined): boolean {
 }
 
 export function isDisplayableChinese(title: string, excerpt?: string | null, summary?: string | null, sourceName?: string): boolean {
+  if (isLowValueCommunityItem({ sourceName, title, excerpt, summary })) return false;
   if (isLowValueBriefingTitle(title)) return false;
   // 如果已经有了中文智能摘要，标题仍含英文专有名词也允许展示。
   if (summary && hasChineseSignal(summary)) return true;

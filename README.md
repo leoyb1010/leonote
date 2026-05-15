@@ -25,7 +25,7 @@
 </p>
 
 <p>
-  <img alt="Version" src="https://img.shields.io/badge/Version-v1.6.16-7B84F6?style=for-the-badge">
+  <img alt="Version" src="https://img.shields.io/badge/Version-v1.6.17-7B84F6?style=for-the-badge">
   <img alt="License" src="https://img.shields.io/badge/License-Personal%20Use%20Only-F26D6D?style=for-the-badge">
   <img alt="Next.js" src="https://img.shields.io/badge/Next.js-16-111111?style=for-the-badge&logo=nextdotjs">
   <img alt="Tauri" src="https://img.shields.io/badge/Tauri-2-24C8DB?style=for-the-badge&logo=tauri">
@@ -58,7 +58,7 @@
 </p>
 
 <p align="center">
-  <sub>截图随 v1.6.16 Quiet Material 文档维护，覆盖桌面端、笔记编辑与移动端简报。</sub>
+  <sub>截图随 v1.6.17 Quiet Material 文档维护，覆盖桌面端、笔记编辑与移动端简报。</sub>
 </p>
 
 ## 核心模块
@@ -66,8 +66,8 @@
 | 模块 | 能力 |
 |---|---|
 | 笔记与长期记忆 | Markdown 写作、标签/项目、收藏/置顶/归档、版本历史、正文内联图片/附件、系统摄像头拍照插入正文、AI 长期记忆 |
-| 每日简报 | RSS / Tavily / X 镜像源 / CoinGecko / 新浪行情聚合，AI 中文摘要、质量评分、标签、市场温度、天气与星座 |
-| AI 协助思考 | 从国内外当日大事件、AI 科技行业与关键人物 X 动态中筛选深度影响事件，形成大事件雷达 + 7 条可继续推演的思考 |
+| 每日简报 | RSS / Tavily / CoinGecko / 新浪行情聚合，AI 中文摘要、质量评分、标签、市场温度、天气与星座 |
+| AI 协助思考 | 从国内外当日大事件、AI 科技行业与重要公开信息中筛选深度影响事件，形成大事件雷达 + 7 条可继续推演的思考 |
 | 全局 AI 助手 | 从当前页面呼出，自动带入路径、标题、选中文本与页面摘要，适合边读边问、边写边整理 |
 | 轻记账 | 快速记账、分类管理、周/月统计、分布趋势、软删除与历史保留 |
 | 自托管与跨端 | SQLite 单文件、Docker / PM2 / Node 部署、PWA、Tauri WebView 壳、Mac / PC / iPad / 手机统一访问 |
@@ -159,10 +159,6 @@ BRIEFING_TRANSLATE_ENGLISH="true"
 BRIEFING_TRANSLATE_MAX_ITEMS="12"
 BRIEFING_TRANSLATE_TIMEOUT_MS="30000"
 RSSHUB_BASE_URL="https://rsshub.app"
-BRIEFING_X_USE_OFFICIAL_API="false"
-X_BEARER_TOKEN=""
-BRIEFING_X_USERS="OpenAI:OpenAI:96,AnthropicAI:Anthropic:94,GoogleDeepMind:DeepMind:94,sama:Sam Altman:92,nvidia:NVIDIA:90,karpathy:Andrej Karpathy:88,github:GitHub:84"
-BRIEFING_X_MIRROR_BASES="https://nitter.net,https://xcancel.com,https://rss.xcancel.com,https://rsshub.rssforever.com,https://rsshub.feeded.xyz,https://hub.slarker.me,https://rsshub.liumingye.cn"
 ```
 
 ---
@@ -184,17 +180,15 @@ BRIEFING_X_MIRROR_BASES="https://nitter.net,https://xcancel.com,https://rss.xcan
 - 设置页「记账类型」入口
 - 完全软删除 + 删除类型后历史账单保留
 
-### 每日简报 (v1.6.16)
+### 每日简报 (v1.6.17)
 - Hero 头部压缩：修复“每日简报”标题下方大面积空白，取消右侧高卡片撑开布局；日期、天气、星座、标题、操作、指标、标签与市场温度统一为紧凑日报头
 - 市场温度胶囊：金融行情从 Sidebar 大卡改为日期天气下方的横向胶囊，保留中国市场颜色习惯：红色上涨、绿色下跌，并可直接刷新
-- 大事件雷达分桶：新增国际大事、国内大事、市场定价、AI 科技、科技产业、X 信号分桶与多源去重，不再让 AI 科技源独占“大事件”；同一来源过量时自动限流，让国内外实时大事件能进入首屏
+- 大事件雷达分桶：新增国际大事、国内大事、市场定价、AI 科技、科技产业分桶与多源去重，不再让 AI 科技源独占“大事件”；同一来源过量时自动限流，让国内外实时大事件能进入首屏
 - 值得继续想可点击：从主内容大块静态卡片改为右侧紧凑思考面板，每条思考都是可点击入口，桌面按点击位置弹出详情，移动端使用底部安全抽屉
-- X 镜像源优先：默认不依赖官方 X API，直接从 Nitter / XCancel / RSSHub 镜像抓取关键账号；会跳过 XCancel 白名单占位页和 RSSHub 503 欢迎页，默认优先使用已验证可返回内容的 `nitter.net`
-- 大事件雷达：简报首屏从“资讯卡片堆叠”升级为“今日大事件雷达”，优先呈现国际/国内/AI 科技/市场/X 信号中真正有深远影响的事件；1 条主事件 + 6 条紧凑事件入口，点击后在鼠标位置或移动端底部安全面板查看详情
-- 关键人物 X 信号：支持 `BRIEFING_X_USERS` 配置，默认关注 OpenAI、Anthropic、DeepMind、Sam Altman、NVIDIA、Andrej Karpathy、GitHub 等 AI/科技账号；官方接口只在 `BRIEFING_X_USE_OFFICIAL_API=true` 时作为可选兜底
-- 高频资讯刷新：白天 RSS/X 抓取提升到 5 分钟粒度，清晨 10 分钟粒度；首屏自动补抓默认新鲜度阈值收紧到 5 分钟；市场行情交易时段 5 分钟同步，Tavily 作为 4 个时间点的补充兜底
+- 大事件雷达：简报首屏从“资讯卡片堆叠”升级为“今日大事件雷达”，优先呈现国际/国内/AI 科技/市场中真正有深远影响的事件；1 条主事件 + 6 条紧凑事件入口，点击后在鼠标位置或移动端底部安全面板查看详情
+- 高频资讯刷新：白天 RSS 抓取提升到 5 分钟粒度，清晨 10 分钟粒度；首屏自动补抓默认新鲜度阈值收紧到 5 分钟；市场行情交易时段 5 分钟同步，Tavily 作为 4 个时间点的补充兜底
 - 首页 IA 重排：Hero 保留日期、天气、星座、质量指标和操作按钮；大事件雷达成为主阅读入口，精选资讯改为“证据库”，减少无效空白和重复阅读成本
-- 复制摘要升级：复制/存笔记内容纳入大事件雷达、AI 协助思考、X 信号和精选资讯，输出更接近“个人日报”而不是普通新闻列表
+- 复制摘要升级：复制/存笔记内容纳入大事件雷达、AI 协助思考和精选资讯，输出更接近“个人日报”而不是普通新闻列表
 - 笔记拍照插入：编辑器新增系统摄像头拍照面板，桌面端通过 `getUserMedia` 调用摄像头，移动端支持 `capture=environment` 兜底；拍摄后自动上传为附件并插入当前正文光标位置
 - 多源抓取：RSS / Tavily / CoinGecko / 新浪行情，支持 Cron 定时抓取、行情刷新与日报生成
 - AI 协助思考：每日简报 Hero 从表层标题升级为不少于 7 条“深度影响/分析价值”思考，优先筛选国内外实时发生的 AI 科技大事件，并结合来源质量、长期记忆、近期笔记与标签判断模型平台、算力芯片、产品入口、资本成本、安全治理、开发者生态和社会情绪的潜在传导
@@ -344,6 +338,7 @@ npm run ci           # 全链路：lint → typecheck → test → build
 
 | 版本 | 日期 | 更新内容 |
 |---|---|---|
+| **v1.6.17** | 2026-05-15 | 修复社区论坛噪音进入每日简报：`LinuxDo 最新`、V2EX、微博/知乎/B站/掘金等社区源中带有“求助、请教、大佬、延迟、报错、帖子/参与者”等明显讨论帖特征且缺少发布、政策、融资、漏洞、财报等高影响信号的内容，会在抓取、查询、Digest 和大事件雷达四层过滤；旧数据中已有的类似“Claude 延迟求助”也不会继续进入首页和大事件雷达。同步清理 X 监控模块残留文档、环境变量和测试 |
 | **v1.6.16** | 2026-05-15 | 每日简报小幅修正：市场温度固定按“上证、深证、美股、港股、美元/人民币、黄金、虚拟币、石油”排序展示，并补入原油行情源；大事件雷达改为稳定配额，优先保留 1-2 条国际大事、1-2 条国内大事、3-5 条 AI/科技圈事件，避免任一类别刷屏；X 监控改为镜像源优先，默认使用已验证可抓取 OpenAI / Anthropic / DeepMind / Sam Altman / NVIDIA / Karpathy / GitHub RSS 的 `nitter.net`，并自动跳过 XCancel 白名单占位页与 RSSHub 503 页面；简报组件可见英文标签改为简体中文，“思考一/二”命名统一，大事件雷达显示完整 8 个入口；新增回归测试覆盖雷达配额 |
 | **v1.6.15** | 2026-05-15 | 修复每日简报 Hero 大面积空白：取消右侧高卡撑开结构，改成紧凑日报头；市场温度从 Sidebar 大卡移动到日期天气下方胶囊，保留红涨绿跌与刷新按钮；大事件雷达改为国际/国内/市场/AI 科技/科技产业/X 信号分桶与来源限流，避免全部被 AI 科技资讯占满；“今天值得继续想”改为右侧可点击思考面板并恢复详情气泡；X 信号新增 XCancel / RSSHub 镜像兜底，未配置官方 X Token 时也会尝试 `rss.xcancel.com`、`xcancel.com` 与多个 RSSHub 镜像 |
 | **v1.6.14** | 2026-05-15 | 每日简报升级为大事件雷达 + 证据库结构：Hero 保留日期/天气/星座/指标与操作按钮，主阅读区突出 1 条主大事件 + 6 条紧凑事件入口，点击后按鼠标位置或移动端底部安全面板查看详情；新增关键人物 X 官方 API 信号抓取与 Sidebar 展示，支持 `X_BEARER_TOKEN` / `BRIEFING_X_USERS`，未配置时明确显示待配置；RSS/X 白天刷新提升到 5 分钟粒度，市场行情交易时段 5 分钟同步，Tavily 补充到每日 4 次；复制摘要纳入大事件雷达、AI 思考、X 信号和精选资讯；笔记编辑器新增系统摄像头拍照插入正文能力，移动端使用相机 capture 兜底；README / `.env.example` / 版本号同步更新 |

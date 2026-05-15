@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/prisma";
-import { categoryLabel, deriveDisplayCategory, isDisplayableChinese, marketDisplayName, sourceDisplayName } from "./display";
+import { categoryLabel, deriveDisplayCategory, isDisplayableChinese, isLowValueCommunityItem, marketDisplayName, sourceDisplayName } from "./display";
 import {
   buildBriefingKeyPoints,
   buildBriefingDetailText,
@@ -95,6 +95,7 @@ export async function getBriefingData(userId: string, options?: { range?: Briefi
     }))
     .filter((item) => category === "all" || item.displayCategory === category)
     .filter((item) => {
+      if (isLowValueCommunityItem({ sourceName: item.source.name, title: item.title, excerpt: item.excerpt, summary: item.aiSummary, detailText: item.content })) return false;
       if (needsTranslation(item.title) && (!item.aiSummary || needsTranslation(item.aiSummary))) return false;
       return isDisplayableChinese(item.title, item.excerpt, item.aiSummary, item.source.name);
   });
