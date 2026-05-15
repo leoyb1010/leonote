@@ -25,7 +25,7 @@
 </p>
 
 <p>
-  <img alt="Version" src="https://img.shields.io/badge/Version-v1.6.15-7B84F6?style=for-the-badge">
+  <img alt="Version" src="https://img.shields.io/badge/Version-v1.6.16-7B84F6?style=for-the-badge">
   <img alt="License" src="https://img.shields.io/badge/License-Personal%20Use%20Only-F26D6D?style=for-the-badge">
   <img alt="Next.js" src="https://img.shields.io/badge/Next.js-16-111111?style=for-the-badge&logo=nextdotjs">
   <img alt="Tauri" src="https://img.shields.io/badge/Tauri-2-24C8DB?style=for-the-badge&logo=tauri">
@@ -58,7 +58,7 @@
 </p>
 
 <p align="center">
-  <sub>Screenshots are maintained for the current v1.6.15 Quiet Material UI across desktop, note editing, and mobile briefing layouts.</sub>
+  <sub>Screenshots are maintained for the current v1.6.16 Quiet Material UI across desktop, note editing, and mobile briefing layouts.</sub>
 </p>
 
 ## Overview
@@ -70,7 +70,7 @@ The product follows a **Quiet Material** design language: restrained surfaces, s
 ## Highlights
 
 - **Personal notes**: Markdown editor, safe live preview, tags, projects, favorites, archive, trash, version history, inline images, attachments, and camera capture into the note body.
-- **Daily briefing**: RSS / Tavily / official X API / CoinGecko / Sina market data, AI summaries, quality scores, Chinese normalization, market strip, weather, horoscope, and note import.
+- **Daily briefing**: RSS / Tavily / X mirror RSS / CoinGecko / Sina market data, AI summaries, quality scores, Chinese normalization, market strip, weather, horoscope, and note import.
 - **AI-assisted thinking**: an event radar for domestic/international/AI-tech/market/X signals plus seven high-impact thoughts.
 - **Global AI assistant**: a context-aware AI panel that can be opened from the current page.
 - **Inline attachments**: paste or drag images and documents directly into note content.
@@ -133,10 +133,10 @@ BRIEFING_MIN_ITEMS="24"
 BRIEFING_MAX_AGE_MINUTES="5"
 BRIEFING_TRANSLATE_ENGLISH="true"
 RSSHUB_BASE_URL="https://rsshub.app"
+BRIEFING_X_USE_OFFICIAL_API="false"
 X_BEARER_TOKEN=""
 BRIEFING_X_USERS="OpenAI:OpenAI:96,AnthropicAI:Anthropic:94,GoogleDeepMind:DeepMind:94,sama:Sam Altman:92,nvidia:NVIDIA:90,karpathy:Andrej Karpathy:88,github:GitHub:84"
-BRIEFING_X_MIRROR_BASES="https://rss.xcancel.com,https://xcancel.com,https://rsshub.rssforever.com,https://rsshub.feeded.xyz,https://hub.slarker.me,https://rsshub.liumingye.cn"
-BRIEFING_X_MIRROR_ALWAYS="false"
+BRIEFING_X_MIRROR_BASES="https://nitter.net,https://xcancel.com,https://rss.xcancel.com,https://rsshub.rssforever.com,https://rsshub.feeded.xyz,https://hub.slarker.me,https://rsshub.liumingye.cn"
 ```
 
 ## Tech Stack
@@ -162,15 +162,15 @@ BRIEFING_X_MIRROR_ALWAYS="false"
 
 ## Version
 
-Current version: **v1.6.15**
+Current version: **v1.6.16**
 
 Recent release focus:
 
 - Compact Daily Briefing hero with no large blank area under the title.
-- Market temperature moved into top capsules below date/weather, using China-style red-up and green-down colors.
-- Event radar now balances international, domestic, market, AI/tech, industry, and X signals instead of being dominated by AI tech feeds.
-- Think Further is a clickable side panel with anchored detail bubbles.
-- XCancel and RSSHub mirror fallbacks are used when the official X API token is absent or empty.
+- Market temperature follows the requested order: SSE, SZSE, US stocks, Hong Kong stocks, USD/CNY, gold, crypto, and oil.
+- Event radar keeps a daily mix of 1-2 international events, 1-2 domestic events, and 3-5 AI/tech events.
+- Visible Daily Briefing component labels are normalized to Simplified Chinese in the product UI.
+- X monitoring uses mirror RSS first by default, with `nitter.net` verified for the default AI/tech accounts.
 
 For the full Chinese changelog, see [README.md](README.md#版本记录).
 

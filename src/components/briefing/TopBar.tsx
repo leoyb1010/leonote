@@ -93,7 +93,7 @@ export function TopBar({ markets, refreshing = false, error, onRefresh }: Props)
         <div>
           <div className="flex items-center gap-2 text-[11px] uppercase text-[var(--text-muted)]">
             <Activity size={13} />
-            Market
+            市场
           </div>
           <h2 className="mt-1 text-base font-semibold text-[var(--text-primary)]">市场温度</h2>
         </div>

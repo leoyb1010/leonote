@@ -123,7 +123,7 @@ function TagInsights({ items }: { items: NewsItemDTO[] }) {
     <section className="card-premium p-4 lg:p-5">
       <div className="mb-3 flex items-center gap-2 text-[11px] uppercase text-[var(--text-muted)]">
         <Tags size={13} />
-        Insights
+        洞察
       </div>
       <h2 className="text-base font-semibold text-[var(--text-primary)]">标签与洞察</h2>
       {tags.length === 0 ? (
@@ -159,7 +159,7 @@ function BriefingMetaPanel({ meta }: { meta: BriefingMetaDTO }) {
     <section className="card-premium p-4 lg:p-5">
       <div className="mb-4 flex items-center gap-2 text-[11px] uppercase text-[var(--text-muted)]">
         <Database size={13} />
-        Sources
+        来源
       </div>
       <div className="grid gap-3 text-xs text-[var(--text-secondary)]">
         <div className="flex items-center justify-between gap-3 border-b border-[var(--hairline)] pb-2.5">
@@ -348,7 +348,7 @@ export function BriefingShell({
   }
 
   const streamTitle = category === "all" ? "全部资讯" : `${categoryLabel(category)}资讯`;
-  const streamEyebrow = range === "favorites" ? "Saved" : range === "week" ? "Week" : "Evidence";
+  const streamEyebrow = range === "favorites" ? "收藏" : range === "week" ? "本周" : "证据";
 
   return (
     <PageContainer width="dashboard">
@@ -421,7 +421,7 @@ export function BriefingShell({
 
           <NewsColumn
             title="精选证据"
-            eyebrow="Evidence picks"
+            eyebrow="精选证据"
             items={featuredItems}
             limit={category === "all" ? 4 : 3}
             featured

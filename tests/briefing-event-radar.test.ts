@@ -123,4 +123,112 @@ describe("briefing event radar", () => {
     expect(events.some((event) => event.scopeLabel === "国内大事")).toBe(true);
     expect(events.filter((event) => event.scope === "ai_tech")).toHaveLength(1);
   });
+
+  it("keeps the daily radar balanced across international, domestic, and AI tech events", () => {
+    const events = buildBriefingEventRadar([
+      newsItem({
+        id: "world-eu",
+        title: "欧盟宣布新的能源进口关税方案，全球供应链成本预期上升",
+        category: "world",
+        sourceName: "英国广播公司中文网",
+        aiSummary: "欧洲贸易政策变化可能传导到能源、制造业和全球市场预期。",
+        aiTags: ["国际", "贸易"],
+      }),
+      newsItem({
+        id: "world-us",
+        title: "白宫公布中东停火谈判进展，能源运输风险暂时降温",
+        category: "world",
+        sourceName: "联合国新闻中文",
+        aiSummary: "中东局势变化会影响能源通道、外交谈判和风险资产定价。",
+        aiTags: ["国际", "能源"],
+      }),
+      newsItem({
+        id: "world-election",
+        title: "法国议会选举进入关键阶段，欧洲政策协调面临新变量",
+        category: "world",
+        sourceName: "ABC 国际",
+        aiSummary: "欧洲主要经济体政治变化可能影响财政、移民和产业政策。",
+        aiTags: ["国际", "选举"],
+      }),
+      newsItem({
+        id: "china-policy",
+        title: "国务院部署消费品以旧换新政策，国内需求侧刺激继续加码",
+        category: "world",
+        sourceName: "中国新闻网国际",
+        aiSummary: "国内消费政策会影响零售、家电、汽车和地方财政节奏。",
+        aiTags: ["国内", "政策"],
+      }),
+      newsItem({
+        id: "china-pboc",
+        title: "央行扩大科技创新再贷款支持范围，中小企业融资成本有望下降",
+        category: "world",
+        sourceName: "中国新闻网财经",
+        aiSummary: "货币工具定向支持会影响科技企业融资、银行投放和市场预期。",
+        aiTags: ["国内", "金融"],
+      }),
+      newsItem({
+        id: "china-space",
+        title: "我国商业航天新火箭完成发射，卫星互联网建设进入加速期",
+        category: "world",
+        sourceName: "IT之家",
+        aiSummary: "国内航天工程进展会影响卫星制造、通信网络和产业链投入。",
+        aiTags: ["国内", "航天"],
+      }),
+      newsItem({
+        id: "openai-agent",
+        title: "OpenAI 发布新的智能体平台，开放浏览器自动化能力",
+        sourceName: "OpenAI Blog",
+        aiSummary: "OpenAI 把智能体能力推向更完整的任务执行入口。",
+        aiTags: ["人工智能", "智能体"],
+      }),
+      newsItem({
+        id: "deepmind-model",
+        title: "Google DeepMind 公布 Gemini 多模态推理升级",
+        sourceName: "Google DeepMind",
+        aiSummary: "模型能力升级可能改变企业选型、开发范式和算力需求。",
+        aiTags: ["人工智能", "模型"],
+      }),
+      newsItem({
+        id: "nvidia-chip",
+        title: "英伟达 Blackwell 服务器订单继续增加，AI 数据中心投资升温",
+        sourceName: "CNBC",
+        aiSummary: "GPU 供应和数据中心建设继续影响云厂商成本曲线。",
+        aiTags: ["算力", "芯片"],
+      }),
+      newsItem({
+        id: "ai-security",
+        title: "谷歌警告攻击者正用 AI 寻找漏洞，企业安全预算重新排序",
+        sourceName: "BleepingComputer",
+        aiSummary: "AI 安全事件会影响企业采购、平台开放和合规策略。",
+        aiTags: ["AI安全", "企业IT"],
+      }),
+      newsItem({
+        id: "anthropic-cloud",
+        title: "Anthropic 扩大企业云合作，AI 模型进入更多内部工作流",
+        sourceName: "The Verge",
+        aiSummary: "企业 AI 工作流落地会改变软件入口和云服务竞争。",
+        aiTags: ["人工智能", "云"],
+      }),
+      newsItem({
+        id: "market-a",
+        title: "A股三大指数午间集体上涨，半导体板块领涨",
+        category: "finance",
+        sourceName: "中国新闻网财经",
+        aiSummary: "市场资金偏好向半导体与科技资产集中。",
+        aiTags: ["市场", "半导体"],
+      }),
+    ]);
+
+    const internationalCount = events.filter((event) => event.scope === "international").length;
+    const domesticCount = events.filter((event) => event.scope === "domestic").length;
+    const aiTechCount = events.filter((event) => event.scope === "ai_tech" || event.scope === "x_signal").length;
+
+    expect(events).toHaveLength(8);
+    expect(internationalCount).toBeGreaterThanOrEqual(1);
+    expect(internationalCount).toBeLessThanOrEqual(2);
+    expect(domesticCount).toBeGreaterThanOrEqual(1);
+    expect(domesticCount).toBeLessThanOrEqual(2);
+    expect(aiTechCount).toBeGreaterThanOrEqual(3);
+    expect(aiTechCount).toBeLessThanOrEqual(5);
+  });
 });

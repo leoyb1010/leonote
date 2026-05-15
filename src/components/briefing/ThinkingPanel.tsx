@@ -10,7 +10,7 @@ interface Props {
   onOpen: (insight: BriefingThinkingInsight, anchor: DetailAnchor) => void;
 }
 
-const THINKING_LABELS = ["One", "Two", "Three", "Four", "Five", "Six", "Seven"];
+const THINKING_LABELS = ["一", "二", "三", "四", "五", "六", "七"];
 
 export function ThinkingPanel({ insights, onOpen }: Props) {
   return (
@@ -19,7 +19,7 @@ export function ThinkingPanel({ insights, onOpen }: Props) {
         <div>
           <div className="mb-2 flex items-center gap-2 text-[11px] uppercase text-[var(--text-muted)]">
             <BrainCircuit size={13} />
-            Think Further
+            继续思考
           </div>
           <h2 className="text-base font-semibold text-[var(--text-primary)]">今天值得继续想</h2>
         </div>
@@ -45,7 +45,7 @@ export function ThinkingPanel({ insights, onOpen }: Props) {
               className="group w-full rounded-[var(--radius-lg)] border border-[var(--hairline)] bg-[var(--material-inset)] px-3 py-3 text-left transition hover:border-[var(--hairline-strong)] hover:bg-[var(--material-muted)]"
             >
               <div className="flex items-center justify-between gap-2 text-[11px] text-[var(--text-muted)]">
-                <span>思考 {THINKING_LABELS[index] ?? index + 1}</span>
+                <span>思考{THINKING_LABELS[index] ?? index + 1}</span>
                 <span>{insight.impactLabel}</span>
               </div>
               <p className="mt-2 line-clamp-2 text-sm font-medium leading-5 text-[var(--text-primary)] group-hover:text-[var(--primary)]">

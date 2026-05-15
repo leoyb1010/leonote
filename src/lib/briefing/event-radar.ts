@@ -202,31 +202,63 @@ function impactLabel(score: number) {
   return "观察";
 }
 
+function isAiRadarScope(scope: BriefingEventScope) {
+  return scope === "ai_tech" || scope === "x_signal";
+}
+
 function diversifyEvents(events: BriefingEventClusterDTO[], limit: number) {
   const selected: BriefingEventClusterDTO[] = [];
   const selectedIds = new Set<string>();
   const sourceUse = new Map<string, number>();
 
-  function canUse(event: BriefingEventClusterDTO) {
-    if (selectedIds.has(event.id)) return false;
-    const primarySource = event.sourceNames[0] ?? "";
-    return (sourceUse.get(primarySource) ?? 0) < 2 || event.scope !== "ai_tech";
+  function scopeCount(scope: BriefingEventScope) {
+    return selected.filter((event) => event.scope === scope).length;
   }
 
-  function add(event: BriefingEventClusterDTO | undefined) {
-    if (!event || !canUse(event) || selected.length >= limit) return;
+  function aiCount() {
+    return selected.filter((event) => isAiRadarScope(event.scope)).length;
+  }
+
+  function canUse(event: BriefingEventClusterDTO, options?: { relaxSource?: boolean }) {
+    if (selectedIds.has(event.id)) return false;
+    if (event.scope === "international" && scopeCount("international") >= 2) return false;
+    if (event.scope === "domestic" && scopeCount("domestic") >= 2) return false;
+    if (event.scope === "market" && scopeCount("market") >= 1) return false;
+    if (isAiRadarScope(event.scope) && aiCount() >= 5) return false;
+    if (options?.relaxSource) return true;
+    const primarySource = event.sourceNames[0] ?? "";
+    const maxPerSource = isAiRadarScope(event.scope) ? 3 : 2;
+    return (sourceUse.get(primarySource) ?? 0) < maxPerSource;
+  }
+
+  function add(event: BriefingEventClusterDTO | undefined, options?: { relaxSource?: boolean }) {
+    if (!event || !canUse(event, options) || selected.length >= limit) return false;
     selected.push(event);
     selectedIds.add(event.id);
     const primarySource = event.sourceNames[0] ?? "";
     sourceUse.set(primarySource, (sourceUse.get(primarySource) ?? 0) + 1);
+    return true;
   }
 
-  const scopeOrder: BriefingEventScope[] = ["international", "domestic", "market", "ai_tech", "x_signal"];
-  for (const scope of scopeOrder) {
-    add(events.find((event) => event.scope === scope && event.impactScore >= 68));
+  function addFrom(bucket: BriefingEventClusterDTO[], targetCount: number, options?: { relaxSource?: boolean }) {
+    for (const event of bucket) {
+      if (selected.length >= limit || targetCount <= 0) return;
+      if (add(event, options)) targetCount -= 1;
+    }
   }
+
+  const international = events.filter((event) => event.scope === "international" && event.impactScore >= 68);
+  const domestic = events.filter((event) => event.scope === "domestic" && event.impactScore >= 68);
+  const aiTech = events.filter((event) => isAiRadarScope(event.scope) && event.impactScore >= 64);
+
+  addFrom(international, Math.min(2, international.length), { relaxSource: true });
+  addFrom(domestic, Math.min(2, domestic.length), { relaxSource: true });
+  addFrom(aiTech, Math.min(3, aiTech.length), { relaxSource: true });
+
   for (const event of events) add(event);
-  return selected.slice(0, limit);
+  return selected
+    .sort((a, b) => b.impactScore - a.impactScore || new Date(b.latestAt).getTime() - new Date(a.latestAt).getTime())
+    .slice(0, limit);
 }
 
 export function buildBriefingEventRadar(items: NewsItemDTO[], limit = 8): BriefingEventClusterDTO[] {

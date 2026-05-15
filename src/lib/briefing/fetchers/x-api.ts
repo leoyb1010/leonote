@@ -58,8 +58,9 @@ function bearerToken() {
 function configuredMirrorBases() {
   const raw = process.env.BRIEFING_X_MIRROR_BASES?.trim();
   const defaults = [
-    "https://rss.xcancel.com",
+    "https://nitter.net",
     "https://xcancel.com",
+    "https://rss.xcancel.com",
     "https://rsshub.rssforever.com",
     "https://rsshub.feeded.xyz",
     "https://hub.slarker.me",
@@ -124,12 +125,13 @@ function stripPostText(text: string) {
 function shouldKeepPost(text: string) {
   if (!text || text.length < 18) return false;
   if (/^(RT|转推)\b/i.test(text)) return false;
+  if (/RSS reader not yet whitelisted|Verifying your request|Just a moment|Welcome to RSSHub|Making sure you/i.test(text)) return false;
   return /AI|OpenAI|ChatGPT|GPT|Claude|Gemini|DeepMind|Agent|model|NVIDIA|GPU|chip|data center|developer|security|release|launch|Grok|xAI|Tesla|SpaceX|robot|humanoid|tariff|China|人工智能|大模型|模型|智能体|芯片|算力|发布|推出|开源|安全|开发者|机器人|特斯拉|航天|关税|中国/i.test(text);
 }
 
 function mirrorFeedUrl(base: string, username: string) {
   const safeUser = encodeURIComponent(username.replace(/^@/, ""));
-  if (/xcancel\.com/i.test(base)) return `${base}/${safeUser}/rss`;
+  if (/xcancel\.com|nitter\./i.test(base)) return `${base}/${safeUser}/rss`;
   return `${base}/x/user/${safeUser}`;
 }
 
@@ -161,6 +163,11 @@ function safeDate(isoDate?: string, pubDate?: string) {
 function statusIdFromUrl(url: string) {
   const match = url.match(/status\/(\d+)/i);
   return match?.[1] ?? "";
+}
+
+function isInvalidMirrorPayload(xml: string, feedTitle?: string) {
+  const text = `${feedTitle ?? ""} ${xml.slice(0, 1800)}`;
+  return /RSS reader not yet whitelisted|Verifying your request|Just a moment|Welcome to RSSHub|Making sure you/i.test(text);
 }
 
 async function upsertMirrorPost(config: XUserConfig, sourceId: string, sourceName: string, item: XFeedItem) {
@@ -222,6 +229,9 @@ async function fetchMirrorSignalsForUser(config: XUserConfig) {
     try {
       const xml = await fetchText(feedUrl);
       const feed = await mirrorParser.parseString(xml);
+      if (isInvalidMirrorPayload(xml, feed.title) || feed.items.length === 0) {
+        throw new Error("镜像返回占位页或空内容");
+      }
       await prisma.newsSource.upsert({
         where: { id: sourceId },
         create: {
@@ -252,7 +262,8 @@ async function fetchMirrorSignalsForUser(config: XUserConfig) {
       for (const item of feed.items.slice(0, 12)) {
         if (await upsertMirrorPost(config, sourceId, sourceName, item)) inserted += 1;
       }
-      return { inserted, base: feedUrl, failed: 0, lastError: "" };
+      if (inserted > 0) return { inserted, base: feedUrl, failed: 0, lastError: "" };
+      lastError = `镜像没有可用动态：${feedUrl}`;
     } catch (error) {
       lastError = error instanceof Error ? error.message : "unknown";
     }
@@ -281,6 +292,15 @@ export async function fetchXSignals() {
   let inserted = 0;
   let failed = 0;
   let lastError = "";
+  const mirror = await fetchMirrorXSignals(users);
+  inserted += mirror.inserted;
+  failed += mirror.failed;
+  if (mirror.lastError) lastError = mirror.lastError;
+
+  const useOfficialApi = process.env.BRIEFING_X_USE_OFFICIAL_API === "true";
+  if (!useOfficialApi || inserted > 0) {
+    return { ok: true, skipped: inserted === 0, users: users.length, inserted, failed, lastError: lastError || undefined };
+  }
 
   if (bearerToken()) {
     for (const config of users) {
@@ -377,14 +397,7 @@ export async function fetchXSignals() {
       }
     }
   } else {
-    lastError = "X_BEARER_TOKEN not configured";
-  }
-
-  if (!bearerToken() || inserted === 0 || process.env.BRIEFING_X_MIRROR_ALWAYS === "true") {
-    const mirror = await fetchMirrorXSignals(users);
-    inserted += mirror.inserted;
-    failed += mirror.failed;
-    if (mirror.lastError) lastError = mirror.lastError;
+    lastError = "官方接口未配置，镜像源暂未返回可用动态";
   }
 
   return { ok: true, skipped: inserted === 0, users: users.length, inserted, failed, lastError: lastError || undefined };

@@ -10,7 +10,7 @@ interface Props {
 }
 
 function formatTime(input: string | null) {
-  if (!input) return "待配置";
+  if (!input) return "待同步";
   return new Date(input).toLocaleString("zh-CN", {
     month: "2-digit",
     day: "2-digit",
@@ -35,7 +35,7 @@ export function XSignalPanel({ signals, updatedAt, onOpenSignal }: Props) {
         <div>
           <div className="mb-2 flex items-center gap-2 text-[11px] uppercase text-[var(--text-muted)]">
             <RadioTower size={13} />
-            X Signals
+            X 信号
           </div>
           <h2 className="text-base font-semibold text-[var(--text-primary)]">关键人物 X 信号</h2>
         </div>
@@ -47,7 +47,7 @@ export function XSignalPanel({ signals, updatedAt, onOpenSignal }: Props) {
 
       {signals.length === 0 ? (
         <div className="quiet-inset rounded-[var(--radius-lg)] px-3 py-6 text-sm leading-6 text-[var(--text-muted)]">
-          X 官方 API 尚未配置或暂未抓到高价值动态。配置 `X_BEARER_TOKEN` 和 `BRIEFING_X_USERS` 后会在这里显示 OpenAI、DeepMind、NVIDIA、Sam Altman 等账号的实时信号。
+          X 镜像源正在同步关键账号动态。可通过 `BRIEFING_X_USERS` 调整 OpenAI、DeepMind、NVIDIA、Sam Altman 等监控账号。
         </div>
       ) : (
         <div className="space-y-2.5">

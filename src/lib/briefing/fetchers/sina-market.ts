@@ -16,9 +16,10 @@ const MARKET_ITEMS: Array<{ symbol: string; name: string; category: string; kind
   // International indices
   { symbol: "hkHSI", name: "恒生指数", category: "index_global", kind: "hk" },
   { symbol: "gb_ixic", name: "纳斯达克", category: "index_global", kind: "us" },
-  // Precious metals (NY futures)
+  // Precious metals and energy futures
   { symbol: "hf_XAU", name: "黄金", category: "metal", kind: "hf" },
   { symbol: "hf_XAG", name: "白银", category: "metal", kind: "hf" },
+  { symbol: "hf_CL", name: "原油", category: "energy", kind: "hf" },
 ];
 
 function toNumber(value: string, fallback = 0) {

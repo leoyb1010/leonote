@@ -25,7 +25,7 @@
 </p>
 
 <p>
-  <img alt="Version" src="https://img.shields.io/badge/Version-v1.6.15-7B84F6?style=for-the-badge">
+  <img alt="Version" src="https://img.shields.io/badge/Version-v1.6.16-7B84F6?style=for-the-badge">
   <img alt="License" src="https://img.shields.io/badge/License-Personal%20Use%20Only-F26D6D?style=for-the-badge">
   <img alt="Next.js" src="https://img.shields.io/badge/Next.js-16-111111?style=for-the-badge&logo=nextdotjs">
   <img alt="Tauri" src="https://img.shields.io/badge/Tauri-2-24C8DB?style=for-the-badge&logo=tauri">
@@ -58,7 +58,7 @@
 </p>
 
 <p align="center">
-  <sub>截图随 v1.6.15 Quiet Material 文档维护，覆盖桌面端、笔记编辑与移动端简报。</sub>
+  <sub>截图随 v1.6.16 Quiet Material 文档维护，覆盖桌面端、笔记编辑与移动端简报。</sub>
 </p>
 
 ## 核心模块
@@ -66,7 +66,7 @@
 | 模块 | 能力 |
 |---|---|
 | 笔记与长期记忆 | Markdown 写作、标签/项目、收藏/置顶/归档、版本历史、正文内联图片/附件、系统摄像头拍照插入正文、AI 长期记忆 |
-| 每日简报 | RSS / Tavily / X 官方 API / CoinGecko / 新浪行情聚合，AI 中文摘要、质量评分、标签、市场温度、天气与星座 |
+| 每日简报 | RSS / Tavily / X 镜像源 / CoinGecko / 新浪行情聚合，AI 中文摘要、质量评分、标签、市场温度、天气与星座 |
 | AI 协助思考 | 从国内外当日大事件、AI 科技行业与关键人物 X 动态中筛选深度影响事件，形成大事件雷达 + 7 条可继续推演的思考 |
 | 全局 AI 助手 | 从当前页面呼出，自动带入路径、标题、选中文本与页面摘要，适合边读边问、边写边整理 |
 | 轻记账 | 快速记账、分类管理、周/月统计、分布趋势、软删除与历史保留 |
@@ -159,10 +159,10 @@ BRIEFING_TRANSLATE_ENGLISH="true"
 BRIEFING_TRANSLATE_MAX_ITEMS="12"
 BRIEFING_TRANSLATE_TIMEOUT_MS="30000"
 RSSHUB_BASE_URL="https://rsshub.app"
+BRIEFING_X_USE_OFFICIAL_API="false"
 X_BEARER_TOKEN=""
 BRIEFING_X_USERS="OpenAI:OpenAI:96,AnthropicAI:Anthropic:94,GoogleDeepMind:DeepMind:94,sama:Sam Altman:92,nvidia:NVIDIA:90,karpathy:Andrej Karpathy:88,github:GitHub:84"
-BRIEFING_X_MIRROR_BASES="https://rss.xcancel.com,https://xcancel.com,https://rsshub.rssforever.com,https://rsshub.feeded.xyz,https://hub.slarker.me,https://rsshub.liumingye.cn"
-BRIEFING_X_MIRROR_ALWAYS="false"
+BRIEFING_X_MIRROR_BASES="https://nitter.net,https://xcancel.com,https://rss.xcancel.com,https://rsshub.rssforever.com,https://rsshub.feeded.xyz,https://hub.slarker.me,https://rsshub.liumingye.cn"
 ```
 
 ---
@@ -184,14 +184,14 @@ BRIEFING_X_MIRROR_ALWAYS="false"
 - 设置页「记账类型」入口
 - 完全软删除 + 删除类型后历史账单保留
 
-### 每日简报 (v1.6.15)
+### 每日简报 (v1.6.16)
 - Hero 头部压缩：修复“每日简报”标题下方大面积空白，取消右侧高卡片撑开布局；日期、天气、星座、标题、操作、指标、标签与市场温度统一为紧凑日报头
 - 市场温度胶囊：金融行情从 Sidebar 大卡改为日期天气下方的横向胶囊，保留中国市场颜色习惯：红色上涨、绿色下跌，并可直接刷新
 - 大事件雷达分桶：新增国际大事、国内大事、市场定价、AI 科技、科技产业、X 信号分桶与多源去重，不再让 AI 科技源独占“大事件”；同一来源过量时自动限流，让国内外实时大事件能进入首屏
 - 值得继续想可点击：从主内容大块静态卡片改为右侧紧凑思考面板，每条思考都是可点击入口，桌面按点击位置弹出详情，移动端使用底部安全抽屉
-- X 镜像源兜底：官方 X API 仍优先；没有 `X_BEARER_TOKEN` 或官方没有抓到有效内容时，自动轮询 XCancel / RSSHub 镜像，默认包含 `rss.xcancel.com`、`xcancel.com`、`rsshub.rssforever.com`、`rsshub.feeded.xyz`、`hub.slarker.me`、`rsshub.liumingye.cn`
+- X 镜像源优先：默认不依赖官方 X API，直接从 Nitter / XCancel / RSSHub 镜像抓取关键账号；会跳过 XCancel 白名单占位页和 RSSHub 503 欢迎页，默认优先使用已验证可返回内容的 `nitter.net`
 - 大事件雷达：简报首屏从“资讯卡片堆叠”升级为“今日大事件雷达”，优先呈现国际/国内/AI 科技/市场/X 信号中真正有深远影响的事件；1 条主事件 + 6 条紧凑事件入口，点击后在鼠标位置或移动端底部安全面板查看详情
-- 关键人物 X 信号：新增 X 官方 API 抓取链路，支持 `X_BEARER_TOKEN` 与 `BRIEFING_X_USERS` 配置，默认关注 OpenAI、Anthropic、DeepMind、Sam Altman、NVIDIA、Andrej Karpathy、GitHub 等 AI/科技账号；未配置时不兜底造假，前端明确显示待配置状态
+- 关键人物 X 信号：支持 `BRIEFING_X_USERS` 配置，默认关注 OpenAI、Anthropic、DeepMind、Sam Altman、NVIDIA、Andrej Karpathy、GitHub 等 AI/科技账号；官方接口只在 `BRIEFING_X_USE_OFFICIAL_API=true` 时作为可选兜底
 - 高频资讯刷新：白天 RSS/X 抓取提升到 5 分钟粒度，清晨 10 分钟粒度；首屏自动补抓默认新鲜度阈值收紧到 5 分钟；市场行情交易时段 5 分钟同步，Tavily 作为 4 个时间点的补充兜底
 - 首页 IA 重排：Hero 保留日期、天气、星座、质量指标和操作按钮；大事件雷达成为主阅读入口，精选资讯改为“证据库”，减少无效空白和重复阅读成本
 - 复制摘要升级：复制/存笔记内容纳入大事件雷达、AI 协助思考、X 信号和精选资讯，输出更接近“个人日报”而不是普通新闻列表
@@ -199,7 +199,7 @@ BRIEFING_X_MIRROR_ALWAYS="false"
 - 多源抓取：RSS / Tavily / CoinGecko / 新浪行情，支持 Cron 定时抓取、行情刷新与日报生成
 - AI 协助思考：每日简报 Hero 从表层标题升级为不少于 7 条“深度影响/分析价值”思考，优先筛选国内外实时发生的 AI 科技大事件，并结合来源质量、长期记忆、近期笔记与标签判断模型平台、算力芯片、产品入口、资本成本、安全治理、开发者生态和社会情绪的潜在传导
 - AI 思考区版面优化：保留 7 条思考信息，从“六张等权卡片”调整为“1 条主思考 + 6 条紧凑入口”，降低首屏空白和卡片重复感，让 Hero 更像今日判断入口而不是信息堆叠
-- AI 思考区体验修正：默认展示紧凑思考卡片，命名为“思考 One / Two / Three …”，点击后再拉起轻量详情气泡，避免 Hero 区占据过多首屏空间；详情气泡保留影响判断、追问问题、来源依据和标签
+- AI 思考区体验修正：默认展示紧凑思考卡片，命名为“思考一 / 思考二 / 思考三 …”，点击后再拉起轻量详情气泡，避免 Hero 区占据过多首屏空间；详情气泡保留影响判断、追问问题、来源依据和标签
 - AI 思考移动端抽屉修复：iPhone 与小屏 iPad 使用可靠的底部抽屉结构，支持 `100vh` / `100dvh` 双兜底、safe-area 关闭按钮、顶部 drag handle 与内部独立滚动，避免详情内容被顶出屏幕或只能看到底部一条
 - AI 思考信号加强：从单一示例触发改为 AI 科技优先的影响评分体系；前沿模型/平台、AI 算力与芯片、AI 产品入口、AI 资本与成本、AI 安全治理、AI 开发生态独立竞争，外交/政策事件只作为窄触发的补充特例，不再盖过普通但重要的 AI 科技大事件
 - 简报响应式布局升级：Hero 右侧指标与星座面板提前到 `md` 断点显示，主内容与 Sidebar 提前到 `lg` 双列；今日亮点、全部资讯、AI 思考和星座区在 sm / md / lg / xl / 2xl 下使用更紧凑的网格与间距，减少中段大块留白
@@ -344,6 +344,7 @@ npm run ci           # 全链路：lint → typecheck → test → build
 
 | 版本 | 日期 | 更新内容 |
 |---|---|---|
+| **v1.6.16** | 2026-05-15 | 每日简报小幅修正：市场温度固定按“上证、深证、美股、港股、美元/人民币、黄金、虚拟币、石油”排序展示，并补入原油行情源；大事件雷达改为稳定配额，优先保留 1-2 条国际大事、1-2 条国内大事、3-5 条 AI/科技圈事件，避免任一类别刷屏；X 监控改为镜像源优先，默认使用已验证可抓取 OpenAI / Anthropic / DeepMind / Sam Altman / NVIDIA / Karpathy / GitHub RSS 的 `nitter.net`，并自动跳过 XCancel 白名单占位页与 RSSHub 503 页面；简报组件可见英文标签改为简体中文，“思考一/二”命名统一，大事件雷达显示完整 8 个入口；新增回归测试覆盖雷达配额 |
 | **v1.6.15** | 2026-05-15 | 修复每日简报 Hero 大面积空白：取消右侧高卡撑开结构，改成紧凑日报头；市场温度从 Sidebar 大卡移动到日期天气下方胶囊，保留红涨绿跌与刷新按钮；大事件雷达改为国际/国内/市场/AI 科技/科技产业/X 信号分桶与来源限流，避免全部被 AI 科技资讯占满；“今天值得继续想”改为右侧可点击思考面板并恢复详情气泡；X 信号新增 XCancel / RSSHub 镜像兜底，未配置官方 X Token 时也会尝试 `rss.xcancel.com`、`xcancel.com` 与多个 RSSHub 镜像 |
 | **v1.6.14** | 2026-05-15 | 每日简报升级为大事件雷达 + 证据库结构：Hero 保留日期/天气/星座/指标与操作按钮，主阅读区突出 1 条主大事件 + 6 条紧凑事件入口，点击后按鼠标位置或移动端底部安全面板查看详情；新增关键人物 X 官方 API 信号抓取与 Sidebar 展示，支持 `X_BEARER_TOKEN` / `BRIEFING_X_USERS`，未配置时明确显示待配置；RSS/X 白天刷新提升到 5 分钟粒度，市场行情交易时段 5 分钟同步，Tavily 补充到每日 4 次；复制摘要纳入大事件雷达、AI 思考、X 信号和精选资讯；笔记编辑器新增系统摄像头拍照插入正文能力，移动端使用相机 capture 兜底；README / `.env.example` / 版本号同步更新 |
 | **v1.6.13** | 2026-05-14 | 美化 GitHub 仓库 README 首屏：新增居中产品标题、双语 slogan、语言切换入口、版本号、许可、Next.js / Tauri / PWA / Quiet Material 徽章；新增英文 README；补充最新桌面端/移动端产品截图与核心模块总览，方便多语言浏览和对外介绍 |
@@ -351,7 +352,7 @@ npm run ci           # 全链路：lint → typecheck → test → build
 | **v1.6.11** | 2026-05-12 | 优化每日简报 Hero 的 AI 协助思考版面：不增加无意义数量，保留 6 条高价值思考，但改为“1 条主思考 + 5 条紧凑入口”的信息架构；主卡展示标题、影响摘要、置信度和标签，右侧紧凑入口降低重复卡片高度，移动端保持横向滑动入口；同时收紧 Hero 内边距与模块间距，减少首屏大面积空白，尽量不影响其他简报组件 |
 | **v1.6.10** | 2026-05-12 | 修复每日星座运势实时性与显示命名：Leo/Ellen/BuBu 改为袁博/张云/袁晨希；星座链路改为 FreeHoroscopeAPI 今日 JSON 优先，Horoscope.com 与 Astrology.com 今日页为备选，并对 AstroSage RSS 做新鲜度校验，拒绝 2020 等过期 RSS，不再展示“本地兜底”运势。星座文案优先用已配置 AI 翻译为简体中文，无 AI Key 时按实时源文本提炼中文摘要，避免星级变化但内容不变。市场温度与 sparkline 改为中国市场习惯：红色代表上涨，绿色代表下跌 |
 | **v1.6.9** | 2026-05-12 | 按 `/briefing` v2 指导文档升级简报页响应式密度：Hero 从 `md` 起呈主栏 + 指标/星座栏，主内容与 Sidebar 从 `lg` 起双列，今日亮点与资讯流在 sm/lg/xl 断点自动切换网格，空态高度和卡片间距收紧，减少 768-1279px 与中段阅读区的大块留白。AI 协助思考详情在 iPhone / 小屏 iPad 改为可靠底部抽屉，使用 `100vh` + `100dvh` 双高度兜底、safe-area 关闭按钮、drag handle、flex 内部滚动，避免详情标题、正文、来源和追问被顶出屏幕。星座运势缓存从 6 小时 TTL 改为 Asia/Shanghai 当日 key，新增 `refresh-horoscope` Cron API 与 00:01 / 06:30 两次定时刷新；星座区展示来源与更新时间。README 与 `.env.example` 同步说明 |
-| **v1.6.8** | 2026-05-11 | 重做每日简报 AI 协助思考的筛选逻辑：从“用户举例触发器”调整为 AI 科技优先的高影响事件评分体系，前沿模型/平台、AI 算力与芯片、AI 产品入口、AI 资本与成本、AI 安全治理、AI 开发生态独立参与排序；外交/政策类事件仅作为窄触发特例，权重降低，不再因为中美示例盖过其它重要 AI 科技新闻。默认输出不少于 6 条思考，卡片命名改为“思考 One / Two / Three …”，标题不再重复套主题前缀；详情文案全部改为“思考”。新增回归测试：普通 AI/产品新闻不会被折叠进地缘判断，足量 AI 科技事件会返回 6 条思考，特朗普访华/黄仁勋/AI 芯片这类复合事件仍可作为政策边界特例识别 |
+| **v1.6.8** | 2026-05-11 | 重做每日简报 AI 协助思考的筛选逻辑：从“用户举例触发器”调整为 AI 科技优先的高影响事件评分体系，前沿模型/平台、AI 算力与芯片、AI 产品入口、AI 资本与成本、AI 安全治理、AI 开发生态独立参与排序；外交/政策类事件仅作为窄触发特例，权重降低，不再因为中美示例盖过其它重要 AI 科技新闻。默认输出不少于 6 条思考，卡片命名改为“思考一 / 二 / 三 …”，标题不再重复套主题前缀；详情文案全部改为“思考”。新增回归测试：普通 AI/产品新闻不会被折叠进地缘判断，足量 AI 科技事件会返回 6 条思考，特朗普访华/黄仁勋/AI 芯片这类复合事件仍可作为政策边界特例识别 |
 | **v1.6.7** | 2026-05-11 | 修复浮层定位根因：普通 `card-premium` 全局样式会把 `fixed` 定位覆盖成 `relative`，导致全局 AI 助手从左侧错位呼出、AI 协助思考气泡不按点击位置弹出；新增专用 `floating-card-premium`，全局 AI 助手、AI 思考详情、资讯详情弹窗统一使用真实固定定位。AI 助手桌面端保持右侧内容伴随面板，移动端使用完整安全面板；AI 思考详情改为按鼠标点击坐标居中锚定，空间不足时自动上翻/边界夹紧。收窄地缘科技战略信号触发条件，必须同时满足高层/外交语境、双边语境和政策议题，避免普通 AI、手机、汽车、家电资讯被误判成地缘议题；新增回归测试覆盖普通资讯不误贴地缘判断和特朗普访华/黄仁勋/AI 芯片案例仍能命中战略信号 |
 | **v1.6.6** | 2026-05-11 | 每日星座运势接入 AstroSage 三个独立 RSS 源：Leo=我/天秤座、Ellen=老婆/双鱼座、BuBu=女儿/双子座，天气后展示每日五颗星星级和简短运势，RSS 失败时稳定兜底；AI 协助思考详情改为按点击位置锚定弹出，桌面靠近鼠标/卡片位置，移动端继续使用底部安全面板；全局 AI 助手改用 body portal 渲染并强制右侧锚定，规避父级布局导致左侧错位/遮挡；AI 思考底层加入战略信号识别，重点覆盖特朗普访华、黄仁勋/英伟达、AI 芯片、出口许可、芯片管制等复合事件，避免高价值中美科技议题被主题去重压掉 |
 | **v1.6.5** | 2026-05-11 | 修正每日简报首屏节奏：AI 协助思考区从大面积分析卡片改为紧凑缩略思考，点击后以轻量气泡/移动端底部面板查看详情，降低首屏占比并改善移动端阅读；重新调整 Hero 信息架构，天气后增加今日星座运势，固定展示“我/天秤座、老婆/双鱼座、女儿/双子座”的每日摘要和小卡；全局 AI 悬浮窗改为始终从右侧抽屉呼出，桌面不再铺满遮罩，移动端使用 `100dvh` 右侧面板、safe-area padding、顶部固定关闭按钮和 Escape 关闭，降低遮挡、错位和无法关闭风险 |

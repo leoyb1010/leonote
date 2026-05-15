@@ -599,8 +599,11 @@ export const PRESET_NEWS_SOURCES: PresetNewsSource[] = [
 
 export const MARKET_SYMBOLS = [
   { symbol: "000001.SS", name: "上证指数", category: "index_cn" },
-  { symbol: "^HSI", name: "恒生指数", category: "index_global" },
+  { symbol: "399001.SZ", name: "深证成指", category: "index_cn" },
   { symbol: "^IXIC", name: "纳斯达克", category: "index_global" },
-  { symbol: "BTC-USD", name: "比特币", category: "crypto" },
+  { symbol: "^HSI", name: "恒生指数", category: "index_global" },
   { symbol: "CNY=X", name: "美元/人民币", category: "fx" },
+  { symbol: "GC=F", name: "黄金", category: "metal" },
+  { symbol: "BTC-USD", name: "比特币", category: "crypto" },
+  { symbol: "CL=F", name: "原油", category: "energy" },
 ];

@@ -35,13 +35,13 @@ function scoreTone(score: number) {
 
 export function EventRadar({ events, onOpenEvent }: Props) {
   const primary = events[0] ?? null;
-  const secondary = events.slice(1, 7);
+  const secondary = events.slice(1, 8);
 
   return (
     <motion.section variants={listItemFloat} className="rounded-[var(--radius-2xl)] border border-[var(--hairline)] bg-[var(--material-elevated)] p-4 shadow-[var(--shadow-sm)] sm:p-5">
       <div className="mb-4 flex items-center justify-between gap-3">
         <div>
-          <p className="text-[11px] uppercase tracking-wide text-[var(--text-muted)]">Event Radar</p>
+          <p className="text-[11px] uppercase tracking-wide text-[var(--text-muted)]">大事雷达</p>
           <h2 className="mt-1 text-lg font-semibold text-[var(--text-primary)]">今日大事件雷达</h2>
         </div>
         <span className="rounded-[var(--radius-pill)] bg-[var(--primary-soft)] px-3 py-1 text-xs text-[var(--primary)]">

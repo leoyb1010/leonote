@@ -271,6 +271,34 @@ function formatMarketPrice(item: MarketSnapshotDTO) {
   return value.toFixed(2);
 }
 
+function heroMarketRank(item: MarketSnapshotDTO) {
+  const symbol = item.symbol.toLowerCase();
+  const name = item.name.toLowerCase();
+  const text = `${symbol} ${name}`;
+
+  if (/sh000001|000001\.ss|上证/.test(text)) return 0;
+  if (/sz399001|399001\.sz|深证/.test(text)) return 1;
+  if (/gb_ixic|\^ixic|nasdaq|纳斯达克|道琼斯|标普|美股/.test(text)) return 2;
+  if (/hkhsi|\^hsi|恒生|港股/.test(text)) return 3;
+  if (/usd-cny|cny=x|usd\/cny|美元\/人民币|美元人民币/.test(text)) return 4;
+  if (/hf_xau|xau|gc=f|黄金/.test(text)) return 5;
+  if (/btc|eth|比特币|以太坊|crypto|虚拟币|加密/.test(text) || item.category === "crypto") {
+    return /eth|以太坊/.test(text) ? 6.2 : 6.1;
+  }
+  if (/hf_cl|hf_oil|cl=f|原油|布伦特|石油/.test(text) || item.category === "energy") return 7;
+  return 99;
+}
+
+function orderHeroMarkets(markets: MarketSnapshotDTO[]) {
+  const preferred = markets.filter((item) => heroMarketRank(item) < 99);
+  const source = preferred.length > 0 ? preferred : markets;
+  return [...source].sort((a, b) => {
+    const byRank = heroMarketRank(a) - heroMarketRank(b);
+    if (byRank !== 0) return byRank;
+    return Math.abs(b.changePct) - Math.abs(a.changePct);
+  });
+}
+
 function MarketPulseStrip({
   markets,
   refreshing = false,
@@ -282,7 +310,7 @@ function MarketPulseStrip({
   error?: string | null;
   onRefresh: () => void;
 }) {
-  const visible = markets.slice(0, 6);
+  const visible = orderHeroMarkets(markets).slice(0, 9);
 
   return (
     <div className="mt-3 rounded-[var(--radius-xl)] border border-[var(--hairline)] bg-[var(--material-inset)] px-3 py-2.5">

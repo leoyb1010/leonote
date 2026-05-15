@@ -62,6 +62,10 @@ const MARKET_NAME_MAP: Record<string, string> = {
   "USD/CNY": "美元/人民币",
   "USD-CNY": "美元/人民币",
   "CNY=X": "美元/人民币",
+  "hf_CL": "原油",
+  "hf_OIL": "布伦特原油",
+  "CL=F": "原油",
+  "GC=F": "黄金",
 };
 
 const AI_NEWS_KEYWORDS = /人工智能|大模型|AI|芯片|算力|机器人|自动驾驶|半导体|软件|云计算|数据中心|算法|OpenAI|DeepSeek|模型|智能体/i;
@@ -78,6 +82,7 @@ export const MARKET_CATEGORY_LABELS: Record<string, string> = {
   index_cn: "A 股",
   index_global: "港美",
   metal: "贵金属",
+  energy: "能源",
   crypto: "加密资产",
   fx: "汇率",
 };
