@@ -20,11 +20,27 @@ const X_SOURCE_RE = /^X\s*[·-]/i;
 
 const THEMES: EventTheme[] = [
   {
+    id: "global-public",
+    scope: "international",
+    label: "国际大事",
+    match: /总统|白宫|国会|欧盟|联合国|俄罗斯|乌克兰|中东|以色列|伊朗|印度|日本|韩国|英国|法国|德国|外交|贸易|关税|制裁|出口管制|战争|冲突|停火|选举|移民|气候|能源|G7|G20|NATO|北约/i,
+    weight: 94,
+    why: "它可能改变政策边界、地缘关系、能源供给、贸易成本或全球市场预期，是需要先判断传导路径的大事件。",
+  },
+  {
+    id: "domestic-public",
+    scope: "domestic",
+    label: "国内大事",
+    match: /我国|全国|国家|国务院|发改委|工信部|央行|证监会|商务部|财政部|监管|政策|房地产|消费|就业|教育|医疗|航天|火箭|卫星|地震|台风|事故|标准|新规|A股|港股|新华社|央视|中国新闻网/i,
+    weight: 91,
+    why: "国内公共事件、政策和产业动作会影响生活秩序、需求结构、供应链与资产价格。",
+  },
+  {
     id: "frontier-ai",
     scope: "ai_tech",
     label: "AI 科技",
     match: /OpenAI|Anthropic|Claude|DeepMind|Gemini|GPT|Sora|Llama|Meta AI|xAI|大模型|多模态|推理|智能体|Agent|AI\s?搜索|AI\s?助手|生成式|人工智能/i,
-    weight: 96,
+    weight: 90,
     why: "它可能改变模型能力、产品入口、开发方式或算力需求，是今天最值得优先看的科技变量。",
   },
   {
@@ -32,7 +48,7 @@ const THEMES: EventTheme[] = [
     scope: "ai_tech",
     label: "算力芯片",
     match: /NVIDIA|英伟达|黄仁勋|Jensen|GPU|TPU|ASIC|H100|H200|B200|GB200|Blackwell|Rubin|芯片|半导体|算力|数据中心|HBM|台积电|ASML/i,
-    weight: 92,
+    weight: 88,
     why: "算力供给会直接传导到 AI 产品成本、云厂商投入、国产替代和资本市场定价。",
   },
   {
@@ -66,6 +82,14 @@ const THEMES: EventTheme[] = [
     match: /漏洞|攻击|泄露|勒索|安全|隐私|数据|后门|供应链攻击|合规|版权|深度伪造|deepfake|prompt injection|提示词注入/i,
     weight: 74,
     why: "安全与信任事件会影响企业采购、产品边界和平台开放策略。",
+  },
+  {
+    id: "tech-industry",
+    scope: "ai_tech",
+    label: "科技产业",
+    match: /手机|汽车|机器人|家电|耳机|平板|电脑|游戏|电商|京东|淘宝|小米|荣耀|华为|苹果|特斯拉|比亚迪|产品|发布|预售|国标|行业标准|供应链/i,
+    weight: 64,
+    why: "科技产业新闻要看它是否改变入口、价格、供应链或用户行为，而不只是新品发布本身。",
   },
   {
     id: "x-signal",
@@ -115,20 +139,25 @@ function isDomestic(item: NewsItemDTO) {
 
 function themeFor(item: NewsItemDTO): EventTheme {
   const text = `${item.title} ${item.aiSummary ?? ""} ${item.detailText} ${item.sourceName} ${item.aiTags.join(" ")}`;
+  if (X_SOURCE_RE.test(item.sourceName)) return THEMES.find((theme) => theme.id === "x-signal") ?? THEMES[0];
+  if (item.category === "finance") return THEMES.find((theme) => theme.id === "market-pricing") ?? THEMES[0];
+  if (item.category === "world") {
+    return isDomestic(item)
+      ? THEMES.find((theme) => theme.id === "domestic-public") ?? THEMES[0]
+      : THEMES.find((theme) => theme.id === "global-public") ?? THEMES[0];
+  }
+
   const matched = THEMES
-    .filter((theme) => theme.match.test(text))
+    .filter((theme) => theme.id !== "x-signal" && theme.match.test(text))
     .sort((a, b) => b.weight - a.weight)[0];
   if (matched) {
     if (matched.scope === "international" && isDomestic(item) && !/中美|美中|美国|欧盟|联合国|外交|关税|制裁|出口管制/i.test(text)) {
-      return THEMES.find((theme) => theme.id === "china-domestic") ?? matched;
+      return THEMES.find((theme) => theme.id === "domestic-public") ?? matched;
     }
     return matched;
   }
-  if (item.category === "finance") return THEMES.find((theme) => theme.id === "market-pricing") ?? THEMES[0];
-  if (item.category === "world") return isDomestic(item)
-    ? THEMES.find((theme) => theme.id === "china-domestic") ?? THEMES[0]
-    : THEMES.find((theme) => theme.id === "geopolitics-policy") ?? THEMES[0];
-  return THEMES.find((theme) => theme.id === "frontier-ai") ?? THEMES[0];
+  if (isDomestic(item)) return THEMES.find((theme) => theme.id === "domestic-public") ?? THEMES[0];
+  return THEMES.find((theme) => theme.id === "tech-industry") ?? THEMES[0];
 }
 
 function sourceWeight(sourceName: string) {
@@ -173,6 +202,33 @@ function impactLabel(score: number) {
   return "观察";
 }
 
+function diversifyEvents(events: BriefingEventClusterDTO[], limit: number) {
+  const selected: BriefingEventClusterDTO[] = [];
+  const selectedIds = new Set<string>();
+  const sourceUse = new Map<string, number>();
+
+  function canUse(event: BriefingEventClusterDTO) {
+    if (selectedIds.has(event.id)) return false;
+    const primarySource = event.sourceNames[0] ?? "";
+    return (sourceUse.get(primarySource) ?? 0) < 2 || event.scope !== "ai_tech";
+  }
+
+  function add(event: BriefingEventClusterDTO | undefined) {
+    if (!event || !canUse(event) || selected.length >= limit) return;
+    selected.push(event);
+    selectedIds.add(event.id);
+    const primarySource = event.sourceNames[0] ?? "";
+    sourceUse.set(primarySource, (sourceUse.get(primarySource) ?? 0) + 1);
+  }
+
+  const scopeOrder: BriefingEventScope[] = ["international", "domestic", "market", "ai_tech", "x_signal"];
+  for (const scope of scopeOrder) {
+    add(events.find((event) => event.scope === scope && event.impactScore >= 68));
+  }
+  for (const event of events) add(event);
+  return selected.slice(0, limit);
+}
+
 export function buildBriefingEventRadar(items: NewsItemDTO[], limit = 8): BriefingEventClusterDTO[] {
   const sourceItems = items
     .filter((item) => item.category !== "social_x" || X_SOURCE_RE.test(item.sourceName) || (item.aiScore ?? 0) >= 0.62)
@@ -194,7 +250,7 @@ export function buildBriefingEventRadar(items: NewsItemDTO[], limit = 8): Briefi
     }
   }
 
-  return clusters
+  const ranked = clusters
     .map((cluster) => {
       const sortedItems = [...cluster.items].sort((a, b) => {
         const theme = cluster.theme;
@@ -215,7 +271,7 @@ export function buildBriefingEventRadar(items: NewsItemDTO[], limit = 8): Briefi
         id: cluster.id,
         title: sanitizeBriefingText(top.title, 58),
         scope: cluster.theme.scope,
-        scopeLabel: SCOPE_LABEL[cluster.theme.scope],
+        scopeLabel: cluster.theme.label || SCOPE_LABEL[cluster.theme.scope],
         impactLabel: impactLabel(score),
         impactScore: Math.max(60, Math.min(99, Math.round(score / 1.65))),
         summary,
@@ -228,8 +284,9 @@ export function buildBriefingEventRadar(items: NewsItemDTO[], limit = 8): Briefi
         itemIds: sortedItems.map((item) => item.id).slice(0, 8),
       } satisfies BriefingEventClusterDTO;
     })
-    .sort((a, b) => b.impactScore - a.impactScore || new Date(b.latestAt).getTime() - new Date(a.latestAt).getTime())
-    .slice(0, limit);
+    .sort((a, b) => b.impactScore - a.impactScore || new Date(b.latestAt).getTime() - new Date(a.latestAt).getTime());
+
+  return diversifyEvents(ranked, limit);
 }
 
 export function buildBriefingXSignals(items: NewsItemDTO[], limit = 8): BriefingXSignalDTO[] {

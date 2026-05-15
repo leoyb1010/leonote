@@ -25,7 +25,7 @@
 </p>
 
 <p>
-  <img alt="Version" src="https://img.shields.io/badge/Version-v1.6.14-7B84F6?style=for-the-badge">
+  <img alt="Version" src="https://img.shields.io/badge/Version-v1.6.15-7B84F6?style=for-the-badge">
   <img alt="License" src="https://img.shields.io/badge/License-Personal%20Use%20Only-F26D6D?style=for-the-badge">
   <img alt="Next.js" src="https://img.shields.io/badge/Next.js-16-111111?style=for-the-badge&logo=nextdotjs">
   <img alt="Tauri" src="https://img.shields.io/badge/Tauri-2-24C8DB?style=for-the-badge&logo=tauri">
@@ -58,7 +58,7 @@
 </p>
 
 <p align="center">
-  <sub>Screenshots are maintained for the current v1.6.14 Quiet Material UI across desktop, note editing, and mobile briefing layouts.</sub>
+  <sub>Screenshots are maintained for the current v1.6.15 Quiet Material UI across desktop, note editing, and mobile briefing layouts.</sub>
 </p>
 
 ## Overview
@@ -135,6 +135,8 @@ BRIEFING_TRANSLATE_ENGLISH="true"
 RSSHUB_BASE_URL="https://rsshub.app"
 X_BEARER_TOKEN=""
 BRIEFING_X_USERS="OpenAI:OpenAI:96,AnthropicAI:Anthropic:94,GoogleDeepMind:DeepMind:94,sama:Sam Altman:92,nvidia:NVIDIA:90,karpathy:Andrej Karpathy:88,github:GitHub:84"
+BRIEFING_X_MIRROR_BASES="https://rss.xcancel.com,https://xcancel.com,https://rsshub.rssforever.com,https://rsshub.feeded.xyz,https://hub.slarker.me,https://rsshub.liumingye.cn"
+BRIEFING_X_MIRROR_ALWAYS="false"
 ```
 
 ## Tech Stack
@@ -160,15 +162,15 @@ BRIEFING_X_USERS="OpenAI:OpenAI:96,AnthropicAI:Anthropic:94,GoogleDeepMind:DeepM
 
 ## Version
 
-Current version: **v1.6.14**
+Current version: **v1.6.15**
 
 Recent release focus:
 
-- Daily briefing event radar with one primary event and six compact high-impact entries.
-- Official X API signal ingestion for important AI/tech people and organizations.
-- Five-minute daytime RSS/X refresh cadence and five-minute market refresh during trading hours.
-- Camera capture in the note editor, inserted directly into Markdown content.
-- README, environment examples, and version metadata refreshed for v1.6.14.
+- Compact Daily Briefing hero with no large blank area under the title.
+- Market temperature moved into top capsules below date/weather, using China-style red-up and green-down colors.
+- Event radar now balances international, domestic, market, AI/tech, industry, and X signals instead of being dominated by AI tech feeds.
+- Think Further is a clickable side panel with anchored detail bubbles.
+- XCancel and RSSHub mirror fallbacks are used when the official X API token is absent or empty.
 
 For the full Chinese changelog, see [README.md](README.md#版本记录).
 

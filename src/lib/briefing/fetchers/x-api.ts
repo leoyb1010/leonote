@@ -1,3 +1,4 @@
+import Parser from "rss-parser";
 import { prisma } from "@/lib/prisma";
 import { sourceDisplayName } from "../display";
 import { stableExternalId, sanitizeBriefingText } from "../normalize";
@@ -20,6 +21,25 @@ type XPost = {
   created_at?: string;
 };
 
+type XFeedItem = {
+  title?: string;
+  link?: string;
+  guid?: string;
+  content?: string;
+  contentSnippet?: string;
+  summary?: string;
+  isoDate?: string;
+  pubDate?: string;
+};
+
+const mirrorParser = new Parser<Record<string, unknown>, XFeedItem>({
+  timeout: 12_000,
+  headers: {
+    Accept: "application/rss+xml, application/atom+xml, application/xml, text/xml;q=0.9, */*;q=0.8",
+    "User-Agent": "Mozilla/5.0 (compatible; LeonoteBriefing/1.0; +https://leonote.local)",
+  },
+});
+
 const DEFAULT_X_USERS: XUserConfig[] = [
   { username: "OpenAI", label: "OpenAI", weight: 92 },
   { username: "AnthropicAI", label: "Anthropic", weight: 90 },
@@ -33,6 +53,21 @@ const DEFAULT_X_USERS: XUserConfig[] = [
 
 function bearerToken() {
   return process.env.X_BEARER_TOKEN || process.env.TWITTER_BEARER_TOKEN || "";
+}
+
+function configuredMirrorBases() {
+  const raw = process.env.BRIEFING_X_MIRROR_BASES?.trim();
+  const defaults = [
+    "https://rss.xcancel.com",
+    "https://xcancel.com",
+    "https://rsshub.rssforever.com",
+    "https://rsshub.feeded.xyz",
+    "https://hub.slarker.me",
+    "https://rsshub.liumingye.cn",
+  ];
+  return (raw ? raw.split(",") : defaults)
+    .map((base) => base.trim().replace(/\/$/, ""))
+    .filter(Boolean);
 }
 
 function configuredUsers(): XUserConfig[] {
@@ -89,33 +124,110 @@ function stripPostText(text: string) {
 function shouldKeepPost(text: string) {
   if (!text || text.length < 18) return false;
   if (/^(RT|转推)\b/i.test(text)) return false;
-  return /AI|OpenAI|ChatGPT|GPT|Claude|Gemini|DeepMind|Agent|model|NVIDIA|GPU|chip|data center|developer|security|release|launch|人工智能|大模型|模型|智能体|芯片|算力|发布|推出|开源|安全|开发者/i.test(text);
+  return /AI|OpenAI|ChatGPT|GPT|Claude|Gemini|DeepMind|Agent|model|NVIDIA|GPU|chip|data center|developer|security|release|launch|Grok|xAI|Tesla|SpaceX|robot|humanoid|tariff|China|人工智能|大模型|模型|智能体|芯片|算力|发布|推出|开源|安全|开发者|机器人|特斯拉|航天|关税|中国/i.test(text);
 }
 
-export async function fetchXSignals() {
-  if (!bearerToken()) {
-    return { ok: false, skipped: true, reason: "X_BEARER_TOKEN not configured", users: 0, inserted: 0 };
-  }
+function mirrorFeedUrl(base: string, username: string) {
+  const safeUser = encodeURIComponent(username.replace(/^@/, ""));
+  if (/xcancel\.com/i.test(base)) return `${base}/${safeUser}/rss`;
+  return `${base}/x/user/${safeUser}`;
+}
 
-  const users = configuredUsers();
-  let inserted = 0;
-  let failed = 0;
+async function fetchText(url: string) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 12_000);
+  try {
+    const res = await fetch(url, {
+      headers: {
+        Accept: "application/rss+xml, application/atom+xml, application/xml, text/xml;q=0.9, */*;q=0.8",
+        "User-Agent": "Mozilla/5.0 (compatible; LeonoteBriefing/1.0; +https://leonote.local)",
+      },
+      cache: "no-store",
+      signal: controller.signal,
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    return await res.text();
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+function safeDate(isoDate?: string, pubDate?: string) {
+  const raw = isoDate || pubDate || "";
+  const date = raw ? new Date(raw) : new Date();
+  return Number.isFinite(date.getTime()) ? date : new Date();
+}
+
+function statusIdFromUrl(url: string) {
+  const match = url.match(/status\/(\d+)/i);
+  return match?.[1] ?? "";
+}
+
+async function upsertMirrorPost(config: XUserConfig, sourceId: string, sourceName: string, item: XFeedItem) {
+  const rawText = stripPostText(`${item.title ?? ""} ${item.contentSnippet ?? item.summary ?? item.content ?? ""}`);
+  if (!shouldKeepPost(rawText)) return false;
+  const url = item.link?.trim() || `https://x.com/${config.username}`;
+  const externalId = statusIdFromUrl(url) || item.guid || stableExternalId(`${config.username}:${url}:${rawText}`);
+  const title = sanitizeBriefingText(rawText, 92);
+  const summary = sanitizeBriefingText(`来自 ${sourceDisplayName(sourceName, "social_x")}：${rawText}`, 220);
+
+  await prisma.newsItem.upsert({
+    where: {
+      sourceId_externalId: {
+        sourceId,
+        externalId,
+      },
+    },
+    create: {
+      sourceId,
+      externalId,
+      title,
+      url,
+      excerpt: summary,
+      content: rawText,
+      publishedAt: safeDate(item.isoDate, item.pubDate),
+      fetchedAt: new Date(),
+      category: "ai_tech",
+      language: /[\u3400-\u9fff]/.test(rawText) ? "zh" : "en",
+      region: "global",
+      aiSummary: summary,
+      aiKeyPoints: JSON.stringify([title]),
+      aiTags: JSON.stringify(["X监控", config.label, "镜像源"]),
+      aiScore: Math.max(0.62, Math.min(0.94, config.weight / 100)),
+    },
+    update: {
+      title,
+      url,
+      excerpt: summary,
+      content: rawText,
+      publishedAt: safeDate(item.isoDate, item.pubDate),
+      fetchedAt: new Date(),
+      category: "ai_tech",
+      aiSummary: summary,
+      aiKeyPoints: JSON.stringify([title]),
+      aiTags: JSON.stringify(["X监控", config.label, "镜像源"]),
+      aiScore: Math.max(0.62, Math.min(0.94, config.weight / 100)),
+    },
+  });
+  return true;
+}
+
+async function fetchMirrorSignalsForUser(config: XUserConfig) {
+  const sourceId = stableExternalId(`x:${config.username}`);
+  const sourceName = `X · ${config.label}`;
   let lastError = "";
 
-  for (const config of users) {
+  for (const base of configuredMirrorBases()) {
+    const feedUrl = mirrorFeedUrl(base, config.username);
     try {
-      const userResponse = await xFetch<{ data?: XUser }>(`/users/by/username/${encodeURIComponent(config.username)}?user.fields=name,username`);
-      const user = userResponse.data;
-      if (!user?.id) continue;
-
-      const sourceId = stableExternalId(`x:${config.username}`);
-      const sourceName = `X · ${config.label}`;
+      const xml = await fetchText(feedUrl);
+      const feed = await mirrorParser.parseString(xml);
       await prisma.newsSource.upsert({
         where: { id: sourceId },
         create: {
           id: sourceId,
-          kind: "api",
-          url: `https://x.com/${config.username}`,
+          kind: "rss",
+          url: feedUrl,
           name: sourceName,
           category: "ai_tech",
           region: "global",
@@ -124,8 +236,8 @@ export async function fetchXSignals() {
           lastFetchAt: new Date(),
         },
         update: {
-          kind: "api",
-          url: `https://x.com/${config.username}`,
+          kind: "rss",
+          url: feedUrl,
           name: sourceName,
           category: "ai_tech",
           region: "global",
@@ -136,65 +248,144 @@ export async function fetchXSignals() {
         },
       });
 
-      const timeline = await xFetch<{ data?: XPost[] }>(
-        `/users/${user.id}/tweets?max_results=10&exclude=retweets,replies&tweet.fields=created_at,lang`,
-      );
-
-      for (const post of timeline.data ?? []) {
-        const text = stripPostText(post.text ?? "");
-        if (!shouldKeepPost(text)) continue;
-        const title = sanitizeBriefingText(text, 92);
-        const publishedAt = post.created_at ? new Date(post.created_at) : new Date();
-        const safePublishedAt = Number.isFinite(publishedAt.getTime()) ? publishedAt : new Date();
-        const url = `https://x.com/${config.username}/status/${post.id}`;
-        const summary = sanitizeBriefingText(`来自 ${sourceDisplayName(sourceName, "social_x")}：${text}`, 220);
-
-        await prisma.newsItem.upsert({
-          where: {
-            sourceId_externalId: {
-              sourceId,
-              externalId: post.id,
-            },
-          },
-          create: {
-            sourceId,
-            externalId: post.id,
-            title,
-            url,
-            excerpt: summary,
-            content: text,
-            publishedAt: safePublishedAt,
-            fetchedAt: new Date(),
-            category: "ai_tech",
-            language: /[\u3400-\u9fff]/.test(text) ? "zh" : "en",
-            region: "global",
-            aiSummary: summary,
-            aiKeyPoints: JSON.stringify([title]),
-            aiTags: JSON.stringify(["X监控", config.label, "人工智能"]),
-            aiScore: Math.max(0.62, Math.min(0.96, config.weight / 100)),
-          },
-          update: {
-            title,
-            url,
-            excerpt: summary,
-            content: text,
-            publishedAt: safePublishedAt,
-            fetchedAt: new Date(),
-            category: "ai_tech",
-            aiSummary: summary,
-            aiKeyPoints: JSON.stringify([title]),
-            aiTags: JSON.stringify(["X监控", config.label, "人工智能"]),
-            aiScore: Math.max(0.62, Math.min(0.96, config.weight / 100)),
-          },
-        });
-        inserted += 1;
+      let inserted = 0;
+      for (const item of feed.items.slice(0, 12)) {
+        if (await upsertMirrorPost(config, sourceId, sourceName, item)) inserted += 1;
       }
+      return { inserted, base: feedUrl, failed: 0, lastError: "" };
     } catch (error) {
-      failed += 1;
       lastError = error instanceof Error ? error.message : "unknown";
-      console.warn(`[briefing:x] ${config.username} failed`, lastError);
     }
   }
 
-  return { ok: true, skipped: false, users: users.length, inserted, failed, lastError: lastError || undefined };
+  return { inserted: 0, base: "", failed: 1, lastError };
+}
+
+async function fetchMirrorXSignals(users: XUserConfig[]) {
+  let inserted = 0;
+  let failed = 0;
+  let lastError = "";
+
+  for (const user of users) {
+    const result = await fetchMirrorSignalsForUser(user);
+    inserted += result.inserted;
+    failed += result.failed;
+    if (result.lastError) lastError = result.lastError;
+  }
+
+  return { inserted, failed, lastError };
+}
+
+export async function fetchXSignals() {
+  const users = configuredUsers();
+  let inserted = 0;
+  let failed = 0;
+  let lastError = "";
+
+  if (bearerToken()) {
+    for (const config of users) {
+      try {
+        const userResponse = await xFetch<{ data?: XUser }>(`/users/by/username/${encodeURIComponent(config.username)}?user.fields=name,username`);
+        const user = userResponse.data;
+        if (!user?.id) continue;
+
+        const sourceId = stableExternalId(`x:${config.username}`);
+        const sourceName = `X · ${config.label}`;
+        await prisma.newsSource.upsert({
+          where: { id: sourceId },
+          create: {
+            id: sourceId,
+            kind: "api",
+            url: `https://x.com/${config.username}`,
+            name: sourceName,
+            category: "ai_tech",
+            region: "global",
+            weight: config.weight,
+            enabled: true,
+            lastFetchAt: new Date(),
+          },
+          update: {
+            kind: "api",
+            url: `https://x.com/${config.username}`,
+            name: sourceName,
+            category: "ai_tech",
+            region: "global",
+            weight: config.weight,
+            enabled: true,
+            lastFetchAt: new Date(),
+            failCount: 0,
+          },
+        });
+
+        const timeline = await xFetch<{ data?: XPost[] }>(
+          `/users/${user.id}/tweets?max_results=10&exclude=retweets,replies&tweet.fields=created_at,lang`,
+        );
+
+        for (const post of timeline.data ?? []) {
+          const text = stripPostText(post.text ?? "");
+          if (!shouldKeepPost(text)) continue;
+          const title = sanitizeBriefingText(text, 92);
+          const publishedAt = post.created_at ? new Date(post.created_at) : new Date();
+          const safePublishedAt = Number.isFinite(publishedAt.getTime()) ? publishedAt : new Date();
+          const url = `https://x.com/${config.username}/status/${post.id}`;
+          const summary = sanitizeBriefingText(`来自 ${sourceDisplayName(sourceName, "social_x")}：${text}`, 220);
+
+          await prisma.newsItem.upsert({
+            where: {
+              sourceId_externalId: {
+                sourceId,
+                externalId: post.id,
+              },
+            },
+            create: {
+              sourceId,
+              externalId: post.id,
+              title,
+              url,
+              excerpt: summary,
+              content: text,
+              publishedAt: safePublishedAt,
+              fetchedAt: new Date(),
+              category: "ai_tech",
+              language: /[\u3400-\u9fff]/.test(text) ? "zh" : "en",
+              region: "global",
+              aiSummary: summary,
+              aiKeyPoints: JSON.stringify([title]),
+              aiTags: JSON.stringify(["X监控", config.label, "人工智能"]),
+              aiScore: Math.max(0.62, Math.min(0.96, config.weight / 100)),
+            },
+            update: {
+              title,
+              url,
+              excerpt: summary,
+              content: text,
+              publishedAt: safePublishedAt,
+              fetchedAt: new Date(),
+              category: "ai_tech",
+              aiSummary: summary,
+              aiKeyPoints: JSON.stringify([title]),
+              aiTags: JSON.stringify(["X监控", config.label, "人工智能"]),
+              aiScore: Math.max(0.62, Math.min(0.96, config.weight / 100)),
+            },
+          });
+          inserted += 1;
+        }
+      } catch (error) {
+        failed += 1;
+        lastError = error instanceof Error ? error.message : "unknown";
+        console.warn(`[briefing:x] ${config.username} failed`, lastError);
+      }
+    }
+  } else {
+    lastError = "X_BEARER_TOKEN not configured";
+  }
+
+  if (!bearerToken() || inserted === 0 || process.env.BRIEFING_X_MIRROR_ALWAYS === "true") {
+    const mirror = await fetchMirrorXSignals(users);
+    inserted += mirror.inserted;
+    failed += mirror.failed;
+    if (mirror.lastError) lastError = mirror.lastError;
+  }
+
+  return { ok: true, skipped: inserted === 0, users: users.length, inserted, failed, lastError: lastError || undefined };
 }

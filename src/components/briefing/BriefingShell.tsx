@@ -4,13 +4,14 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import { AlertCircle, CheckCircle2, Clock3, Database, Loader2, Tags } from "lucide-react";
 import { BriefingHero, type BriefingHeroStats } from "./BriefingHero";
-import { TopBar } from "./TopBar";
 import { BriefingFilters } from "./BriefingFilters";
 import { NewsColumn } from "./NewsColumn";
 import { NewsDetailModal } from "./NewsDetailModal";
 import { DeepReadCard } from "./DeepReadCard";
 import { EventRadar } from "./EventRadar";
 import { EventDetailModal } from "./EventDetailModal";
+import { ThinkingDetailModal } from "./ThinkingDetailModal";
+import { ThinkingPanel } from "./ThinkingPanel";
 import { XSignalPanel } from "./XSignalPanel";
 import { listStagger } from "@/lib/animations";
 import { PageContainer } from "@/components/layout/PageContainer";
@@ -20,6 +21,7 @@ import type { BriefingCategory, BriefingDigestSummary, BriefingEventClusterDTO, 
 type CategoryFilter = BriefingCategory | "all";
 type DetailAnchor = { top: number; left: number; width: number; height: number; x?: number; y?: number };
 type SelectedDetail = { item: NewsItemDTO; anchor: DetailAnchor };
+type SelectedThinkingDetail = { insight: BriefingThinkingInsight; anchor: DetailAnchor };
 type SelectedSignalDetail =
   | { event: BriefingEventClusterDTO; anchor: DetailAnchor }
   | { signal: BriefingXSignalDTO; anchor: DetailAnchor };
@@ -214,6 +216,7 @@ export function BriefingShell({
   const [category, setCategory] = useState<CategoryFilter>("all");
   const [briefingTitle, setBriefingTitle] = useState("每日简报");
   const [selectedDetail, setSelectedDetail] = useState<SelectedDetail | null>(null);
+  const [selectedThinkingDetail, setSelectedThinkingDetail] = useState<SelectedThinkingDetail | null>(null);
   const [selectedSignalDetail, setSelectedSignalDetail] = useState<SelectedSignalDetail | null>(null);
   const [loading, setLoading] = useState(false);
   const [importingDigest, setImportingDigest] = useState(false);
@@ -352,6 +355,7 @@ export function BriefingShell({
       <BriefingHero
         digest={digest}
         stats={stats}
+        markets={markets}
         weather={weather}
         horoscopes={horoscopes}
         dateLabel={dateLabel}
@@ -360,9 +364,12 @@ export function BriefingShell({
         loading={loading}
         importingDigest={importingDigest}
         copied={copied}
+        marketRefreshing={marketRefreshing}
+        marketError={marketError}
         onRefresh={() => void refresh(range, category, true)}
         onImportDigest={() => void importDigest()}
         onCopySummary={() => void copySummary()}
+        onMarketRefresh={() => void refreshMarkets(true)}
         onTitleChange={setBriefingTitle}
       />
 
@@ -412,43 +419,6 @@ export function BriefingShell({
             onOpenEvent={(event, anchor) => setSelectedSignalDetail({ event, anchor })}
           />
 
-          {thinkingInsights.length > 0 ? (
-            <section className="rounded-[var(--radius-2xl)] border border-[var(--hairline)] bg-[var(--material-elevated)] p-4 shadow-[var(--shadow-sm)] sm:p-5">
-              <div className="mb-4 flex items-center justify-between gap-3">
-                <div>
-                  <p className="text-[11px] uppercase tracking-wide text-[var(--text-muted)]">Think Further</p>
-                  <h2 className="mt-1 text-lg font-semibold text-[var(--text-primary)]">今天值得继续想</h2>
-                </div>
-                <span className="rounded-[var(--radius-pill)] bg-[var(--primary-soft)] px-3 py-1 text-xs text-[var(--primary)]">
-                  {thinkingInsights.length} 条
-                </span>
-              </div>
-              <div className="grid gap-3 sm:grid-cols-2">
-                {thinkingInsights.slice(0, 6).map((insight, index) => (
-                  <article key={insight.id} className="rounded-[var(--radius-lg)] border border-[var(--hairline)] bg-[var(--material-inset)] p-3.5">
-                    <div className="flex items-center justify-between gap-2 text-[11px] text-[var(--text-muted)]">
-                      <span>思考 {index + 1}</span>
-                      <span>{insight.impactLabel}</span>
-                    </div>
-                    <h3 className="mt-2 line-clamp-2 text-sm font-semibold leading-5 text-[var(--text-primary)]">
-                      {insight.title}
-                    </h3>
-                    <p className="mt-2 line-clamp-3 font-[var(--font-reading)] text-xs leading-5 text-[var(--text-secondary)]">
-                      {insight.question}
-                    </p>
-                    <div className="mt-3 flex flex-wrap gap-1.5">
-                      {insight.tags.slice(0, 3).map((tag) => (
-                        <span key={tag} className="rounded-[var(--radius-pill)] border border-[var(--hairline)] px-2 py-0.5 text-[11px] text-[var(--text-muted)]">
-                          {tag}
-                        </span>
-                      ))}
-                    </div>
-                  </article>
-                ))}
-              </div>
-            </section>
-          ) : null}
-
           <NewsColumn
             title="精选证据"
             eyebrow="Evidence picks"
@@ -472,11 +442,9 @@ export function BriefingShell({
         </div>
 
         <aside className="space-y-4 lg:sticky lg:top-6 lg:self-start lg:space-y-5">
-          <TopBar
-            markets={markets}
-            refreshing={marketRefreshing}
-            error={marketError}
-            onRefresh={() => void refreshMarkets(true)}
+          <ThinkingPanel
+            insights={thinkingInsights}
+            onOpen={(insight, anchor) => setSelectedThinkingDetail({ insight, anchor })}
           />
           <XSignalPanel
             signals={xSignals}
@@ -501,6 +469,10 @@ export function BriefingShell({
         selected={selectedSignalDetail}
         items={items}
         onClose={() => setSelectedSignalDetail(null)}
+      />
+      <ThinkingDetailModal
+        selected={selectedThinkingDetail}
+        onClose={() => setSelectedThinkingDetail(null)}
       />
     </PageContainer>
   );

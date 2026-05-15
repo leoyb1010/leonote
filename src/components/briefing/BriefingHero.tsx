@@ -3,10 +3,10 @@
 import { motion } from "framer-motion";
 import { useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
-import { CalendarDays, Check, ChevronRight, CloudSun, Copy, FilePlus2, Gauge, Loader2, MoonStar, Newspaper, RefreshCw, Star, Tags, X } from "lucide-react";
+import { Activity, ArrowDownRight, ArrowUpRight, CalendarDays, Check, ChevronRight, CloudSun, Copy, FilePlus2, Gauge, Loader2, MoonStar, Newspaper, RefreshCw, Star, Tags, X } from "lucide-react";
 import { Button } from "@/components/base/Button";
 import { cardFloatIn, heroTitleReveal } from "@/lib/animations";
-import type { BriefingDigestSummary, BriefingRange, HoroscopeDTO, WeatherDTO } from "@/lib/briefing/types";
+import type { BriefingDigestSummary, BriefingRange, HoroscopeDTO, MarketSnapshotDTO, WeatherDTO } from "@/lib/briefing/types";
 
 export interface BriefingHeroStats {
   total: number;
@@ -18,6 +18,7 @@ export interface BriefingHeroStats {
 interface Props {
   digest: BriefingDigestSummary | null;
   stats: BriefingHeroStats;
+  markets: MarketSnapshotDTO[];
   weather: WeatherDTO | null;
   horoscopes: HoroscopeDTO[];
   dateLabel: string;
@@ -26,9 +27,12 @@ interface Props {
   loading?: boolean;
   importingDigest?: boolean;
   copied?: boolean;
+  marketRefreshing?: boolean;
+  marketError?: string | null;
   onRefresh: () => void;
   onImportDigest: () => void;
   onCopySummary: () => void;
+  onMarketRefresh: () => void;
   onTitleChange: (title: string) => void;
 }
 
@@ -166,14 +170,17 @@ function HoroscopeStrip({ horoscopes, onSelect }: { horoscopes: HoroscopeDTO[]; 
   const sourceLabel = Array.from(new Set(horoscopes.map((item) => item.sourceName))).join(" / ") || "实时源待同步";
 
   return (
-    <div className="quiet-inset rounded-[var(--radius-lg)] px-3.5 py-3">
-      <div className="flex items-center gap-2 text-[11px] text-[var(--text-muted)]">
-        <MoonStar size={13} />
-        今日星座
+    <div className="mt-3">
+      <div className="mb-2 flex flex-wrap items-center justify-between gap-2 text-[11px] text-[var(--text-muted)]">
+        <span className="inline-flex items-center gap-1.5">
+          <MoonStar size={13} />
+          今日星座
+        </span>
+        <span className="tabular">更新 {formatHoroscopeTime(latestUpdate?.toISOString())}</span>
       </div>
-      <div className="mt-3 grid gap-2 sm:grid-cols-3 md:grid-cols-1 xl:grid-cols-1">
+      <div className="grid gap-2 sm:grid-cols-3">
         {horoscopes.length === 0 ? (
-          <div className="rounded-[var(--radius-md)] border border-[var(--hairline)] bg-[var(--material-elevated)] px-3 py-5 text-center text-[11px] leading-5 text-[var(--text-muted)]">
+          <div className="rounded-[var(--radius-md)] border border-[var(--hairline)] bg-[var(--material-inset)] px-3 py-4 text-center text-[11px] leading-5 text-[var(--text-muted)] sm:col-span-3">
             实时星座源暂未返回，稍后刷新。
           </div>
         ) : (
@@ -192,7 +199,7 @@ function HoroscopeStrip({ horoscopes, onSelect }: { horoscopes: HoroscopeDTO[]; 
                   height: rect.height,
                 });
               }}
-              className="group cursor-pointer rounded-[var(--radius-md)] border border-[var(--hairline)] bg-[var(--material-elevated)] px-3 py-2 text-left transition hover:-translate-y-0.5 hover:bg-[var(--material-muted)]"
+              className="group min-h-[74px] cursor-pointer rounded-[var(--radius-md)] border border-[var(--hairline)] bg-[var(--material-inset)] px-3 py-2 text-left transition hover:-translate-y-0.5 hover:bg-[var(--material-muted)]"
             >
               <div className="flex items-center justify-between gap-3 text-xs">
                 <span className="min-w-0 truncate font-medium text-[var(--text-secondary)]">
@@ -205,16 +212,15 @@ function HoroscopeStrip({ horoscopes, onSelect }: { horoscopes: HoroscopeDTO[]; 
               <p className="mt-1.5 line-clamp-2 text-[11px] leading-5 text-[var(--text-muted)]">
                 {item.summary}
               </p>
-              <div className="mt-1.5 flex items-center justify-end text-[var(--text-muted)]">
+              <div className="mt-1 flex items-center justify-end text-[var(--text-muted)]">
                 <ChevronRight size={11} className="transition group-hover:translate-x-0.5" />
               </div>
             </button>
           ))
         )}
       </div>
-      <div className="mt-2 flex items-center justify-between gap-2 text-[11px] leading-5 text-[var(--text-muted)]">
+      <div className="mt-2 flex min-w-0 items-center justify-between gap-2 text-[11px] leading-5 text-[var(--text-muted)]">
         <span className="min-w-0 truncate">来源：{sourceLabel}</span>
-        <span className="shrink-0 tabular">更新 {formatHoroscopeTime(latestUpdate?.toISOString())}</span>
       </div>
     </div>
   );
@@ -233,7 +239,7 @@ function qualityLabel(score: number | null) {
   return "待筛选";
 }
 
-function MetricCard({
+function MiniMetric({
   icon,
   label,
   value,
@@ -245,21 +251,87 @@ function MetricCard({
   hint: string;
 }) {
   return (
-    <div className="quiet-inset rounded-[var(--radius-lg)] px-3.5 py-3">
-      <div className="flex items-center gap-2 text-[11px] text-[var(--text-muted)]">
+    <div className="rounded-[var(--radius-lg)] border border-[var(--hairline)] bg-[var(--material-inset)] px-3 py-2.5">
+      <div className="flex items-center gap-1.5 text-[11px] text-[var(--text-muted)]">
         <span className="text-[var(--text-faint)]">{icon}</span>
         {label}
       </div>
-      <div className="mt-2 text-[1.35rem] font-semibold leading-none text-[var(--text-primary)]">
+      <div className="mt-1.5 text-lg font-semibold leading-none text-[var(--text-primary)]">
         {value}
       </div>
-      <p className="mt-1.5 text-[11px] leading-4 text-[var(--text-muted)]">{hint}</p>
+      <p className="mt-1 text-[11px] leading-4 text-[var(--text-muted)]">{hint}</p>
+    </div>
+  );
+}
+
+function formatMarketPrice(item: MarketSnapshotDTO) {
+  const value = item.price;
+  if (value >= 1000) return value.toLocaleString("zh-CN", { maximumFractionDigits: 0 });
+  if (item.category === "fx" || value < 1) return value.toFixed(4);
+  return value.toFixed(2);
+}
+
+function MarketPulseStrip({
+  markets,
+  refreshing = false,
+  error,
+  onRefresh,
+}: {
+  markets: MarketSnapshotDTO[];
+  refreshing?: boolean;
+  error?: string | null;
+  onRefresh: () => void;
+}) {
+  const visible = markets.slice(0, 6);
+
+  return (
+    <div className="mt-3 rounded-[var(--radius-xl)] border border-[var(--hairline)] bg-[var(--material-inset)] px-3 py-2.5">
+      <div className="mb-2 flex items-center justify-between gap-3">
+        <div className="flex min-w-0 items-center gap-1.5 text-[11px] text-[var(--text-muted)]">
+          <Activity size={13} />
+          <span>市场温度</span>
+          {error ? <span className="text-[var(--warning)]">显示缓存</span> : null}
+        </div>
+        <button
+          type="button"
+          onClick={onRefresh}
+          disabled={refreshing}
+          title="刷新实时行情"
+          className="inline-flex h-7 w-7 items-center justify-center rounded-full border border-[var(--hairline)] text-[var(--text-muted)] transition hover:bg-[var(--interactive-hover)] hover:text-[var(--text-primary)] disabled:opacity-50"
+        >
+          <RefreshCw size={12} className={refreshing ? "animate-spin" : ""} />
+        </button>
+      </div>
+      {visible.length === 0 ? (
+        <p className="text-xs text-[var(--text-muted)]">市场数据收集中。</p>
+      ) : (
+        <div className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1">
+          {visible.map((item) => {
+            const up = item.changePct >= 0;
+            const Icon = up ? ArrowUpRight : ArrowDownRight;
+            return (
+              <span
+                key={item.symbol}
+                className="inline-flex shrink-0 items-center gap-2 rounded-[var(--radius-pill)] border border-[var(--hairline)] bg-[var(--material-elevated)] px-3 py-1.5 text-xs text-[var(--text-secondary)]"
+              >
+                <span className="font-medium text-[var(--text-primary)]">{item.name}</span>
+                <span className="numeric-display text-[var(--text-muted)]">{formatMarketPrice(item)}</span>
+                <span className={`inline-flex items-center gap-0.5 numeric-display ${up ? "text-[var(--danger)]" : "text-[var(--success)]"}`}>
+                  <Icon size={11} />
+                  {up ? "+" : ""}{item.changePct.toFixed(2)}%
+                </span>
+              </span>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }
 
 export function BriefingHero({
   stats,
+  markets,
   weather,
   horoscopes,
   dateLabel,
@@ -268,9 +340,12 @@ export function BriefingHero({
   loading = false,
   importingDigest = false,
   copied = false,
+  marketRefreshing = false,
+  marketError,
   onRefresh,
   onImportDigest,
   onCopySummary,
+  onMarketRefresh,
   onTitleChange,
 }: Props) {
   const score = stats.averageScore == null ? null : Math.round(stats.averageScore);
@@ -288,31 +363,37 @@ export function BriefingHero({
     >
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_18%_0%,rgba(255,255,255,0.055),transparent_32%),radial-gradient(circle_at_92%_18%,var(--primary-soft),transparent_28%)]" />
 
-      <div className="relative z-10 grid gap-5 md:grid-cols-[minmax(0,1fr)_300px] md:items-start xl:grid-cols-[minmax(0,1fr)_360px]">
-        <div className="min-w-0">
-          <div className="mb-4 flex flex-wrap items-center gap-2 text-xs text-[var(--text-muted)]">
+      <div className="relative z-10">
+        <div className="flex flex-wrap items-center gap-2 text-xs text-[var(--text-muted)]">
+          <span className="inline-flex items-center gap-1.5 rounded-[var(--radius-pill)] border border-[var(--hairline)] bg-[var(--material-inset)] px-2.5 py-1">
+            <CalendarDays size={13} />
+            {dateLabel}
+          </span>
+          <span className="rounded-[var(--radius-pill)] border border-[var(--hairline)] bg-[var(--material-inset)] px-2.5 py-1">
+            {rangeLabel(range)}
+          </span>
+          {weather ? (
             <span className="inline-flex items-center gap-1.5 rounded-[var(--radius-pill)] border border-[var(--hairline)] bg-[var(--material-inset)] px-2.5 py-1">
-              <CalendarDays size={13} />
-              {dateLabel}
+              <CloudSun size={13} />
+              深圳 {Math.round(weather.temp)}° · {weather.weatherLabel} · 湿度 {weather.humidity}%
             </span>
-            <span className="rounded-[var(--radius-pill)] border border-[var(--hairline)] bg-[var(--material-inset)] px-2.5 py-1">
-              {rangeLabel(range)}
-            </span>
-            {weather ? (
-              <span className="inline-flex items-center gap-1.5 rounded-[var(--radius-pill)] border border-[var(--hairline)] bg-[var(--material-inset)] px-2.5 py-1">
-                <CloudSun size={13} />
-                深圳 {Math.round(weather.temp)}° · {weather.weatherLabel} · 湿度 {weather.humidity}%
-              </span>
-            ) : null}
-            <span className="inline-flex items-center gap-1.5 rounded-[var(--radius-pill)] border border-[var(--hairline)] bg-[var(--material-inset)] px-2.5 py-1">
-              <MoonStar size={13} />
-              今日星座 · {horoscopeBrief}
-            </span>
-          </div>
+          ) : null}
+          <span className="inline-flex min-w-0 items-center gap-1.5 rounded-[var(--radius-pill)] border border-[var(--hairline)] bg-[var(--material-inset)] px-2.5 py-1">
+            <MoonStar size={13} />
+            <span className="truncate">今日星座 · {horoscopeBrief}</span>
+          </span>
+        </div>
 
-          <motion.div
-            variants={heroTitleReveal}
-          >
+        <MarketPulseStrip
+          markets={markets}
+          refreshing={marketRefreshing}
+          error={marketError}
+          onRefresh={onMarketRefresh}
+        />
+
+        <div className="mt-4 grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(360px,480px)] lg:items-end">
+          <div className="min-w-0">
+            <motion.div variants={heroTitleReveal}>
             <input
               aria-label="简报标题"
               value={title}
@@ -320,57 +401,57 @@ export function BriefingHero({
               className="w-full max-w-3xl bg-transparent text-[1.7rem] font-semibold leading-tight text-[var(--text-primary)] outline-none transition-colors placeholder:text-[var(--text-placeholder)] focus:text-[var(--primary)] sm:text-[2.15rem]"
               placeholder="每日简报"
             />
-          </motion.div>
+            </motion.div>
 
-          <div className="mt-4 flex flex-wrap gap-2">
-            <Button variant="primary" size="sm" onClick={onRefresh} disabled={loading} className="gap-1.5">
-              {loading ? <Loader2 size={14} className="animate-spin" /> : <RefreshCw size={14} />}
-              刷新简报
-            </Button>
-            <Button variant="secondary" size="sm" onClick={onImportDigest} disabled={importingDigest || stats.total === 0} className="gap-1.5">
-              {importingDigest ? <Loader2 size={14} className="animate-spin" /> : <FilePlus2 size={14} />}
-              存为笔记
-            </Button>
-            <Button variant="ghost" size="sm" onClick={onCopySummary} disabled={stats.total === 0} className="gap-1.5">
-              {copied ? <Check size={14} /> : <Copy size={14} />}
-              {copied ? "已复制" : "复制摘要"}
-            </Button>
+            <div className="mt-4 flex flex-wrap gap-2">
+              <Button variant="primary" size="sm" onClick={onRefresh} disabled={loading} className="gap-1.5">
+                {loading ? <Loader2 size={14} className="animate-spin" /> : <RefreshCw size={14} />}
+                刷新简报
+              </Button>
+              <Button variant="secondary" size="sm" onClick={onImportDigest} disabled={importingDigest || stats.total === 0} className="gap-1.5">
+                {importingDigest ? <Loader2 size={14} className="animate-spin" /> : <FilePlus2 size={14} />}
+                存为笔记
+              </Button>
+              <Button variant="ghost" size="sm" onClick={onCopySummary} disabled={stats.total === 0} className="gap-1.5">
+                {copied ? <Check size={14} /> : <Copy size={14} />}
+                {copied ? "已复制" : "复制摘要"}
+              </Button>
+            </div>
+          </div>
+
+          <div className="grid gap-2 sm:grid-cols-2">
+            <MiniMetric
+              icon={<Newspaper size={13} />}
+              label="资讯"
+              value={<span className="numeric-display">{stats.total}</span>}
+              hint={`${stats.unread} 条未读`}
+            />
+            <MiniMetric
+              icon={<Gauge size={13} />}
+              label="质量"
+              value={<span className="numeric-display">{score == null ? "..." : `${score}`}</span>}
+              hint={qualityLabel(score)}
+            />
+            <div className="rounded-[var(--radius-lg)] border border-[var(--hairline)] bg-[var(--material-inset)] px-3 py-2.5 sm:col-span-2">
+              <div className="flex items-center gap-1.5 text-[11px] text-[var(--text-muted)]">
+                <Tags size={13} />
+                重要标签
+              </div>
+              <div className="mt-2 flex flex-wrap gap-1.5">
+                {(stats.topTags.length ? stats.topTags : ["等待标签"]).slice(0, 5).map((tag) => (
+                  <span
+                    key={tag}
+                    className="rounded-[var(--radius-pill)] border border-[var(--hairline)] bg-[var(--material-elevated)] px-2.5 py-1 text-xs text-[var(--text-secondary)]"
+                  >
+                    {tag}
+                  </span>
+                ))}
+              </div>
+            </div>
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-3 md:pt-1">
-          <MetricCard
-            icon={<Newspaper size={13} />}
-            label="资讯"
-            value={<span className="numeric-display">{stats.total}</span>}
-            hint={`${stats.unread} 条未读`}
-          />
-          <MetricCard
-            icon={<Gauge size={13} />}
-            label="质量"
-            value={<span className="numeric-display">{score == null ? "..." : `${score}`}</span>}
-            hint={qualityLabel(score)}
-          />
-          <div className="quiet-inset col-span-2 rounded-[var(--radius-lg)] px-3.5 py-3">
-            <div className="flex items-center gap-2 text-[11px] text-[var(--text-muted)]">
-              <Tags size={13} />
-              重要标签
-            </div>
-            <div className="mt-3 flex flex-wrap gap-2">
-              {(stats.topTags.length ? stats.topTags : ["等待标签"]).slice(0, 5).map((tag) => (
-                <span
-                  key={tag}
-                  className="rounded-[var(--radius-pill)] border border-[var(--hairline)] bg-[var(--material-elevated)] px-2.5 py-1 text-xs text-[var(--text-secondary)]"
-                >
-                  {tag}
-                </span>
-              ))}
-            </div>
-          </div>
-          <div className="col-span-2">
-            <HoroscopeStrip horoscopes={horoscopes} onSelect={(h, anchor) => setSelectedHoroscope({ horoscope: h, anchor })} />
-          </div>
-        </div>
+        <HoroscopeStrip horoscopes={horoscopes} onSelect={(h, anchor) => setSelectedHoroscope({ horoscope: h, anchor })} />
       </div>
 
       <HoroscopeDetailBubble selected={selectedHoroscope} onClose={() => setSelectedHoroscope(null)} />

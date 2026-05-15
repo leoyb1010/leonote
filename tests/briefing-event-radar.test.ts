@@ -78,4 +78,49 @@ describe("briefing event radar", () => {
     expect(signals[0]?.impactLabel).toBe("强信号");
     expect(signals[0]?.summary).toContain("OpenAI");
   });
+
+  it("keeps domestic, international, market, and AI events visible when all buckets exist", () => {
+    const events = buildBriefingEventRadar([
+      newsItem({
+        id: "world",
+        title: "欧盟宣布新的贸易关税方案，全球供应链成本预期上升",
+        category: "world",
+        sourceName: "英国广播公司中文网",
+        aiSummary: "欧盟贸易政策变化可能传导到制造业、能源与全球市场预期。",
+        aiTags: ["国际", "贸易"],
+        aiScore: 0.88,
+      }),
+      newsItem({
+        id: "domestic",
+        title: "我国一箭 5 星发射成功，力箭系列运载火箭实现 100 星发射里程碑",
+        category: "ai_tech",
+        sourceName: "IT之家",
+        aiSummary: "国内商业航天能力继续推进，产业链与工程能力进入新阶段。",
+        aiTags: ["航天", "国内"],
+        aiScore: 0.86,
+      }),
+      newsItem({
+        id: "market",
+        title: "A股三大指数午间集体上涨，半导体板块领涨",
+        category: "finance",
+        sourceName: "中国新闻网财经",
+        aiSummary: "市场资金偏好向半导体与科技资产集中。",
+        aiTags: ["市场", "半导体"],
+        aiScore: 0.84,
+      }),
+      newsItem({
+        id: "ai",
+        title: "OpenAI 发布新的智能体平台，开放浏览器自动化能力",
+        category: "ai_tech",
+        sourceName: "OpenAI Blog",
+        aiSummary: "OpenAI 把智能体能力推向更完整的任务执行入口。",
+        aiTags: ["人工智能", "智能体"],
+        aiScore: 0.9,
+      }),
+    ]);
+
+    expect(events.map((event) => event.scope)).toEqual(expect.arrayContaining(["international", "domestic", "market", "ai_tech"]));
+    expect(events.some((event) => event.scopeLabel === "国内大事")).toBe(true);
+    expect(events.filter((event) => event.scope === "ai_tech")).toHaveLength(1);
+  });
 });
