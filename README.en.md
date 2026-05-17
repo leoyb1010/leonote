@@ -25,7 +25,7 @@
 </p>
 
 <p>
-  <img alt="Version" src="https://img.shields.io/badge/Version-v1.6.17-7B84F6?style=for-the-badge">
+  <img alt="Version" src="https://img.shields.io/badge/Version-v1.6.18-7B84F6?style=for-the-badge">
   <img alt="License" src="https://img.shields.io/badge/License-Personal%20Use%20Only-F26D6D?style=for-the-badge">
   <img alt="Next.js" src="https://img.shields.io/badge/Next.js-16-111111?style=for-the-badge&logo=nextdotjs">
   <img alt="Tauri" src="https://img.shields.io/badge/Tauri-2-24C8DB?style=for-the-badge&logo=tauri">
@@ -58,7 +58,7 @@
 </p>
 
 <p align="center">
-  <sub>Screenshots are maintained for the current v1.6.17 Quiet Material UI across desktop, note editing, and mobile briefing layouts.</sub>
+  <sub>Screenshots are maintained for the current v1.6.18 Quiet Material UI across desktop, note editing, and mobile briefing layouts.</sub>
 </p>
 
 ## Overview
@@ -122,6 +122,7 @@ AUTH_SECRET="change-me-to-a-long-random-secret"
 DATABASE_URL="file:./data/leonote.db"
 LEONOTE_PUBLIC_URL="https://leonote.example.com"
 LEONOTE_ALLOW_REGISTRATION="false"
+LEONOTE_TRUST_PROXY_HEADERS="false"
 
 AI_BASE_URL="https://api.deepseek.com"
 AI_MODEL="deepseek-v4-flash"
@@ -158,10 +159,11 @@ RSSHUB_BASE_URL="https://rsshub.app"
 
 ## Version
 
-Current version: **v1.6.17**
+Current version: **v1.6.18**
 
 Recent release focus:
 
+- Security and reliability hardening for image proxy SSRF protection, attachment MIME handling, AI prompt budgets, RSS body limits, horoscope cache freshness, and trusted-proxy rate limiting.
 - Compact Daily Briefing hero with no large blank area under the title.
 - Market temperature follows the requested order: SSE, SZSE, US stocks, Hong Kong stocks, USD/CNY, gold, crypto, and oil.
 - Event radar keeps a daily mix of 1-2 international events, 1-2 domestic events, and 3-5 AI/tech events.

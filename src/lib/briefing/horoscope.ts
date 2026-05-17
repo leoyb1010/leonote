@@ -29,8 +29,10 @@ type ThemeKey = "money" | "work" | "relationship" | "home" | "energy" | "learnin
 
 const FEED_TIMEOUT_MS = 12_000;
 const MAX_SOURCE_AGE_DAYS = 3;
+const PARTIAL_CACHE_TTL_MS = 10 * 60 * 1000;
 let cachedHoroscopes: HoroscopeDTO[] | null = null;
 let cachedDay: string | null = null;
+let cachedAt = 0;
 
 const PROFILES: HoroscopeProfile[] = [
   {
@@ -428,14 +430,26 @@ async function fetchHoroscope(profile: HoroscopeProfile): Promise<HoroscopeDTO |
 
 export async function getDailyHoroscopes(force = false): Promise<HoroscopeDTO[]> {
   const today = shanghaiDayKey();
-  if (!force && cachedHoroscopes && cachedDay === today) return cachedHoroscopes;
+  if (
+    !force &&
+    cachedHoroscopes &&
+    cachedDay === today &&
+    (cachedHoroscopes.length === PROFILES.length || Date.now() - cachedAt < PARTIAL_CACHE_TTL_MS)
+  ) {
+    return cachedHoroscopes;
+  }
   const results = await Promise.all(PROFILES.map(fetchHoroscope));
-  cachedHoroscopes = results.filter((item): item is HoroscopeDTO => item != null);
-  cachedDay = today;
-  return cachedHoroscopes;
+  const liveResults = results.filter((item): item is HoroscopeDTO => item != null);
+  if (liveResults.length > 0) {
+    cachedHoroscopes = liveResults;
+    cachedDay = today;
+    cachedAt = Date.now();
+  }
+  return liveResults;
 }
 
 export function invalidateHoroscopeCache() {
   cachedHoroscopes = null;
   cachedDay = null;
+  cachedAt = 0;
 }

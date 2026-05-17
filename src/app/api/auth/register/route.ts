@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { hashPassword } from "@/lib/auth";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { headers } from "next/headers";
+import { getClientRateLimitKey } from "@/lib/request-guard";
 
 const schema = z.object({
   name: z.string().min(1).max(40),
@@ -36,8 +37,7 @@ export async function POST(request: Request) {
   }
 
   const headersList = await headers();
-  const ip =
-    headersList.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
+  const ip = getClientRateLimitKey(headersList);
 
   const ipLimit = checkRateLimit(`register:ip:${ip}`, 5, 60 * 60 * 1000);
   if (!ipLimit.ok) {

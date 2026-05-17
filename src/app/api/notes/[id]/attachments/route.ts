@@ -8,6 +8,7 @@ import {
   createAttachmentStoragePath,
   MAX_ATTACHMENT_SIZE,
   resolveAttachmentPath,
+  sanitizeAttachmentMimeType,
   sanitizeAttachmentFilename,
   toAttachmentDTO,
 } from "@/lib/attachments";
@@ -67,7 +68,7 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
       noteId: id,
       userId,
       filename,
-      mimeType: file.type || "application/octet-stream",
+      mimeType: sanitizeAttachmentMimeType(file.type),
       size: file.size,
       storagePath,
     },

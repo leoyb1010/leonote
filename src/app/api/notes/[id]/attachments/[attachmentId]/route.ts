@@ -2,7 +2,7 @@ import { readFile, unlink } from "node:fs/promises";
 import { NextResponse } from "next/server";
 import { getSessionUserId } from "@/lib/session";
 import { prisma } from "@/lib/prisma";
-import { resolveAttachmentPath } from "@/lib/attachments";
+import { attachmentContentDisposition, resolveAttachmentPath, sanitizeAttachmentMimeType } from "@/lib/attachments";
 import { guardUserWriteRequest } from "@/lib/request-guard";
 
 export const runtime = "nodejs";
@@ -31,12 +31,15 @@ export async function GET(
 
   try {
     const file = await readFile(resolveAttachmentPath(attachment.storagePath));
+    const mimeType = sanitizeAttachmentMimeType(attachment.mimeType);
     return new NextResponse(file, {
       headers: {
-        "Content-Type": attachment.mimeType || "application/octet-stream",
+        "Content-Type": mimeType,
         "Content-Length": String(attachment.size),
-        "Content-Disposition": `inline; filename*=UTF-8''${encodeURIComponent(attachment.filename)}`,
+        "Content-Disposition": attachmentContentDisposition({ filename: attachment.filename, mimeType }),
         "Cache-Control": "private, max-age=3600",
+        "X-Content-Type-Options": "nosniff",
+        "Content-Security-Policy": "sandbox",
       },
     });
   } catch {

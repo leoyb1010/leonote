@@ -9,6 +9,7 @@ import {
 } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { checkRateLimit } from "@/lib/rate-limit";
+import { getClientRateLimitKey } from "@/lib/request-guard";
 
 const schema = z.object({
   email: z.string().email(),
@@ -28,8 +29,7 @@ export async function POST(request: Request) {
   const email = parsed.data.email.trim().toLowerCase();
 
   const headersList = await headers();
-  const ip =
-    headersList.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
+  const ip = getClientRateLimitKey(headersList);
 
   const ipLimit = checkRateLimit(`login:ip:${ip}`, 20, 5 * 60 * 1000);
   if (!ipLimit.ok) {

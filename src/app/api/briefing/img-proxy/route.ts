@@ -3,14 +3,12 @@ import https from "node:https";
 import http from "node:http";
 import { lookup } from "node:dns/promises";
 import net from "node:net";
-import { HttpsProxyAgent } from "https-proxy-agent";
+import type { LookupFunction } from "node:net";
 import { getSessionUserId } from "@/lib/session";
 import { checkRateLimit } from "@/lib/rate-limit";
 
 export const runtime = "nodejs";
 
-const proxyUrl = process.env.HTTPS_PROXY || process.env.HTTP_PROXY;
-const proxyAgent = proxyUrl ? new HttpsProxyAgent(proxyUrl) : undefined;
 const MAX_IMAGE_BYTES = 2 * 1024 * 1024;
 const MAX_REDIRECTS = 3;
 const REQUEST_TIMEOUT_MS = 8000;
@@ -27,6 +25,17 @@ const ALLOWED_CONTENT_TYPES = new Set([
   "image/webp",
   "image/x-icon",
 ]);
+
+type SafeImageTarget = {
+  url: URL;
+  hostname: string;
+  address: string;
+  family: 4 | 6;
+};
+
+function normalizeHostname(hostname: string) {
+  return hostname.replace(/^\[(.*)\]$/, "$1").toLowerCase();
+}
 
 function isBlockedIp(ip: string) {
   if (net.isIP(ip) === 4) {
@@ -58,7 +67,7 @@ function isBlockedIp(ip: string) {
   return false;
 }
 
-async function assertSafeImageUrl(raw: string) {
+async function assertSafeImageUrl(raw: string): Promise<SafeImageTarget> {
   let parsed: URL;
   try {
     parsed = new URL(raw);
@@ -70,7 +79,7 @@ async function assertSafeImageUrl(raw: string) {
     throw new Error("unsupported protocol");
   }
 
-  const hostname = parsed.hostname.toLowerCase();
+  const hostname = normalizeHostname(parsed.hostname);
   if (
     BLOCKED_HOSTS.has(hostname) ||
     hostname.endsWith(".localhost") ||
@@ -79,12 +88,30 @@ async function assertSafeImageUrl(raw: string) {
     throw new Error("blocked host");
   }
 
+  const directFamily = net.isIP(hostname);
+  if (directFamily) {
+    return { url: parsed, hostname, address: hostname, family: directFamily as 4 | 6 };
+  }
+
   const resolved = await lookup(hostname, { all: true });
   if (!resolved.length || resolved.some((item) => isBlockedIp(item.address))) {
     throw new Error("blocked address");
   }
 
-  return parsed.toString();
+  const first = resolved[0];
+  return { url: parsed, hostname, address: first.address, family: first.family as 4 | 6 };
+}
+
+function pinnedLookup(target: SafeImageTarget): LookupFunction {
+  return ((hostname: string, options: unknown, callback?: unknown) => {
+    const cb = typeof options === "function" ? options : callback;
+    if (typeof cb !== "function") return;
+    if (normalizeHostname(hostname) !== target.hostname) {
+      cb(new Error("hostname changed during lookup"));
+      return;
+    }
+    cb(null, target.address, target.family);
+  }) as LookupFunction;
 }
 
 function normalizeContentType(raw: string | string[] | undefined) {
@@ -94,17 +121,22 @@ function normalizeContentType(raw: string | string[] | undefined) {
 
 async function fetchImage(fetchUrl: string, redirects = 0): Promise<{ buffer: Buffer; contentType: string }> {
   if (redirects > MAX_REDIRECTS) throw new Error("too many redirects");
-  const safeUrl = await assertSafeImageUrl(fetchUrl);
-  const mod = safeUrl.startsWith("https://") ? https : http;
+  const target = await assertSafeImageUrl(fetchUrl);
+  const mod = target.url.protocol === "https:" ? https : http;
 
   return new Promise((resolve, reject) => {
-    const req = mod.get(safeUrl, {
-      agent: proxyAgent,
-      headers: { "User-Agent": "Mozilla/5.0", Accept: "image/*" },
+    const req = mod.get(target.url, {
+      lookup: pinnedLookup(target),
+      servername: target.url.hostname,
+      headers: {
+        Host: target.url.host,
+        "User-Agent": "Mozilla/5.0",
+        Accept: "image/*",
+      },
     }, (res) => {
       if (res.statusCode && res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {
         res.resume();
-        const next = new URL(res.headers.location, safeUrl).toString();
+        const next = new URL(res.headers.location, target.url).toString();
         fetchImage(next, redirects + 1).then(resolve, reject);
         return;
       }
@@ -179,6 +211,7 @@ export async function GET(request: Request) {
       headers: {
         "Content-Type": contentType,
         "Cache-Control": "public, max-age=86400",
+        "X-Content-Type-Options": "nosniff",
       },
     });
   } catch {

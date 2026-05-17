@@ -10,6 +10,7 @@ import type { BriefingCategory } from "../types";
 
 const proxyUrl = process.env.HTTPS_PROXY || process.env.HTTP_PROXY;
 const proxyAgent = proxyUrl ? new HttpsProxyAgent(proxyUrl) : undefined;
+const MAX_FEED_BYTES = 3 * 1024 * 1024;
 
 const parser = new Parser({
   timeout: 15000,
@@ -49,8 +50,23 @@ function fetchFeedXml(feedUrl: string, redirectCount = 0): Promise<string> {
           reject(new Error(`HTTP ${res.statusCode}`));
           return;
         }
+        const contentLength = Number(res.headers["content-length"] ?? "0");
+        if (Number.isFinite(contentLength) && contentLength > MAX_FEED_BYTES) {
+          res.resume();
+          reject(new Error("feed too large"));
+          return;
+        }
         const chunks: Buffer[] = [];
-        res.on("data", (chunk) => chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk)));
+        let received = 0;
+        res.on("data", (chunk) => {
+          const buffer = Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk);
+          received += buffer.length;
+          if (received > MAX_FEED_BYTES) {
+            req.destroy(new Error("feed too large"));
+            return;
+          }
+          chunks.push(buffer);
+        });
         res.on("end", () => resolve(Buffer.concat(chunks).toString("utf-8")));
         res.on("error", reject);
       },

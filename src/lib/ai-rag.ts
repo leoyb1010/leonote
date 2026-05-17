@@ -14,6 +14,7 @@ const STOP_WORDS = new Set([
   "最近",
   "关于",
 ]);
+const GLOBAL_CONTEXT_BUDGET = 22_000;
 
 export type GlobalContextNote = {
   id: string;
@@ -71,16 +72,20 @@ function noteBlock(note: {
   excerpt: string;
   content: string;
   updatedAt: Date;
-}) {
+}, maxContent = 2400) {
   return [
     `=== USER_NOTE_BEGIN id=${note.id} updatedAt=${note.updatedAt.toISOString()} ===`,
-    `标题：${note.title}`,
-    note.excerpt ? `摘要：${note.excerpt}` : "",
-    `内容：${trimForContext(note.content)}`,
+    `标题：${trimForContext(note.title, 180)}`,
+    note.excerpt ? `摘要：${trimForContext(note.excerpt, 360)}` : "",
+    `内容：${trimForContext(note.content, maxContent)}`,
     "=== USER_NOTE_END ===",
   ]
     .filter(Boolean)
     .join("\n");
+}
+
+function memoryLine(item: { id: string; type: string; confidence: number; content: string }) {
+  return `- id=${item.id}; type=${item.type}; confidence=${item.confidence}; content=${trimForContext(item.content, 360)}`;
 }
 
 export async function buildGlobalContext(userId: string, question: string) {
@@ -137,20 +142,31 @@ export async function buildGlobalContext(userId: string, question: string) {
   for (const note of [...matchedNotes, ...recentNotes]) noteMap.set(note.id, note);
   const notes = [...noteMap.values()].slice(0, isBrowseAll ? 50 : 20);
 
+  const noteBlocks: string[] = [];
+  const includedNotes: typeof notes = [];
+  let remaining = GLOBAL_CONTEXT_BUDGET;
+  for (const note of notes) {
+    const block = noteBlock(note, isBrowseAll ? 900 : 1800);
+    if (block.length > remaining && noteBlocks.length > 0) break;
+    noteBlocks.push(block.length > remaining ? block.slice(0, Math.max(1000, remaining)) : block);
+    includedNotes.push(note);
+    remaining -= block.length;
+  }
+
   const promptContext = [
     "用户笔记上下文：",
-    notes.length > 0 ? notes.map(noteBlock).join("\n\n") : "（没有检索到相关笔记）",
+    noteBlocks.length > 0 ? noteBlocks.join("\n\n") : "（没有检索到相关笔记）",
     "",
     "长期记忆：",
     memories.length > 0
       ? memories
-          .map((item) => `- id=${item.id}; type=${item.type}; confidence=${item.confidence}; content=${item.content}`)
+          .map(memoryLine)
           .join("\n")
       : "（没有可用长期记忆）",
   ].join("\n");
 
   return {
-    notesUsed: notes.map((note): GlobalContextNote => ({
+    notesUsed: includedNotes.map((note): GlobalContextNote => ({
       id: note.id,
       title: note.title,
       excerpt: note.excerpt,

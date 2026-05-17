@@ -92,3 +92,14 @@ export function guardUserWriteRequest(
     rejectUserWriteBurst(userId, scope, options?.limit, options?.windowMs)
   );
 }
+
+export function getClientRateLimitKey(headersList: Headers) {
+  if (process.env.LEONOTE_TRUST_PROXY_HEADERS === "true") {
+    const forwardedFor = headersList.get("x-forwarded-for")?.split(",")[0]?.trim();
+    const realIp = headersList.get("x-real-ip")?.trim();
+    const cfIp = headersList.get("cf-connecting-ip")?.trim();
+    return forwardedFor || realIp || cfIp || "trusted-proxy-unknown";
+  }
+
+  return "direct";
+}

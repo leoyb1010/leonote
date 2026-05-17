@@ -1,8 +1,21 @@
 import { NextRequest, NextResponse } from "next/server";
+import { z } from "zod";
 import { getSessionUserId } from "@/lib/session";
 import { requireAISettings, callChatText } from "@/lib/ai";
 import { guardUserWriteRequest } from "@/lib/request-guard";
 import { buildGlobalContext } from "@/lib/ai-rag";
+
+const pageContextSchema = z.object({
+  pathname: z.string().max(240).optional(),
+  title: z.string().max(240).optional(),
+  selectedText: z.string().max(1600).optional(),
+  visibleText: z.string().max(2400).optional(),
+}).partial().nullish();
+
+const requestSchema = z.object({
+  question: z.string().trim().min(1).max(1200),
+  pageContext: pageContextSchema,
+});
 
 export async function POST(request: NextRequest) {
   let userId: string | null = null;
@@ -15,16 +28,17 @@ export async function POST(request: NextRequest) {
     if (guarded) return guarded;
 
     await requireAISettings(userId);
-    const { question, pageContext } = await request.json();
+    const parsed = requestSchema.safeParse(await request.json());
 
-    if (!question || typeof question !== "string" || question.trim().length === 0) {
+    if (!parsed.success) {
       return NextResponse.json({ message: "请输入问题" }, { status: 400 });
     }
 
+    const { question, pageContext } = parsed.data;
     const safePageContext = pageContext && typeof pageContext === "object"
       ? [
-          `路径：${typeof pageContext.pathname === "string" ? pageContext.pathname.slice(0, 120) : ""}`,
-          `页面标题：${typeof pageContext.title === "string" ? pageContext.title.slice(0, 160) : ""}`,
+          `路径：${pageContext.pathname?.slice(0, 120) ?? ""}`,
+          `页面标题：${pageContext.title?.slice(0, 160) ?? ""}`,
           typeof pageContext.selectedText === "string" && pageContext.selectedText.trim()
             ? `用户选中文本：${pageContext.selectedText.slice(0, 1200)}`
             : "",
@@ -33,7 +47,7 @@ export async function POST(request: NextRequest) {
             : "",
         ].filter(Boolean).join("\n")
       : "";
-    const retrievalQuestion = `${question.trim()}\n${safePageContext}`;
+    const retrievalQuestion = `${question}\n${safePageContext}`;
     const { notesUsed, promptContext } = await buildGlobalContext(userId, retrievalQuestion);
 
     const answer = await callChatText({
@@ -57,7 +71,7 @@ export async function POST(request: NextRequest) {
         "当前页面上下文：",
         safePageContext || "（无）",
         "",
-        `用户问题：${question.trim()}`,
+        `用户问题：${question}`,
       ].join("\n"),
     });
 

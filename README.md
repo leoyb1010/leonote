@@ -25,7 +25,7 @@
 </p>
 
 <p>
-  <img alt="Version" src="https://img.shields.io/badge/Version-v1.6.17-7B84F6?style=for-the-badge">
+  <img alt="Version" src="https://img.shields.io/badge/Version-v1.6.18-7B84F6?style=for-the-badge">
   <img alt="License" src="https://img.shields.io/badge/License-Personal%20Use%20Only-F26D6D?style=for-the-badge">
   <img alt="Next.js" src="https://img.shields.io/badge/Next.js-16-111111?style=for-the-badge&logo=nextdotjs">
   <img alt="Tauri" src="https://img.shields.io/badge/Tauri-2-24C8DB?style=for-the-badge&logo=tauri">
@@ -58,7 +58,7 @@
 </p>
 
 <p align="center">
-  <sub>截图随 v1.6.17 Quiet Material 文档维护，覆盖桌面端、笔记编辑与移动端简报。</sub>
+  <sub>截图随 v1.6.18 Quiet Material 文档维护，覆盖桌面端、笔记编辑与移动端简报。</sub>
 </p>
 
 ## 核心模块
@@ -145,6 +145,9 @@ LEONOTE_PUBLIC_URL="https://leonote.example.com"
 # 是否允许新用户注册（首个用户始终可注册）
 LEONOTE_ALLOW_REGISTRATION="false"
 
+# 仅当前置反代会安全覆盖 X-Forwarded-For / X-Real-IP 时开启
+LEONOTE_TRUST_PROXY_HEADERS="false"
+
 # AI 配置（可选，使用 DeepSeek 兼容接口）
 AI_BASE_URL="https://api.deepseek.com"
 AI_MODEL="deepseek-v4-flash"
@@ -180,7 +183,7 @@ RSSHUB_BASE_URL="https://rsshub.app"
 - 设置页「记账类型」入口
 - 完全软删除 + 删除类型后历史账单保留
 
-### 每日简报 (v1.6.17)
+### 每日简报 (v1.6.18)
 - Hero 头部压缩：修复“每日简报”标题下方大面积空白，取消右侧高卡片撑开布局；日期、天气、星座、标题、操作、指标、标签与市场温度统一为紧凑日报头
 - 市场温度胶囊：金融行情从 Sidebar 大卡改为日期天气下方的横向胶囊，保留中国市场颜色习惯：红色上涨、绿色下跌，并可直接刷新
 - 大事件雷达分桶：新增国际大事、国内大事、市场定价、AI 科技、科技产业分桶与多源去重，不再让 AI 科技源独占“大事件”；同一来源过量时自动限流，让国内外实时大事件能进入首屏
@@ -338,6 +341,7 @@ npm run ci           # 全链路：lint → typecheck → test → build
 
 | 版本 | 日期 | 更新内容 |
 |---|---|---|
+| **v1.6.18** | 2026-05-17 | 全面安全与可靠性修复：图片代理改为 DNS 校验后钉住解析 IP 发起请求，重定向重新校验，降低 DNS rebinding SSRF 风险；附件上传/下载统一清洗 MIME，HTML/SVG/脚本/XML 等主动内容强制 `application/octet-stream` 并下载，响应增加 `nosniff` 与 `CSP sandbox`；全局 AI 与笔记 AI 增加问题长度、页面上下文、笔记正文和长期记忆预算，明确把笔记内容作为资料而非指令；RSS 抓取增加 3MB 响应体上限，避免异常源占满内存；星座实时源失败不再把空结果缓存一整天，部分成功只短缓存 10 分钟；登录/注册限流默认不信任可伪造代理头，新增 `LEONOTE_TRUST_PROXY_HEADERS` 供可信反代部署开启；补充附件与代理限流单元测试 |
 | **v1.6.17** | 2026-05-15 | 修复社区论坛噪音进入每日简报：`LinuxDo 最新`、V2EX、微博/知乎/B站/掘金等社区源中带有“求助、请教、大佬、延迟、报错、帖子/参与者”等明显讨论帖特征且缺少发布、政策、融资、漏洞、财报等高影响信号的内容，会在抓取、查询、Digest 和大事件雷达四层过滤；旧数据中已有的类似“Claude 延迟求助”也不会继续进入首页和大事件雷达。同步清理 X 监控模块残留文档、环境变量和测试 |
 | **v1.6.16** | 2026-05-15 | 每日简报小幅修正：市场温度固定按“上证、深证、美股、港股、美元/人民币、黄金、虚拟币、石油”排序展示，并补入原油行情源；大事件雷达改为稳定配额，优先保留 1-2 条国际大事、1-2 条国内大事、3-5 条 AI/科技圈事件，避免任一类别刷屏；X 监控改为镜像源优先，默认使用已验证可抓取 OpenAI / Anthropic / DeepMind / Sam Altman / NVIDIA / Karpathy / GitHub RSS 的 `nitter.net`，并自动跳过 XCancel 白名单占位页与 RSSHub 503 页面；简报组件可见英文标签改为简体中文，“思考一/二”命名统一，大事件雷达显示完整 8 个入口；新增回归测试覆盖雷达配额 |
 | **v1.6.15** | 2026-05-15 | 修复每日简报 Hero 大面积空白：取消右侧高卡撑开结构，改成紧凑日报头；市场温度从 Sidebar 大卡移动到日期天气下方胶囊，保留红涨绿跌与刷新按钮；大事件雷达改为国际/国内/市场/AI 科技/科技产业/X 信号分桶与来源限流，避免全部被 AI 科技资讯占满；“今天值得继续想”改为右侧可点击思考面板并恢复详情气泡；X 信号新增 XCancel / RSSHub 镜像兜底，未配置官方 X Token 时也会尝试 `rss.xcancel.com`、`xcancel.com` 与多个 RSSHub 镜像 |
