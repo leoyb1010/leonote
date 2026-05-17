@@ -39,7 +39,7 @@ export async function GET(request: Request) {
     getBriefingData(userId, { range, category }),
     getLiveMarketSnapshots(),
     getWeather().catch(() => null),
-    getDailyHoroscopes().catch(() => []),
+    getDailyHoroscopes(forceRefresh).catch(() => []),
     getBriefingMeta(),
   ]);
   const thinkingInsights = await getBriefingThinkingInsights(userId, items);

@@ -28,7 +28,6 @@ type HoroscopeRssItem = {
 type ThemeKey = "money" | "work" | "relationship" | "home" | "energy" | "learning";
 
 const FEED_TIMEOUT_MS = 12_000;
-const MAX_SOURCE_AGE_DAYS = 3;
 const PARTIAL_CACHE_TTL_MS = 10 * 60 * 1000;
 let cachedHoroscopes: HoroscopeDTO[] | null = null;
 let cachedDay: string | null = null;
@@ -128,6 +127,8 @@ const DEFAULT_SOURCE_THEMES: Record<HoroscopeDTO["signKey"], ThemeKey[]> = {
   gemini: ["learning", "work", "relationship", "energy"],
 };
 
+export type HoroscopeSummaryProfile = Pick<HoroscopeProfile, "id" | "signKey">;
+
 type FreeHoroscopeApiResponse = {
   data?: {
     date?: string;
@@ -144,6 +145,14 @@ function shanghaiDayKey(now = new Date()) {
     month: "2-digit",
     day: "2-digit",
   }).format(now);
+}
+
+function shanghaiDateLabel(date: Date) {
+  return new Intl.DateTimeFormat("zh-CN", {
+    timeZone: "Asia/Shanghai",
+    month: "long",
+    day: "numeric",
+  }).format(date);
 }
 
 function seededIndex(seed: string, length: number, offset = 0) {
@@ -188,10 +197,9 @@ function parseSourceDay(input: string | undefined) {
   return parseSourceDate(input);
 }
 
-function isFreshDate(date: Date | null) {
+function isCurrentSourceDate(date: Date | null): date is Date {
   if (!date) return false;
-  const ageMs = Math.abs(Date.now() - date.getTime());
-  return ageMs <= MAX_SOURCE_AGE_DAYS * 24 * 60 * 60 * 1000;
+  return shanghaiDayKey(date) === shanghaiDayKey();
 }
 
 function unescapeJsString(input: string) {
@@ -231,7 +239,7 @@ function extractAstrologyComPayload(html: string) {
   return { text, sourceDate };
 }
 
-function detectThemes(text: string, profile: HoroscopeProfile) {
+function detectThemes(text: string, profile: HoroscopeSummaryProfile) {
   const themes = (Object.entries(THEME_PATTERNS) as Array<[ThemeKey, RegExp]>)
     .map(([theme, pattern]) => ({
       theme,
@@ -245,14 +253,72 @@ function detectThemes(text: string, profile: HoroscopeProfile) {
   return DEFAULT_SOURCE_THEMES[profile.signKey];
 }
 
-function buildChineseSummary(text: string, profile: HoroscopeProfile) {
-  const themes = detectThemes(text, profile).slice(0, 2);
-  const seed = stableExternalId(`${shanghaiDayKey()}-${profile.id}-${text.slice(0, 220)}`);
-  const sentences = themes.map((theme, index) => {
-    const pool = THEME_SENTENCES[theme];
-    return pool[seededIndex(seed, pool.length, index * 6)];
-  });
-  return sanitizeBriefingText(sentences.join(""), 150);
+type SignalRule = {
+  key: string;
+  match: RegExp;
+  sentence: string;
+};
+
+const SOURCE_SIGNAL_RULES: SignalRule[] = [
+  {
+    key: "relationship-talk",
+    match: /relationship|relationships|communication|conversation|communicat|partner|friends|friend|listening|compromise|harmony|love|admirer|dating/i,
+    sentence: "关系与沟通是主线，表达前先听清对方立场，分歧里先找可接受的共识",
+  },
+  {
+    key: "priorities-plan",
+    match: /priorit|priority|priorities|plan|goals?|achieve|organized|routine|focus|one thing at a time/i,
+    sentence: "适合重新排优先级，把目标、计划和日常节奏整理清楚后再推进",
+  },
+  {
+    key: "restless-new",
+    match: /restless|new hobby|activity|try something new|adventure|whimsy|invitation|trip|special group|fun/i,
+    sentence: "好奇心和新鲜感会被放大，可以尝试新活动，但别让兴奋打乱节奏",
+  },
+  {
+    key: "unexpected-news",
+    match: /unexpected news|surprise visit|think on your feet|prepared|offer/i,
+    sentence: "可能出现临时消息或意外邀约，先稳住节奏，再快速判断要不要接住",
+  },
+  {
+    key: "clarity-confidence",
+    match: /clarity|confidence|truth|analytical|fog|clear|sunny|reliable|understood|appreciated/i,
+    sentence: "判断力和安全感需要校准，别只靠猜测，先把事实和感受分开看",
+  },
+  {
+    key: "emotion-home",
+    match: /emotion|feelings|home|family|domestic|relaxation|safe relationships|self-reflection|change/i,
+    sentence: "情绪和家庭关系值得放慢处理，透明表达比憋着更容易带来修复",
+  },
+  {
+    key: "writing-learning",
+    match: /words|writing|letter|profile|educational|learn|spiritually|views|ideas|express/i,
+    sentence: "表达、学习和文字相关的行动更顺手，适合把想法说清楚或写下来",
+  },
+];
+
+export function buildSourceDrivenChineseSummary(text: string, profile: HoroscopeSummaryProfile, sourceDate: Date | null) {
+  const clean = sanitizeBriefingText(text, 720);
+  const matched: string[] = [];
+  const used = new Set<string>();
+  for (const rule of SOURCE_SIGNAL_RULES) {
+    if (!rule.match.test(clean) || used.has(rule.key)) continue;
+    used.add(rule.key);
+    matched.push(rule.sentence);
+    if (matched.length >= 2) break;
+  }
+
+  if (matched.length === 0) {
+    const themes = detectThemes(clean, profile).slice(0, 2);
+    const seed = stableExternalId(`${shanghaiDayKey()}-${profile.id}-${clean.slice(0, 220)}`);
+    matched.push(...themes.map((theme, index) => {
+      const pool = THEME_SENTENCES[theme];
+      return pool[seededIndex(seed, pool.length, index * 6)];
+    }));
+  }
+
+  const datePrefix = sourceDate ? `${shanghaiDateLabel(sourceDate)}重点：` : "今日重点：";
+  return sanitizeBriefingText(`${datePrefix}${matched.join("；")}。`, 180);
 }
 
 function hasReadableChinese(text: string) {
@@ -263,7 +329,7 @@ function canAttemptAiTranslation() {
   return Boolean(process.env.AI_API_KEY || process.env.OPENAI_API_KEY || process.env.DATABASE_URL);
 }
 
-async function toChineseDisplaySummary(text: string, profile: HoroscopeProfile) {
+async function toChineseDisplaySummary(text: string, profile: HoroscopeProfile, sourceDate: Date | null) {
   const clean = sanitizeBriefingText(text, 720);
   if (!clean) return "";
   if (!needsTranslation(clean) && hasReadableChinese(clean)) return sanitizeBriefingText(clean, 150);
@@ -274,7 +340,7 @@ async function toChineseDisplaySummary(text: string, profile: HoroscopeProfile) 
     if (hasReadableChinese(translatedClean)) return translatedClean;
   }
 
-  return buildChineseSummary(clean, profile);
+  return buildSourceDrivenChineseSummary(clean, profile, sourceDate);
 }
 
 async function fetchWithTimeout(url: string, accept: string) {
@@ -311,8 +377,8 @@ async function fetchFreeHoroscopeApi(profile: HoroscopeProfile): Promise<Horosco
   }
   const text = sanitizeBriefingText(json.data?.horoscope || "", 720);
   const sourceDate = parseSourceDay(json.data?.date);
-  if (!text || !isFreshDate(sourceDate)) return null;
-  const summary = await toChineseDisplaySummary(text, profile);
+  if (!text || !isCurrentSourceDate(sourceDate)) return null;
+  const summary = await toChineseDisplaySummary(text, profile, sourceDate);
   if (!summary) return null;
   return {
     id: profile.id,
@@ -324,6 +390,7 @@ async function fetchFreeHoroscopeApi(profile: HoroscopeProfile): Promise<Horosco
     summary,
     sourceName: "FreeHoroscopeAPI",
     sourceUrl: "https://freehoroscopeapi.com/",
+    sourceDate: sourceDate.toISOString(),
     updatedAt: new Date().toISOString(),
     isFallback: false,
   };
@@ -332,8 +399,8 @@ async function fetchFreeHoroscopeApi(profile: HoroscopeProfile): Promise<Horosco
 async function fetchHoroscopeCom(profile: HoroscopeProfile): Promise<HoroscopeDTO | null> {
   const html = await fetchWithTimeout(profile.webUrl, "text/html,application/xhtml+xml;q=0.9,*/*;q=0.8");
   const { text, sourceDate } = extractHoroscopeComPayload(html);
-  if (!text || !isFreshDate(sourceDate)) return null;
-  const summary = await toChineseDisplaySummary(text, profile);
+  if (!text || !isCurrentSourceDate(sourceDate)) return null;
+  const summary = await toChineseDisplaySummary(text, profile, sourceDate);
   if (!summary) return null;
   return {
     id: profile.id,
@@ -345,6 +412,7 @@ async function fetchHoroscopeCom(profile: HoroscopeProfile): Promise<HoroscopeDT
     summary,
     sourceName: "Horoscope.com",
     sourceUrl: profile.webUrl,
+    sourceDate: sourceDate.toISOString(),
     updatedAt: new Date().toISOString(),
     isFallback: false,
   };
@@ -353,8 +421,8 @@ async function fetchHoroscopeCom(profile: HoroscopeProfile): Promise<HoroscopeDT
 async function fetchAstrologyCom(profile: HoroscopeProfile): Promise<HoroscopeDTO | null> {
   const html = await fetchWithTimeout(profile.astrologyUrl, "text/html,application/xhtml+xml;q=0.9,*/*;q=0.8");
   const { text, sourceDate } = extractAstrologyComPayload(html);
-  if (!text || !isFreshDate(sourceDate)) return null;
-  const summary = await toChineseDisplaySummary(text, profile);
+  if (!text || !isCurrentSourceDate(sourceDate)) return null;
+  const summary = await toChineseDisplaySummary(text, profile, sourceDate);
   if (!summary) return null;
   return {
     id: profile.id,
@@ -366,6 +434,7 @@ async function fetchAstrologyCom(profile: HoroscopeProfile): Promise<HoroscopeDT
     summary,
     sourceName: "Astrology.com",
     sourceUrl: profile.astrologyUrl,
+    sourceDate: sourceDate.toISOString(),
     updatedAt: new Date().toISOString(),
     isFallback: false,
   };
@@ -376,10 +445,10 @@ async function fetchAstroSage(profile: HoroscopeProfile): Promise<HoroscopeDTO |
   const item = feed.items[0];
   if (!item) return null;
   const sourceDate = parseSourceDate(item.isoDate || item.pubDate);
-  if (!isFreshDate(sourceDate)) return null;
+  if (!isCurrentSourceDate(sourceDate)) return null;
   const rawText = item.content || item.contentSnippet || item.summary || item.title || "";
   const cleanText = sanitizeBriefingText(rawText, 720);
-  const summary = await toChineseDisplaySummary(cleanText, profile);
+  const summary = await toChineseDisplaySummary(cleanText, profile, sourceDate);
   if (!summary) return null;
   return {
     id: profile.id,
@@ -391,6 +460,7 @@ async function fetchAstroSage(profile: HoroscopeProfile): Promise<HoroscopeDTO |
     summary,
     sourceName: "AstroSage RSS",
     sourceUrl: item.link || profile.feedUrl,
+    sourceDate: sourceDate.toISOString(),
     updatedAt: new Date().toISOString(),
     isFallback: false,
   };

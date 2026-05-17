@@ -25,7 +25,7 @@
 </p>
 
 <p>
-  <img alt="Version" src="https://img.shields.io/badge/Version-v1.6.18-7B84F6?style=for-the-badge">
+  <img alt="Version" src="https://img.shields.io/badge/Version-v1.6.19-7B84F6?style=for-the-badge">
   <img alt="License" src="https://img.shields.io/badge/License-Personal%20Use%20Only-F26D6D?style=for-the-badge">
   <img alt="Next.js" src="https://img.shields.io/badge/Next.js-16-111111?style=for-the-badge&logo=nextdotjs">
   <img alt="Tauri" src="https://img.shields.io/badge/Tauri-2-24C8DB?style=for-the-badge&logo=tauri">
@@ -58,7 +58,7 @@
 </p>
 
 <p align="center">
-  <sub>Screenshots are maintained for the current v1.6.18 Quiet Material UI across desktop, note editing, and mobile briefing layouts.</sub>
+  <sub>Screenshots are maintained for the current v1.6.19 Quiet Material UI across desktop, note editing, and mobile briefing layouts.</sub>
 </p>
 
 ## Overview
@@ -159,10 +159,12 @@ RSSHUB_BASE_URL="https://rsshub.app"
 
 ## Version
 
-Current version: **v1.6.18**
+Current version: **v1.6.19**
 
 Recent release focus:
 
+- Daily horoscope refresh now forces the horoscope pipeline, accepts only Asia/Shanghai same-day source dates, and shows the source horoscope date in the UI.
+- Source-driven Simplified Chinese horoscope summaries now change with the live horoscope text even when no AI key is configured.
 - Security and reliability hardening for image proxy SSRF protection, attachment MIME handling, AI prompt budgets, RSS body limits, horoscope cache freshness, and trusted-proxy rate limiting.
 - Compact Daily Briefing hero with no large blank area under the title.
 - Market temperature follows the requested order: SSE, SZSE, US stocks, Hong Kong stocks, USD/CNY, gold, crypto, and oil.

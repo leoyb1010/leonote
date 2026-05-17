@@ -108,6 +108,7 @@ export interface HoroscopeDTO {
   summary: string;
   sourceName: string;
   sourceUrl: string;
+  sourceDate: string;
   updatedAt: string;
   isFallback: boolean;
 }

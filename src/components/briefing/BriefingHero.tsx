@@ -130,6 +130,12 @@ function HoroscopeDetailBubble({
                 <span className="tabular">更新 {formatHoroscopeTime(horoscope.updatedAt)}</span>
               </>
             ) : null}
+            {horoscope.sourceDate ? (
+              <>
+                <span>·</span>
+                <span>运势日 {formatHoroscopeDate(horoscope.sourceDate)}</span>
+              </>
+            ) : null}
           </div>
           {horoscope.isFallback ? (
             <p className="mt-2 text-[11px] text-[var(--text-muted)]">此为兜底内容，实时源稍后刷新。</p>
@@ -160,6 +166,13 @@ function formatHoroscopeTime(input: string | null | undefined) {
   const date = new Date(input);
   if (!Number.isFinite(date.getTime())) return "等待同步";
   return date.toLocaleTimeString("zh-CN", { hour: "2-digit", minute: "2-digit" });
+}
+
+function formatHoroscopeDate(input: string | null | undefined) {
+  if (!input) return "等待同步";
+  const date = new Date(input);
+  if (!Number.isFinite(date.getTime())) return "等待同步";
+  return date.toLocaleDateString("zh-CN", { timeZone: "Asia/Shanghai", month: "long", day: "numeric" });
 }
 
 function HoroscopeStrip({ horoscopes, onSelect }: { horoscopes: HoroscopeDTO[]; onSelect: (horoscope: HoroscopeDTO, anchor: DetailAnchor) => void }) {
@@ -220,7 +233,10 @@ function HoroscopeStrip({ horoscopes, onSelect }: { horoscopes: HoroscopeDTO[]; 
         )}
       </div>
       <div className="mt-2 flex min-w-0 items-center justify-between gap-2 text-[11px] leading-5 text-[var(--text-muted)]">
-        <span className="min-w-0 truncate">来源：{sourceLabel}</span>
+        <span className="min-w-0 truncate">
+          来源：{sourceLabel}
+          {horoscopes[0]?.sourceDate ? ` · 运势日 ${formatHoroscopeDate(horoscopes[0].sourceDate)}` : ""}
+        </span>
       </div>
     </div>
   );
