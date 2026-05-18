@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
-import { Boxes, FilePlus2, FolderPlus, Library, Newspaper, Plus, Sparkles, Sun, WalletCards } from "lucide-react";
+import { Boxes, CalendarClock, FilePlus2, FolderPlus, Library, Newspaper, Plus, Sun, WalletCards } from "lucide-react";
 
 interface BottomNavProps {
   currentPath: string;
@@ -12,13 +12,14 @@ interface BottomNavProps {
 const navItems = [
   { id: "briefing", label: "简报", icon: Newspaper, href: "/briefing" },
   { id: "today", label: "今天", icon: Sun, href: "/" },
-  { id: "new", label: "", icon: Plus, href: "/notes/new", isAction: true },
+  { id: "schedule", label: "日程", icon: CalendarClock, href: "/schedule" },
   { id: "notes", label: "笔记库", icon: Library, href: "/notes" },
-  { id: "ai", label: "AI", icon: Sparkles, href: "/ai" },
+  { id: "new", label: "", icon: Plus, href: "/notes/new", isAction: true },
 ];
 
 const createItems = [
   { label: "新笔记", href: "/notes/new", icon: FilePlus2 },
+  { label: "新日程", href: "/schedule", icon: CalendarClock },
   { label: "装备入库", href: "/ledger", icon: Boxes },
   { label: "记一笔", href: "/ledger", icon: WalletCards },
   { label: "新项目", href: "/projects", icon: FolderPlus },

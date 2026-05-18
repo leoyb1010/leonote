@@ -25,7 +25,7 @@
 </p>
 
 <p>
-  <img alt="Version" src="https://img.shields.io/badge/Version-v1.7.0-7B84F6?style=for-the-badge">
+  <img alt="Version" src="https://img.shields.io/badge/Version-v1.8.0-7B84F6?style=for-the-badge">
   <img alt="License" src="https://img.shields.io/badge/License-Personal%20Use%20Only-F26D6D?style=for-the-badge">
   <img alt="Next.js" src="https://img.shields.io/badge/Next.js-16-111111?style=for-the-badge&logo=nextdotjs">
   <img alt="Tauri" src="https://img.shields.io/badge/Tauri-2-24C8DB?style=for-the-badge&logo=tauri">
@@ -58,7 +58,7 @@
 </p>
 
 <p align="center">
-  <sub>Screenshots are maintained for the current v1.7.0 Quiet Material UI across desktop, note editing, and mobile briefing layouts.</sub>
+  <sub>Screenshots are maintained for the current v1.8.0 Quiet Material UI across desktop, note editing, mobile briefing, and schedule workspace layouts.</sub>
 </p>
 
 ## Overview
@@ -159,15 +159,15 @@ RSSHUB_BASE_URL="https://rsshub.app"
 
 ## Version
 
-Current version: **v1.7.0**
+Current version: **v1.8.0**
 
 Recent release focus:
 
-- `/ledger` now opens as a two-mode Gear Library + Ledger page. The gear library supports quick natural-language capture, product-link metadata preview, item details, status/location/warranty/serial fields, and optional linked expenses.
-- The original ledger flow remains available in the same page for quick expense capture, categories, weekly/monthly summaries, and soft deletion.
-- The PWA service worker now bypasses Next.js RSC and App Router navigation requests, fixing stale-cache failures that could show “This page couldn’t load” after clicking Ledger.
-- The mobile Daily Briefing layout is reorganized around Radar, Featured, Thinking, and News sections, with tighter 320px / 390px responsive behavior.
-- Horoscope source freshness is now explicit: Asia/Shanghai same-day sources are valid, western sources dated yesterday are allowed only from 00:00 through 07:59 Shanghai time, and yesterday is rejected from 08:00 onward.
+- New personal schedule module with Today / Week timelines, event creation, done/restore/delete actions, color markers, and note/project/gear links.
+- The Today page now surfaces schedule blocks, and project cards show upcoming linked schedule events.
+- The Cal-like workspace visual system is expanded across navigation, page headers, dashboard metrics, object-library lists, and quick action areas.
+- Dashboard containers now use wider desktop breakpoints so web layouts feel fuller instead of leaving large side gutters.
+- Gear Library, Notes, Projects, Briefing, and Schedule share clearer object-workbench language and icon semantics.
 
 For the full Chinese changelog, see [README.md](README.md#版本记录).
 

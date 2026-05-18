@@ -8,6 +8,7 @@ import {
   Newspaper,
   Sun,
   Library,
+  CalendarClock,
   FolderKanban,
   Sparkles,
   Settings,
@@ -29,6 +30,7 @@ const navItems: NavItem[] = [
   { id: "today", label: "今天", icon: <Sun size={20} />, href: "/" },
   { id: "notes", label: "笔记库", icon: <Library size={20} />, href: "/notes" },
   { id: "projects", label: "项目", icon: <FolderKanban size={20} />, href: "/projects" },
+  { id: "schedule", label: "日程", icon: <CalendarClock size={20} />, href: "/schedule" },
   { id: "ledger", label: "装备库", icon: <Boxes size={20} />, href: "/ledger" },
   { id: "ai", label: "AI", icon: <Sparkles size={20} />, href: "/ai" },
 ];

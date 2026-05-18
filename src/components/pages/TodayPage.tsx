@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { BookOpenText, Boxes, FilePlus2, FolderPlus, Gauge, History, Library, Newspaper, PenLine, Search, Sparkles, Sun, WalletCards } from "lucide-react";
+import { BookOpenText, Boxes, CalendarClock, FilePlus2, FolderPlus, Gauge, History, Library, Newspaper, PenLine, Search, Sparkles, Sun, WalletCards } from "lucide-react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { NoteRow } from "@/components/notes/NoteRow";
@@ -52,6 +52,20 @@ interface WeeklyExpense {
   }>;
 }
 
+interface HomeSchedule {
+  today: number;
+  week: number;
+  overdue: number;
+  todayEvents: Array<{
+    id: string;
+    title: string;
+    startAt: string;
+    endAt: string;
+    status: string;
+    statusLabel: string;
+  }>;
+}
+
 interface TodayPageProps {
   data: {
     counts: { total: number; favorite: number; pinned: number };
@@ -62,6 +76,7 @@ interface TodayPageProps {
     weeklySettling: WeeklySettling;
     recentlyViewed: RecentlyViewedItem[];
     weeklyExpense: WeeklyExpense;
+    schedule: HomeSchedule;
   } | null;
   signedIn: boolean;
 }
@@ -229,6 +244,12 @@ function QuickLink({
   );
 }
 
+function timeLabel(value: string) {
+  const date = new Date(value);
+  if (!Number.isFinite(date.getTime())) return "--:--";
+  return date.toLocaleTimeString("zh-CN", { hour: "2-digit", minute: "2-digit" });
+}
+
 export function TodayPage({ data, signedIn }: TodayPageProps) {
   const [recent, setRecent] = useState(data?.recent ?? []);
   const [counts, setCounts] = useState(data?.counts ?? { total: 0, favorite: 0, pinned: 0 });
@@ -278,7 +299,7 @@ export function TodayPage({ data, signedIn }: TodayPageProps) {
     );
   }
 
-  const { tags, projects, memoryFlashback, weeklySettling, weeklyExpense, recentlyViewed } = data;
+  const { tags, projects, memoryFlashback, weeklySettling, weeklyExpense, recentlyViewed, schedule } = data;
 
   const handleNoteCreated = (note: QuickCaptureNote) => {
     setRecent((prev) => [note, ...prev].slice(0, 5));
@@ -451,18 +472,41 @@ export function TodayPage({ data, signedIn }: TodayPageProps) {
       <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
         <DashboardMetric label="全部笔记" value={String(counts.total)} hint={`${counts.pinned} 篇置顶`} icon={<Library size={15} />} />
         <DashboardMetric label="收藏内容" value={String(counts.favorite)} hint="长期值得回看" icon={<BookOpenText size={15} />} />
-        <DashboardMetric label="本周新增" value={String(weeklySettling.created)} hint={`${weeklySettling.edited} 次编辑`} icon={<Sparkles size={15} />} />
+        <DashboardMetric label="今日日程" value={String(schedule.today)} hint={`${schedule.week} 项本周安排`} icon={<CalendarClock size={15} />} />
         <DashboardMetric label="本周开销" value={formatMoney(weeklyExpense.total)} hint="装备与日常都可追踪" icon={<WalletCards size={15} />} />
       </section>
 
       <section className="grid gap-3 md:grid-cols-4">
         <QuickLink href="/briefing" icon={<Newspaper size={17} />} label="每日简报" hint="雷达、精选、思考" />
         <QuickLink href="/notes" icon={<Search size={17} />} label="笔记库" hint="搜索和对象管理" />
+        <QuickLink href="/schedule" icon={<CalendarClock size={17} />} label="日程" hint="今天和本周时间线" />
         <QuickLink href="/ledger" icon={<Boxes size={17} />} label="装备库" hint="设备、价格、保修" />
-        <QuickLink href="/projects" icon={<FolderPlus size={17} />} label="项目" hint="按主题整理" />
       </section>
 
       <QuickCapture onCreated={handleNoteCreated} />
+
+      <section>
+        <SectionTitle icon={<CalendarClock size={15} />} title="今天安排" href="/schedule" />
+        {schedule.todayEvents.length > 0 ? (
+          <div className="grid gap-2 md:grid-cols-2">
+            {schedule.todayEvents.map((event) => (
+              <Link key={event.id} href="/schedule" className="quiet-inset flex min-h-[64px] items-center gap-3 rounded-[var(--radius-xl)] p-3 transition hover:bg-[var(--material-muted)]">
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[var(--material-elevated)] text-[var(--primary)]">
+                  <CalendarClock size={16} />
+                </span>
+                <span className="min-w-0">
+                  <span className="block truncate text-sm font-medium text-[var(--text-primary)]">{event.title}</span>
+                  <span className="mt-1 block text-xs text-[var(--text-muted)]">{timeLabel(event.startAt)} - {timeLabel(event.endAt)} · {event.statusLabel}</span>
+                </span>
+              </Link>
+            ))}
+          </div>
+        ) : (
+          <Link href="/schedule" className="quiet-inset block rounded-[var(--radius-xl)] px-4 py-5 text-sm text-[var(--text-muted)] transition hover:bg-[var(--material-muted)]">
+            今天还没有安排。可以把接下来要做的笔记、项目或装备事项放进时间线。
+          </Link>
+        )}
+      </section>
 
       {recent.length > 0 && (
         <section>
@@ -527,15 +571,17 @@ export function TodayPage({ data, signedIn }: TodayPageProps) {
   // Empty state
   if (counts.total === 0) {
     return (
-      <div className="min-w-0 space-y-8">
-        {heroSection}
-        <QuickCapture onCreated={handleNoteCreated} />
-        {mobileRail}
-        <div className="text-center py-12">
-          <p className="text-sm text-[var(--text-muted)]">
-            这里还很安静。写下第一条想法，它会成为你的起点。
-          </p>
-        </div>
+      <div className="grid min-w-0 gap-8 2xl:grid-cols-[minmax(0,1fr)_320px]">
+        <main className="min-w-0 space-y-8">
+          {mainContent}
+          <div className="quiet-inset rounded-[var(--radius-2xl)] px-4 py-10 text-center">
+            <p className="text-sm text-[var(--text-muted)]">
+              这里还很安静。写下第一条想法，它会成为你的起点。
+            </p>
+          </div>
+          {mobileRail}
+        </main>
+        {desktopRightRail}
       </div>
     );
   }

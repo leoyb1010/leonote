@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { useMemo, useState } from "react";
-import { FolderKanban, KanbanSquare, MoveRight, Plus } from "lucide-react";
+import { CalendarClock, FolderKanban, KanbanSquare, MoveRight, Plus } from "lucide-react";
 import { GlassPanel } from "@/components/ui/GlassPanel";
 import { NoteCard } from "@/components/notes/NoteCard";
 import { Button, buttonClass } from "@/components/base/Button";
@@ -11,7 +11,16 @@ import { PageHeader } from "@/components/layout/PageHeader";
 import { staggerContainer, staggerItem } from "@/lib/animations";
 
 type PreviewNote = { id: string; title: string; excerpt: string; tags: string[]; favorite?: boolean; pinned?: boolean; archived?: boolean; updatedAt?: string };
-type Project = { id: string; name: string; description: string; noteCount: number; updatedAt?: string; status?: string; previewNotes?: PreviewNote[] };
+type Project = {
+  id: string;
+  name: string;
+  description: string;
+  noteCount: number;
+  updatedAt?: string;
+  status?: string;
+  previewNotes?: PreviewNote[];
+  scheduleEvents?: Array<{ id: string; title: string; startAt: string; endAt: string; status: string }>;
+};
 
 const STATUS_OPTIONS = [{ value: "active", label: "进行中" }, { value: "paused", label: "暂停中" }, { value: "done", label: "已完成" }];
 
@@ -149,6 +158,21 @@ export function ProjectBoard({ initialProjects, signedIn }: { initialProjects: P
                       </div>
                       <p className="mt-3 text-sm text-[var(--text-secondary)] leading-relaxed">{project.description || "暂未填写项目简介。"}</p>
                       {project.updatedAt && <div className="mt-4 text-xs text-[var(--text-muted)]">最近活跃：{new Date(project.updatedAt).toLocaleString("zh-CN")}</div>}
+                      {project.scheduleEvents?.length ? (
+                        <div className="mt-4 rounded-[var(--radius-lg)] border border-[var(--hairline)] bg-[var(--material-inset)] p-3">
+                          <div className="mb-2 flex items-center gap-2 text-xs text-[var(--text-muted)]">
+                            <CalendarClock size={13} />
+                            近期日程
+                          </div>
+                          <div className="space-y-1.5">
+                            {project.scheduleEvents.map((event) => (
+                              <Link key={event.id} href="/schedule" className="block truncate text-xs text-[var(--text-secondary)] hover:text-[var(--primary)]">
+                                {new Date(event.startAt).toLocaleDateString("zh-CN", { month: "2-digit", day: "2-digit" })} · {event.title}
+                              </Link>
+                            ))}
+                          </div>
+                        </div>
+                      ) : null}
                     </div>
                     <div className="mt-5 flex flex-wrap gap-2">
                       <Link href={`/projects/${project.id}`} className={buttonClass("secondary", "sm")}><MoveRight size={14} />看板详情</Link>

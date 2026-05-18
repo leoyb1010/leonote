@@ -25,7 +25,7 @@
 </p>
 
 <p>
-  <img alt="Version" src="https://img.shields.io/badge/Version-v1.7.0-7B84F6?style=for-the-badge">
+  <img alt="Version" src="https://img.shields.io/badge/Version-v1.8.0-7B84F6?style=for-the-badge">
   <img alt="License" src="https://img.shields.io/badge/License-Personal%20Use%20Only-F26D6D?style=for-the-badge">
   <img alt="Next.js" src="https://img.shields.io/badge/Next.js-16-111111?style=for-the-badge&logo=nextdotjs">
   <img alt="Tauri" src="https://img.shields.io/badge/Tauri-2-24C8DB?style=for-the-badge&logo=tauri">
@@ -58,7 +58,7 @@
 </p>
 
 <p align="center">
-  <sub>截图随 v1.7.0 Quiet Material 文档维护，覆盖桌面端、笔记编辑与移动端简报。</sub>
+  <sub>截图随 v1.8.0 Quiet Material 文档维护，覆盖桌面端、笔记编辑、移动端简报与日程工作台。</sub>
 </p>
 
 ## 核心模块
@@ -69,6 +69,7 @@
 | 每日简报 | RSS / Tavily / CoinGecko / 新浪行情聚合，AI 中文摘要、质量评分、标签、市场温度、天气与星座 |
 | AI 协助思考 | 从国内外当日大事件、AI 科技行业与重要公开信息中筛选深度影响事件，形成大事件雷达 + 7 条可继续推演的思考 |
 | 全局 AI 助手 | 从当前页面呼出，自动带入路径、标题、选中文本与页面摘要，适合边读边问、边写边整理 |
+| 日程 | 个人时间线、今日/本周视图、日程关联笔记/项目/装备，让内容进入具体时间块 |
 | 装备库与记账 | 设备/物品型号快速入库，记录价格、渠道、保修、序列号、状态与位置；可同步生成关联支出，并保留快速记账、分类管理、周/月统计、软删除与历史保留 |
 | 自托管与跨端 | SQLite 单文件、Docker / PM2 / Node 部署、PWA、Tauri WebView 壳、Mac / PC / iPad / 手机统一访问 |
 
@@ -174,6 +175,12 @@ RSSHUB_BASE_URL="https://rsshub.app"
 - 记忆闪回：21天前笔记轻提醒
 - 本周沉淀：新增/编辑/回看/长期记忆统计
 - 2xl 大屏右栏布局（主内容+320px侧栏）
+
+### 日程与时间线 (v1.8)
+- 新增个人日程模块：今日 / 本周视图、时间块创建、完成/恢复/删除、颜色标记
+- 日程可关联笔记、项目和装备，首页显示今日安排，项目卡片显示近期关联日程
+- 大屏工作台宽度升级到 1680px 档位，首页、笔记库、项目、装备与日程减少两侧空白，按页面类型提升信息密度
+- Cal-like 工作台视觉：统一 PageHeader、对象库列表、指标卡、快捷入口、图标语义和移动端底部导航
 
 ### 装备库与记账 (v1.7)
 - `/ledger` 默认进入「装备库」模式，原轻记账完整保留在同页「记账」标签下
@@ -345,6 +352,7 @@ npm run ci           # 全链路：lint → typecheck → test → build
 
 | 版本 | 日期 | 更新内容 |
 |---|---|---|
+| **v1.8.0** | 2026-05-18 | 新增个人日程模块 `/schedule` 与 `/api/schedule`：支持今日/本周时间线、创建时间块、完成/恢复/软删除、颜色标记，并可关联笔记、项目和装备；首页接入今日日程，项目卡片显示近期关联日程；设计系统按 Cal-like 工作台方向继续统一，PageContainer 大屏宽度提升到 1680px，导航、PageHeader、首页、笔记库、项目、装备/记账入口统一为更清晰的对象库与工作台语言；补充日程 helper 回归测试 |
 | **v1.7.0** | 2026-05-18 | `/ledger` 升级为「装备库 + 记账」双模式：新增 GearItem 数据模型、迁移、装备 API、自然语言快速入库、商品链接识别预填、装备详情编辑、状态/位置/保修/序列号记录，并支持带价格装备同步生成关联支出；修复 PWA service worker 缓存 Next RSC / App Router 导航导致 `/ledger` 点击后出现 “This page couldn’t load” 的问题，新增路由级错误恢复页；每日简报移动端重排为雷达、精选、思考、资讯四段阅读路径，压缩 Hero、雷达和资讯卡片在 320px / 390px 小屏下的横向溢出；星座源日期规则正式明确为 Asia/Shanghai 同日有效，上海时间 00:00-07:59 可接受西方源昨天日期，08:00 后拒绝昨天源，并补充回归测试 |
 | **v1.6.19** | 2026-05-17 | 修复每日星座“看起来一直没刷新”的根因：`刷新简报` 现在会强制刷新星座链路；实时源日期必须等于 Asia/Shanghai 当日，拒绝昨天/前天内容继续占缓存；无 AI Key 时不再只套泛化主题句，而是根据实时英文源文本中的沟通、计划、优先级、意外消息、学习表达等信号生成简体中文摘要；星座卡片与详情增加“运势日”显示，方便确认源内容日期；新增星座摘要回归测试 |
 | **v1.6.18** | 2026-05-17 | 全面安全与可靠性修复：图片代理改为 DNS 校验后钉住解析 IP 发起请求，重定向重新校验，降低 DNS rebinding SSRF 风险；附件上传/下载统一清洗 MIME，HTML/SVG/脚本/XML 等主动内容强制 `application/octet-stream` 并下载，响应增加 `nosniff` 与 `CSP sandbox`；全局 AI 与笔记 AI 增加问题长度、页面上下文、笔记正文和长期记忆预算，明确把笔记内容作为资料而非指令；RSS 抓取增加 3MB 响应体上限，避免异常源占满内存；星座实时源失败不再把空结果缓存一整天，部分成功只短缓存 10 分钟；登录/注册限流默认不信任可伪造代理头，新增 `LEONOTE_TRUST_PROXY_HEADERS` 供可信反代部署开启；补充附件与代理限流单元测试 |

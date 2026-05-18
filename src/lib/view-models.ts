@@ -1,6 +1,7 @@
 import { listNotes, toNoteDTO } from "@/lib/server-notes";
 import { prisma } from "@/lib/prisma";
 import { getExpenseSummary } from "@/lib/expense";
+import { endOfDay, endOfWeek, getScheduleSummary, listScheduleEvents, startOfDay, toScheduleDTO } from "@/lib/schedule";
 
 export async function getHomeViewData(userId: string) {
   const notes = (await listNotes(userId, { status: "active" })).map(toNoteDTO);
@@ -55,7 +56,11 @@ export async function getHomeViewData(userId: string) {
   });
 
   // v1.5: Expense summary for home page
-  const expenseSummary = await getExpenseSummary(userId);
+  const [expenseSummary, scheduleSummary, todaySchedule] = await Promise.all([
+    getExpenseSummary(userId),
+    getScheduleSummary(userId),
+    listScheduleEvents(userId, { from: startOfDay(), to: endOfDay(), take: 5 }),
+  ]);
 
   return {
     notes,
@@ -106,10 +111,18 @@ export async function getHomeViewData(userId: string) {
       monthTotal: expenseSummary.totalAmount,
       topCategories: expenseSummary.byCategory.slice(0, 2),
     },
+    schedule: {
+      today: scheduleSummary.today,
+      week: scheduleSummary.week,
+      overdue: scheduleSummary.overdue,
+      next: scheduleSummary.next,
+      todayEvents: todaySchedule.map(toScheduleDTO),
+    },
   };
 }
 
 export async function getProjectCards(userId: string) {
+  const weekEnd = endOfWeek();
   const projects = await prisma.project.findMany({
     where: { userId },
     include: {
@@ -119,6 +132,11 @@ export async function getProjectCards(userId: string) {
         orderBy: [{ isPinned: "desc" }, { updatedAt: "desc" }],
         take: 4,
         include: { project: true, tags: { include: { tag: true } } },
+      },
+      scheduleEvents: {
+        where: { deletedAt: null, status: "planned", startAt: { lte: weekEnd }, endAt: { gte: new Date() } },
+        orderBy: [{ startAt: "asc" }],
+        take: 3,
       },
     },
     orderBy: [{ updatedAt: "desc" }, { createdAt: "desc" }],
@@ -140,6 +158,13 @@ export async function getProjectCards(userId: string) {
       pinned: note.isPinned,
       archived: note.isArchived,
       updatedAt: note.updatedAt.toISOString(),
+    })),
+    scheduleEvents: item.scheduleEvents.map((event) => ({
+      id: event.id,
+      title: event.title,
+      startAt: event.startAt.toISOString(),
+      endAt: event.endAt.toISOString(),
+      status: event.status,
     })),
   }));
 }
