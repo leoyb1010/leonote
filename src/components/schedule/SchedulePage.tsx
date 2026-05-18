@@ -1,8 +1,8 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import Link from "next/link";
-import { CalendarClock, CheckCircle2, Clock3, Flag, FolderKanban, Link2, NotebookText, Plus, RotateCcw, Trash2 } from "lucide-react";
+import { CalendarClock, CalendarPlus, CheckCircle2, Clock3, Flag, FolderKanban, Link2, NotebookText, Plus, RotateCcw, Trash2 } from "lucide-react";
 import { Button } from "@/components/base/Button";
 import { PageHeader } from "@/components/layout/PageHeader";
 import type { ScheduleEventDTO, ScheduleReferenceOptionsDTO, ScheduleStatus, ScheduleSummaryDTO } from "./types";
@@ -59,6 +59,59 @@ function isToday(value: string) {
   return date.getFullYear() === now.getFullYear() && date.getMonth() === now.getMonth() && date.getDate() === now.getDate();
 }
 
+function overlapsRange(event: ScheduleEventDTO, start: Date, end: Date) {
+  const eventStart = new Date(event.startAt);
+  const eventEnd = new Date(event.endAt);
+  if (!Number.isFinite(eventStart.getTime()) || !Number.isFinite(eventEnd.getTime())) return false;
+  return eventStart < end && eventEnd >= start;
+}
+
+function icsDate(value: string, allDay?: boolean) {
+  const date = new Date(value);
+  if (!Number.isFinite(date.getTime())) return "";
+  if (allDay) return date.toISOString().slice(0, 10).replaceAll("-", "");
+  return date.toISOString().replaceAll("-", "").replaceAll(":", "").replace(/\.\d{3}Z$/, "Z");
+}
+
+function escapeIcs(value: string) {
+  return value
+    .replace(/\\/g, "\\\\")
+    .replace(/\n/g, "\\n")
+    .replace(/,/g, "\\,")
+    .replace(/;/g, "\\;");
+}
+
+function downloadIcs(event: ScheduleEventDTO) {
+  const title = escapeIcs(event.title);
+  const description = escapeIcs(event.description || "Leonote 日程");
+  const start = icsDate(event.startAt, event.allDay);
+  const end = icsDate(event.endAt, event.allDay);
+  if (!start || !end) return;
+
+  const lines = [
+    "BEGIN:VCALENDAR",
+    "VERSION:2.0",
+    "PRODID:-//Leonote//Schedule//ZH-CN",
+    "CALSCALE:GREGORIAN",
+    "BEGIN:VEVENT",
+    `UID:${event.id}@leonote.local`,
+    `DTSTAMP:${icsDate(new Date().toISOString())}`,
+    event.allDay ? `DTSTART;VALUE=DATE:${start}` : `DTSTART:${start}`,
+    event.allDay ? `DTEND;VALUE=DATE:${end}` : `DTEND:${end}`,
+    `SUMMARY:${title}`,
+    `DESCRIPTION:${description}`,
+    "END:VEVENT",
+    "END:VCALENDAR",
+  ];
+  const blob = new Blob([lines.join("\r\n")], { type: "text/calendar;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const anchor = document.createElement("a");
+  anchor.href = url;
+  anchor.download = `${event.title.slice(0, 40) || "leonote-schedule"}.ics`;
+  anchor.click();
+  URL.revokeObjectURL(url);
+}
+
 function colorClass(color: string) {
   const map: Record<string, string> = {
     slate: "border-[var(--hairline)] bg-[var(--material-inset)]",
@@ -79,7 +132,7 @@ function statusIcon(status: string) {
 
 function MetricCard({ label, value, hint, icon }: { label: string; value: string; hint: string; icon: React.ReactNode }) {
   return (
-    <div className="quiet-inset rounded-[var(--radius-xl)] p-4">
+    <div className="quiet-inset min-w-0 rounded-[var(--radius-xl)] p-4">
       <div className="flex items-center gap-2 text-xs text-[var(--text-muted)]">
         <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-[var(--material-elevated)] text-[var(--text-secondary)]">{icon}</span>
         {label}
@@ -92,7 +145,7 @@ function MetricCard({ label, value, hint, icon }: { label: string; value: string
 
 function EventCard({ event, onStatus, onDelete }: { event: ScheduleEventDTO; onStatus: (event: ScheduleEventDTO, status: ScheduleStatus) => void; onDelete: (event: ScheduleEventDTO) => void }) {
   return (
-    <article className={`rounded-[var(--radius-xl)] border p-3 ${colorClass(event.color)}`}>
+    <article className={`min-w-0 rounded-[var(--radius-xl)] border p-3 ${colorClass(event.color)}`}>
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <div className="flex items-center gap-2 text-xs text-[var(--text-muted)]">
@@ -113,6 +166,7 @@ function EventCard({ event, onStatus, onDelete }: { event: ScheduleEventDTO; onS
         {event.gearItem ? <span className="inline-flex items-center gap-1 rounded-full bg-[var(--material-elevated)] px-2 py-1"><Link2 size={12} />{event.gearItem.name}</span> : null}
       </div>
       <div className="mt-3 flex flex-wrap justify-end gap-2">
+        <Button size="sm" variant="secondary" icon={<CalendarPlus size={13} />} onClick={() => downloadIcs(event)}>导出</Button>
         {event.status !== "done" ? <Button size="sm" variant="secondary" onClick={() => onStatus(event, "done")}>完成</Button> : null}
         {event.status === "done" ? <Button size="sm" variant="secondary" onClick={() => onStatus(event, "planned")}>恢复</Button> : null}
         <Button size="sm" variant="danger" icon={<Trash2 size={13} />} onClick={() => onDelete(event)}>删除</Button>
@@ -121,9 +175,11 @@ function EventCard({ event, onStatus, onDelete }: { event: ScheduleEventDTO; onS
   );
 }
 
-export function SchedulePage({ initialEvents, initialSummary, references, signedIn }: Props) {
+export function SchedulePage({ initialEvents, references, signedIn }: Props) {
   const [events, setEvents] = useState(initialEvents);
   const [view, setView] = useState<(typeof viewOptions)[number]["value"]>("today");
+  const formRef = useRef<HTMLElement>(null);
+  const titleInputRef = useRef<HTMLInputElement>(null);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [startAt, setStartAt] = useState(() => dateInput(defaultStart()));
@@ -136,8 +192,29 @@ export function SchedulePage({ initialEvents, initialSummary, references, signed
   const [noteId, setNoteId] = useState("");
   const [gearItemId, setGearItemId] = useState("");
   const [color, setColor] = useState("slate");
+  const [allDay, setAllDay] = useState(false);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
+
+  const computedSummary = useMemo(() => {
+    const now = new Date();
+    const todayStart = new Date(now);
+    todayStart.setHours(0, 0, 0, 0);
+    const todayEnd = new Date(todayStart);
+    todayEnd.setDate(todayEnd.getDate() + 1);
+    const weekStart = new Date(todayStart);
+    weekStart.setDate(todayStart.getDate() - todayStart.getDay());
+    const weekEnd = new Date(weekStart);
+    weekEnd.setDate(weekEnd.getDate() + 7);
+    const planned = events.filter((event) => event.status === "planned");
+
+    return {
+      today: planned.filter((event) => overlapsRange(event, todayStart, todayEnd)).length,
+      week: planned.filter((event) => overlapsRange(event, weekStart, weekEnd)).length,
+      overdue: planned.filter((event) => new Date(event.endAt).getTime() < now.getTime()).length,
+      next: planned.filter((event) => new Date(event.startAt).getTime() >= now.getTime()).length,
+    };
+  }, [events]);
 
   const filtered = useMemo(() => {
     if (view === "today") return events.filter((event) => isToday(event.startAt) || isToday(event.endAt));
@@ -160,7 +237,18 @@ export function SchedulePage({ initialEvents, initialSummary, references, signed
   }, [filtered]);
 
   async function createEvent() {
-    if (!title.trim() || saving) return;
+    if (saving) return;
+    if (!title.trim()) {
+      setMessage("先写日程标题。");
+      titleInputRef.current?.focus();
+      return;
+    }
+    const startDate = new Date(startAt);
+    const endDate = new Date(endAt);
+    if (!Number.isFinite(startDate.getTime()) || !Number.isFinite(endDate.getTime()) || endDate <= startDate) {
+      setMessage("结束时间需要晚于开始时间。");
+      return;
+    }
     setSaving(true);
     setMessage("");
     const res = await fetch("/api/schedule", {
@@ -169,8 +257,9 @@ export function SchedulePage({ initialEvents, initialSummary, references, signed
       body: JSON.stringify({
         title,
         description,
-        startAt: new Date(startAt).toISOString(),
-        endAt: new Date(endAt).toISOString(),
+        startAt: startDate.toISOString(),
+        endAt: endDate.toISOString(),
+        allDay,
         projectId: projectId || null,
         noteId: noteId || null,
         gearItemId: gearItemId || null,
@@ -186,8 +275,15 @@ export function SchedulePage({ initialEvents, initialSummary, references, signed
     setEvents((prev) => [...prev, data.event].sort((a, b) => new Date(a.startAt).getTime() - new Date(b.startAt).getTime()));
     setTitle("");
     setDescription("");
+    setAllDay(false);
     setMessage("已加入时间线。");
     window.setTimeout(() => setMessage(""), 2200);
+  }
+
+  function focusCreateForm() {
+    formRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+    window.setTimeout(() => titleInputRef.current?.focus(), 180);
+    if (!title.trim()) setMessage("先写标题，再加入日程。");
   }
 
   async function updateStatus(event: ScheduleEventDTO, status: ScheduleStatus) {
@@ -223,19 +319,19 @@ export function SchedulePage({ initialEvents, initialSummary, references, signed
         icon={<CalendarClock size={19} />}
         title="日程"
         description="把笔记、项目、装备和今日安排放进同一条时间线。"
-        actions={<Button icon={<Plus size={15} />} onClick={createEvent} loading={saving}>加入日程</Button>}
+        actions={<Button icon={<Plus size={15} />} onClick={focusCreateForm}>加入日程</Button>}
       />
 
       <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        <MetricCard label="今天" value={String(initialSummary.today)} hint="计划中的时间块" icon={<Clock3 size={15} />} />
-        <MetricCard label="本周" value={String(initialSummary.week)} hint="本周安排总量" icon={<CalendarClock size={15} />} />
-        <MetricCard label="待补" value={String(initialSummary.overdue)} hint="已过期未完成" icon={<Flag size={15} />} />
-        <MetricCard label="接下来" value={String(initialSummary.next.length)} hint="未来几项安排" icon={<CheckCircle2 size={15} />} />
+        <MetricCard label="今天" value={String(computedSummary.today)} hint="计划中的时间块" icon={<Clock3 size={15} />} />
+        <MetricCard label="本周" value={String(computedSummary.week)} hint="本周安排总量" icon={<CalendarClock size={15} />} />
+        <MetricCard label="待补" value={String(computedSummary.overdue)} hint="已过期未完成" icon={<Flag size={15} />} />
+        <MetricCard label="接下来" value={String(computedSummary.next)} hint="未来几项安排" icon={<CheckCircle2 size={15} />} />
       </section>
 
-      <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_420px]">
+      <div className="grid min-w-0 gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(360px,420px)] xl:items-start">
         <main className="min-w-0 space-y-4">
-          <div className="rounded-[var(--radius-2xl)] border border-[var(--hairline)] bg-[var(--material-inset)] p-1 sm:inline-flex">
+          <div className="grid rounded-[var(--radius-2xl)] border border-[var(--hairline)] bg-[var(--material-inset)] p-1 sm:inline-grid sm:grid-cols-2">
             {viewOptions.map((item) => (
               <button
                 key={item.value}
@@ -251,8 +347,8 @@ export function SchedulePage({ initialEvents, initialSummary, references, signed
           </div>
 
           {grouped.length === 0 ? (
-            <div className="quiet-inset rounded-[var(--radius-2xl)] px-4 py-16 text-center text-sm text-[var(--text-muted)]">
-              当前视图还没有日程。先从右侧创建一个时间块。
+            <div className="quiet-inset rounded-[var(--radius-2xl)] px-4 py-12 text-center text-sm text-[var(--text-muted)] sm:py-14">
+              当前视图还没有日程。先建一个时间块。
             </div>
           ) : (
             <div className="space-y-4">
@@ -262,7 +358,7 @@ export function SchedulePage({ initialEvents, initialSummary, references, signed
                     <CalendarClock size={15} />
                     {day}
                   </div>
-                  <div className="grid gap-3 lg:grid-cols-2">
+                  <div className="grid min-w-0 gap-3 2xl:grid-cols-2">
                     {items.map((event) => <EventCard key={event.id} event={event} onStatus={updateStatus} onDelete={deleteEvent} />)}
                   </div>
                 </section>
@@ -271,35 +367,39 @@ export function SchedulePage({ initialEvents, initialSummary, references, signed
           )}
         </main>
 
-        <aside className="min-w-0 space-y-4">
-          <section className="rounded-[var(--radius-2xl)] border border-[var(--hairline)] bg-[var(--material-elevated)] p-4 shadow-[var(--shadow-sm)]">
+        <aside ref={formRef} className="min-w-0 space-y-4 xl:sticky xl:top-6">
+          <section className="min-w-0 overflow-hidden rounded-[var(--radius-2xl)] border border-[var(--hairline)] bg-[var(--material-elevated)] p-4 shadow-[var(--shadow-sm)]">
             <div className="mb-4 flex items-center gap-2 text-sm font-medium text-[var(--text-secondary)]">
               <Plus size={15} />
               新建时间块
             </div>
-            <div className="grid gap-3">
-              <input value={title} onChange={(event) => setTitle(event.target.value)} placeholder="日程标题" className="h-11 rounded-xl border border-[var(--hairline)] bg-[var(--material-inset)] px-3 text-sm outline-none" />
-              <textarea value={description} onChange={(event) => setDescription(event.target.value)} placeholder="描述、目标或准备事项" className="min-h-20 resize-none rounded-xl border border-[var(--hairline)] bg-[var(--material-inset)] px-3 py-3 text-sm outline-none" />
-              <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-1 2xl:grid-cols-2">
-                <input type="datetime-local" value={startAt} onChange={(event) => setStartAt(event.target.value)} className="h-11 rounded-xl border border-[var(--hairline)] bg-[var(--material-inset)] px-3 text-sm outline-none" />
-                <input type="datetime-local" value={endAt} onChange={(event) => setEndAt(event.target.value)} className="h-11 rounded-xl border border-[var(--hairline)] bg-[var(--material-inset)] px-3 text-sm outline-none" />
+            <div className="grid min-w-0 gap-3">
+              <input ref={titleInputRef} value={title} onChange={(event) => setTitle(event.target.value)} placeholder="日程标题" className="h-11 w-full min-w-0 rounded-xl border border-[var(--hairline)] bg-[var(--material-inset)] px-3 text-sm outline-none" />
+              <textarea value={description} onChange={(event) => setDescription(event.target.value)} placeholder="描述、目标或准备事项" className="min-h-20 w-full min-w-0 resize-none rounded-xl border border-[var(--hairline)] bg-[var(--material-inset)] px-3 py-3 text-sm outline-none" />
+              <div className="grid min-w-0 gap-3 sm:grid-cols-2 xl:grid-cols-1 2xl:grid-cols-2">
+                <input type="datetime-local" value={startAt} onChange={(event) => setStartAt(event.target.value)} className="h-11 w-full min-w-0 rounded-xl border border-[var(--hairline)] bg-[var(--material-inset)] px-3 text-sm outline-none" />
+                <input type="datetime-local" value={endAt} onChange={(event) => setEndAt(event.target.value)} className="h-11 w-full min-w-0 rounded-xl border border-[var(--hairline)] bg-[var(--material-inset)] px-3 text-sm outline-none" />
               </div>
-              <select value={projectId} onChange={(event) => setProjectId(event.target.value)} className="h-11 rounded-xl border border-[var(--hairline)] bg-[var(--material-inset)] px-3 text-sm outline-none">
+              <label className="inline-flex min-h-9 items-center gap-2 px-1 text-xs text-[var(--text-muted)]">
+                <input type="checkbox" checked={allDay} onChange={(event) => setAllDay(event.target.checked)} className="h-4 w-4 accent-[var(--primary)]" />
+                全天安排
+              </label>
+              <select value={projectId} onChange={(event) => setProjectId(event.target.value)} className="h-11 w-full min-w-0 rounded-xl border border-[var(--hairline)] bg-[var(--material-inset)] px-3 text-sm outline-none">
                 <option value="">关联项目</option>
                 {references.projects.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}
               </select>
-              <select value={noteId} onChange={(event) => setNoteId(event.target.value)} className="h-11 rounded-xl border border-[var(--hairline)] bg-[var(--material-inset)] px-3 text-sm outline-none">
+              <select value={noteId} onChange={(event) => setNoteId(event.target.value)} className="h-11 w-full min-w-0 rounded-xl border border-[var(--hairline)] bg-[var(--material-inset)] px-3 text-sm outline-none">
                 <option value="">关联笔记</option>
                 {references.notes.map((item) => <option key={item.id} value={item.id}>{item.title}</option>)}
               </select>
-              <select value={gearItemId} onChange={(event) => setGearItemId(event.target.value)} className="h-11 rounded-xl border border-[var(--hairline)] bg-[var(--material-inset)] px-3 text-sm outline-none">
+              <select value={gearItemId} onChange={(event) => setGearItemId(event.target.value)} className="h-11 w-full min-w-0 rounded-xl border border-[var(--hairline)] bg-[var(--material-inset)] px-3 text-sm outline-none">
                 <option value="">关联装备</option>
                 {references.gearItems.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}
               </select>
-              <select value={color} onChange={(event) => setColor(event.target.value)} className="h-11 rounded-xl border border-[var(--hairline)] bg-[var(--material-inset)] px-3 text-sm outline-none">
+              <select value={color} onChange={(event) => setColor(event.target.value)} className="h-11 w-full min-w-0 rounded-xl border border-[var(--hairline)] bg-[var(--material-inset)] px-3 text-sm outline-none">
                 {colorOptions.map((item) => <option key={item.value} value={item.value}>{item.label}</option>)}
               </select>
-              <Button icon={<Plus size={15} />} onClick={createEvent} loading={saving}>加入日程</Button>
+              <Button icon={<Plus size={15} />} onClick={createEvent} loading={saving} className="w-full">加入日程</Button>
             </div>
             {message ? <p className="mt-3 text-center text-xs text-[var(--text-muted)]">{message}</p> : null}
           </section>

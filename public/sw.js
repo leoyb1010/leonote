@@ -1,4 +1,4 @@
-const CACHE_NAME = "leonote-runtime-v20260518";
+const CACHE_NAME = "leonote-static-v20260518-navclean";
 const STATIC_ASSETS = ["/manifest.json", "/favicon.ico", "/icon-192.png", "/icon-512.png", "/offline.html"];
 
 self.addEventListener("install", (event) => {
@@ -12,7 +12,7 @@ self.addEventListener("activate", (event) => {
   event.waitUntil(
     caches.keys().then((keys) =>
       Promise.all(
-        keys.filter((key) => key !== CACHE_NAME).map((key) => caches.delete(key))
+        keys.filter((key) => key.startsWith("leonote-") && key !== CACHE_NAME).map((key) => caches.delete(key))
       )
     )
   );
@@ -30,6 +30,7 @@ self.addEventListener("fetch", (event) => {
   if (req.method !== "GET") return;
 
   const url = new URL(req.url);
+  if (url.origin !== self.location.origin) return;
   if (url.pathname.startsWith("/api/")) return;
   if (url.pathname.startsWith("/_next/")) return;
   if (url.searchParams.has("_rsc")) return;
@@ -48,16 +49,7 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  event.respondWith(
-    caches.match(req).then((cached) => {
-      const fetchPromise = fetch(req).then((res) => {
-        if (res.ok) {
-          const clone = res.clone();
-          caches.open(CACHE_NAME).then((cache) => cache.put(req, clone));
-        }
-        return res;
-      });
-      return cached || fetchPromise;
-    })
-  );
+  if (STATIC_ASSETS.includes(url.pathname)) {
+    event.respondWith(caches.match(req).then((cached) => cached || fetch(req)));
+  }
 });

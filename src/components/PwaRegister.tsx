@@ -44,15 +44,6 @@ export function PwaRegister() {
   useEffect(() => {
     if (!("serviceWorker" in navigator)) return;
 
-    let refreshing = false;
-    const reloadOnControllerChange = () => {
-      if (refreshing) return;
-      refreshing = true;
-      window.location.reload();
-    };
-
-    navigator.serviceWorker.addEventListener("controllerchange", reloadOnControllerChange);
-
     navigator.serviceWorker.register("/sw.js").then((registration) => {
       void registration.update();
 
@@ -74,9 +65,6 @@ export function PwaRegister() {
         // Silent fail - SW is progressive enhancement
       });
 
-    return () => {
-      navigator.serviceWorker.removeEventListener("controllerchange", reloadOnControllerChange);
-    };
   }, []);
 
   return null;

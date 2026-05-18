@@ -439,6 +439,7 @@ export function BriefingShell({
             items={featuredItems}
             limit={category === "all" ? 4 : 3}
             featured
+            dense
             emptyText="大事件之外暂时没有更多高质量证据。"
             onPatchItem={patchItem}
             onClick={openDetail}

@@ -86,6 +86,15 @@ function GearQuickCapture({
   const [value, setValue] = useState("");
   const [category, setCategory] = useState("");
   const [status, setStatus] = useState<GearStatus>("active");
+  const [brand, setBrand] = useState("");
+  const [model, setModel] = useState("");
+  const [purchasePrice, setPurchasePrice] = useState("");
+  const [purchaseChannel, setPurchaseChannel] = useState("");
+  const [purchaseDate, setPurchaseDate] = useState("");
+  const [warrantyUntil, setWarrantyUntil] = useState("");
+  const [serialNumber, setSerialNumber] = useState("");
+  const [location, setLocation] = useState("");
+  const [notes, setNotes] = useState("");
   const [createExpense, setCreateExpense] = useState(true);
   const [expenseCategoryId, setExpenseCategoryId] = useState<string | null>(categories[0]?.id ?? null);
   const [link, setLink] = useState("");
@@ -117,6 +126,11 @@ function GearQuickCapture({
     setLinkDraft(preview);
     setValue(preview.rawText);
     if (!category && preview.draft.category) setCategory(preview.draft.category);
+    setBrand((current) => current || preview.draft.brand || "");
+    setModel((current) => current || preview.draft.model || "");
+    setPurchasePrice((current) => current || centsToInput(preview.draft.purchasePrice));
+    setPurchaseChannel((current) => current || preview.draft.purchaseChannel || "");
+    setNotes((current) => current || preview.draft.notes || "");
     setCreateExpense(false);
     setMessage(`已读取 ${preview.sourceHost}，确认后入库。`);
   }
@@ -134,15 +148,19 @@ function GearQuickCapture({
       body: JSON.stringify({
         rawText,
         name: activeLinkDraft?.name,
-        brand: activeLinkDraft?.brand,
-        model: activeLinkDraft?.model,
+        brand: brand.trim() || activeLinkDraft?.brand,
+        model: model.trim() || activeLinkDraft?.model,
         category: category || activeLinkDraft?.category || undefined,
         status,
-        purchasePrice: activeLinkDraft?.purchasePrice,
+        location: location.trim() || undefined,
+        serialNumber: serialNumber.trim() || undefined,
+        purchasePrice: inputToCents(purchasePrice) ?? activeLinkDraft?.purchasePrice,
         currency: activeLinkDraft?.currency,
-        purchaseChannel: activeLinkDraft?.purchaseChannel,
+        purchaseDate: inputDateToIso(purchaseDate),
+        purchaseChannel: purchaseChannel.trim() || activeLinkDraft?.purchaseChannel,
+        warrantyUntil: inputDateToIso(warrantyUntil),
         specs: activeLinkDraft?.specs,
-        notes: activeLinkDraft?.notes,
+        notes: notes.trim() || activeLinkDraft?.notes,
         createExpense,
         expenseCategoryId,
       }),
@@ -158,6 +176,15 @@ function GearQuickCapture({
     setValue("");
     setLink("");
     setLinkDraft(null);
+    setBrand("");
+    setModel("");
+    setPurchasePrice("");
+    setPurchaseChannel("");
+    setPurchaseDate("");
+    setWarrantyUntil("");
+    setSerialNumber("");
+    setLocation("");
+    setNotes("");
     setMessage("已放进装备库。");
     window.setTimeout(() => setMessage(""), 2200);
     onCreated(data.item);
@@ -214,7 +241,7 @@ function GearQuickCapture({
         placeholder="输入设备或物品型号，比如 MacBook Pro M4 32G 15999 京东 保修到 2027-05-18"
         className="mt-3 min-h-[76px] w-full resize-none rounded-[var(--radius-xl)] border border-[var(--hairline)] bg-[var(--material-inset)] px-4 py-3 text-[15px] leading-6 outline-none placeholder:text-[var(--text-placeholder)]"
       />
-      <div className="mt-3 grid gap-2 sm:grid-cols-[1fr_1fr_auto] sm:items-center">
+      <div className="mt-3 grid gap-2 sm:grid-cols-2 sm:items-center">
         <select
           value={category}
           onChange={(event) => setCategory(event.target.value)}
@@ -236,9 +263,23 @@ function GearQuickCapture({
             <option key={item.value} value={item.value}>{item.label}</option>
           ))}
         </select>
-        <Button onClick={submit} loading={saving} className="w-full sm:w-auto">
-          入库
-        </Button>
+      </div>
+      <div className="mt-3 rounded-[var(--radius-xl)] border border-[var(--hairline)] bg-[var(--material-inset)] p-3">
+        <div className="mb-2 flex items-center gap-2 text-xs text-[var(--text-muted)]">
+          <Wrench size={13} />
+          自定义字段
+        </div>
+        <div className="grid min-w-0 gap-2 sm:grid-cols-2 lg:grid-cols-4">
+          <input value={brand} onChange={(event) => setBrand(event.target.value)} placeholder="品牌" className="h-10 min-w-0 rounded-lg border border-[var(--hairline)] bg-[var(--material-elevated)] px-3 text-sm outline-none" />
+          <input value={model} onChange={(event) => setModel(event.target.value)} placeholder="型号" className="h-10 min-w-0 rounded-lg border border-[var(--hairline)] bg-[var(--material-elevated)] px-3 text-sm outline-none" />
+          <input value={purchasePrice} onChange={(event) => setPurchasePrice(event.target.value)} inputMode="decimal" placeholder="价格" className="h-10 min-w-0 rounded-lg border border-[var(--hairline)] bg-[var(--material-elevated)] px-3 text-sm outline-none" />
+          <input value={purchaseChannel} onChange={(event) => setPurchaseChannel(event.target.value)} placeholder="渠道" className="h-10 min-w-0 rounded-lg border border-[var(--hairline)] bg-[var(--material-elevated)] px-3 text-sm outline-none" />
+          <input type="date" value={purchaseDate} onChange={(event) => setPurchaseDate(event.target.value)} className="h-10 min-w-0 rounded-lg border border-[var(--hairline)] bg-[var(--material-elevated)] px-3 text-sm outline-none" aria-label="购买日期" />
+          <input type="date" value={warrantyUntil} onChange={(event) => setWarrantyUntil(event.target.value)} className="h-10 min-w-0 rounded-lg border border-[var(--hairline)] bg-[var(--material-elevated)] px-3 text-sm outline-none" aria-label="保修到期" />
+          <input value={serialNumber} onChange={(event) => setSerialNumber(event.target.value)} placeholder="序列号" className="h-10 min-w-0 rounded-lg border border-[var(--hairline)] bg-[var(--material-elevated)] px-3 text-sm outline-none" />
+          <input value={location} onChange={(event) => setLocation(event.target.value)} placeholder="位置" className="h-10 min-w-0 rounded-lg border border-[var(--hairline)] bg-[var(--material-elevated)] px-3 text-sm outline-none" />
+          <textarea value={notes} onChange={(event) => setNotes(event.target.value)} placeholder="备注、配件、序列记录" className="min-h-20 min-w-0 resize-none rounded-lg border border-[var(--hairline)] bg-[var(--material-elevated)] px-3 py-2 text-sm outline-none sm:col-span-2 lg:col-span-4" />
+        </div>
       </div>
       <div className="mt-3 flex flex-wrap items-center justify-between gap-2 px-1 text-xs text-[var(--text-muted)]">
         <label className="inline-flex min-h-8 items-center gap-2">
@@ -264,6 +305,9 @@ function GearQuickCapture({
           </select>
         ) : null}
       </div>
+      <Button onClick={submit} loading={saving} className="mt-3 w-full">
+        入库
+      </Button>
       {message ? <p className="mt-2 text-center text-xs text-[var(--text-muted)]">{message}</p> : null}
     </section>
   );
