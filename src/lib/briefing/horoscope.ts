@@ -197,9 +197,24 @@ function parseSourceDay(input: string | undefined) {
   return parseSourceDate(input);
 }
 
-function isCurrentSourceDate(date: Date | null): date is Date {
+export function isCurrentSourceDate(date: Date | null, now = new Date()): date is Date {
   if (!date) return false;
-  return shanghaiDayKey(date) === shanghaiDayKey();
+  const today = shanghaiDayKey(now);
+  const source = shanghaiDayKey(date);
+  if (source === today) return true;
+  // 上海时间凌晨0-8点（西方还在"昨天"），接受昨天的星座数据为有效
+  const shanghaiHour = Number(
+    new Intl.DateTimeFormat("en-GB", {
+      timeZone: "Asia/Shanghai",
+      hour: "2-digit",
+      hourCycle: "h23",
+    }).format(now),
+  );
+  if (shanghaiHour < 8) {
+    const yesterday = shanghaiDayKey(new Date(now.getTime() - 24 * 60 * 60 * 1000));
+    if (source === yesterday) return true;
+  }
+  return false;
 }
 
 function unescapeJsString(input: string) {

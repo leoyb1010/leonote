@@ -2,20 +2,25 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Package, WalletCards } from "lucide-react";
 import { EmptyState } from "@/components/base/EmptyState";
 import { Button } from "@/components/base/Button";
 import { formatMoney } from "@/lib/format-money";
+import { cn } from "@/lib/utils";
+import { GearLibrary } from "@/components/gear/GearLibrary";
 import { ExpenseQuickCapture } from "@/components/ledger/ExpenseQuickCapture";
 import { ExpenseRow } from "@/components/ledger/ExpenseRow";
 import { CategoryDistribution } from "@/components/ledger/CategoryDistribution";
 import { LedgerDashboard } from "@/components/ledger/LedgerDashboard";
 import type { ExpenseCategoryDTO, ExpenseDTO, ExpenseSummaryDTO } from "@/components/ledger/types";
+import type { GearDTO, GearSummaryDTO } from "@/components/gear/types";
 
 type Props = {
   signedIn: boolean;
   categories: ExpenseCategoryDTO[];
   summary: ExpenseSummaryDTO | null;
+  gearItems: GearDTO[];
+  gearSummary: GearSummaryDTO | null;
 };
 
 function buildHeroLine(summary: ExpenseSummaryDTO | null) {
@@ -64,9 +69,10 @@ function updateDaily(daily: ExpenseSummaryDTO["daily"], dateValue: string, delta
   );
 }
 
-export function LedgerPage({ signedIn, categories, summary }: Props) {
+export function LedgerPage({ signedIn, categories, summary, gearItems, gearSummary }: Props) {
   const [recent, setRecent] = useState<ExpenseDTO[]>(summary?.recent ?? []);
   const [localSummary, setLocalSummary] = useState(summary);
+  const [activeView, setActiveView] = useState<"gear" | "ledger">("gear");
 
   function handleCreated(expense: ExpenseDTO) {
     setRecent((prev) => [expense, ...prev].slice(0, 10));
@@ -134,49 +140,77 @@ export function LedgerPage({ signedIn, categories, summary }: Props) {
     );
   }
 
+  const tabClass = (view: "gear" | "ledger") => cn(
+    "inline-flex min-h-10 flex-1 items-center justify-center gap-2 rounded-xl px-3 text-sm transition sm:flex-none",
+    activeView === view
+      ? "bg-[var(--text-primary)] text-[var(--bg-app)]"
+      : "text-[var(--text-secondary)] hover:bg-[var(--interactive-hover)] hover:text-[var(--text-primary)]",
+  );
+
   return (
     <div className="space-y-8">
-      <section className="border-b border-[var(--hairline)] pb-6">
-        <p className="text-xs tracking-wide text-[var(--text-muted)]">Ledger</p>
-        <h1 className="mt-2 text-[1.5rem] font-semibold tracking-[-0.04em] text-[var(--text-primary)]">
-          {buildHeroLine(localSummary)}
-        </h1>
-        <p className="mt-3 max-w-2xl text-sm leading-6 text-[var(--text-secondary)]">
-          钱花在了让你成为现在这个你的事情上。先记下，不必立刻评判。
-        </p>
-      </section>
+      <div className="rounded-[var(--radius-2xl)] border border-[var(--hairline)] bg-[var(--material-inset)] p-1 sm:inline-flex">
+        <button type="button" className={tabClass("gear")} onClick={() => setActiveView("gear")}>
+          <Package size={16} />
+          装备库
+        </button>
+        <button type="button" className={tabClass("ledger")} onClick={() => setActiveView("ledger")}>
+          <WalletCards size={16} />
+          记账
+        </button>
+      </div>
 
-      <ExpenseQuickCapture categories={categories} onCreated={handleCreated} />
+      {activeView === "gear" ? (
+        <GearLibrary
+          initialItems={gearItems}
+          initialSummary={gearSummary}
+          expenseCategories={categories}
+        />
+      ) : (
+        <>
+          <section className="border-b border-[var(--hairline)] pb-6">
+            <p className="text-xs tracking-wide text-[var(--text-muted)]">Ledger</p>
+            <h1 className="mt-2 text-[1.5rem] font-semibold text-[var(--text-primary)]">
+              {buildHeroLine(localSummary)}
+            </h1>
+            <p className="mt-3 max-w-2xl text-sm leading-6 text-[var(--text-secondary)]">
+              钱花在了让你成为现在这个你的事情上。先记下，不必立刻评判。
+            </p>
+          </section>
 
-      {categories.length === 0 ? (
-        <div className="rounded-[var(--radius-xl)] border border-[var(--hairline)] bg-[var(--material-inset)] px-4 py-5">
-          <p className="text-sm text-[var(--text-secondary)]">还没有记账类型。第一条可以从 AI 订阅、咖啡、书或健身开始。</p>
-          <Link href="/ledger/categories" className="mt-3 inline-flex items-center gap-1 text-xs text-[var(--primary)] hover:underline">
-            去放一个类型 <ArrowRight size={12} />
-          </Link>
-        </div>
-      ) : null}
+          <ExpenseQuickCapture categories={categories} onCreated={handleCreated} />
 
-      {localSummary ? <LedgerDashboard summary={{ ...localSummary, recent }} /> : null}
-      {localSummary ? <CategoryDistribution summary={{ ...localSummary, recent }} /> : null}
+          {categories.length === 0 ? (
+            <div className="rounded-[var(--radius-xl)] border border-[var(--hairline)] bg-[var(--material-inset)] px-4 py-5">
+              <p className="text-sm text-[var(--text-secondary)]">还没有记账类型。第一条可以从 AI 订阅、咖啡、书或健身开始。</p>
+              <Link href="/ledger/categories" className="mt-3 inline-flex items-center gap-1 text-xs text-[var(--primary)] hover:underline">
+                去放一个类型 <ArrowRight size={12} />
+              </Link>
+            </div>
+          ) : null}
 
-      <section>
-        <div className="mb-3 flex items-center justify-between">
-          <h2 className="text-sm font-medium text-[var(--text-secondary)]">最近记录</h2>
-          <Link href="/ledger/categories" className="text-xs text-[var(--primary)] hover:underline">管理类型</Link>
-        </div>
+          {localSummary ? <LedgerDashboard summary={{ ...localSummary, recent }} /> : null}
+          {localSummary ? <CategoryDistribution summary={{ ...localSummary, recent }} /> : null}
 
-        {recent.length === 0 ? (
-          <EmptyState
-            title="还没有开始记账。"
-            description="第一笔可以从今天的咖啡开始。"
-          />
-        ) : (
-          <div className="divide-y divide-[var(--hairline)] rounded-[var(--radius-xl)] border border-[var(--hairline)] bg-[var(--material-elevated)] p-1">
-            {recent.map((expense) => <ExpenseRow key={expense.id} expense={expense} onDeleted={handleDeleted} />)}
-          </div>
-        )}
-      </section>
+          <section>
+            <div className="mb-3 flex items-center justify-between">
+              <h2 className="text-sm font-medium text-[var(--text-secondary)]">最近记录</h2>
+              <Link href="/ledger/categories" className="text-xs text-[var(--primary)] hover:underline">管理类型</Link>
+            </div>
+
+            {recent.length === 0 ? (
+              <EmptyState
+                title="还没有开始记账。"
+                description="第一笔可以从今天的咖啡开始。"
+              />
+            ) : (
+              <div className="divide-y divide-[var(--hairline)] rounded-[var(--radius-xl)] border border-[var(--hairline)] bg-[var(--material-elevated)] p-1">
+                {recent.map((expense) => <ExpenseRow key={expense.id} expense={expense} onDeleted={handleDeleted} />)}
+              </div>
+            )}
+          </section>
+        </>
+      )}
     </div>
   );
 }

@@ -180,6 +180,31 @@ function BriefingMetaPanel({ meta }: { meta: BriefingMetaDTO }) {
   );
 }
 
+function MobileBriefingNav() {
+  const items = [
+    { href: "#briefing-radar", label: "雷达" },
+    { href: "#briefing-featured", label: "精选" },
+    { href: "#briefing-thinking", label: "思考" },
+    { href: "#briefing-stream", label: "资讯" },
+  ];
+
+  return (
+    <nav className="lg:hidden sticky top-0 z-20 -mx-4 mt-4 border-y border-[var(--hairline)] bg-[var(--bg-app)]/92 px-4 py-2 backdrop-blur sm:-mx-6 sm:px-6">
+      <div className="flex flex-wrap gap-2">
+        {items.map((item) => (
+          <a
+            key={item.href}
+            href={item.href}
+            className="min-h-9 shrink-0 rounded-full border border-[var(--hairline)] bg-[var(--material-inset)] px-3 text-xs leading-9 text-[var(--text-secondary)]"
+          >
+            {item.label}
+          </a>
+        ))}
+      </div>
+    </nav>
+  );
+}
+
 export function BriefingShell({
   initialDigest,
   initialItems,
@@ -390,20 +415,25 @@ export function BriefingShell({
         </div>
       </div>
 
+      <MobileBriefingNav />
+
       <motion.section
         key={`${range}-${category}`}
         variants={listStagger}
         initial="initial"
         animate="animate"
-        className="mt-6 grid gap-5 lg:grid-cols-[minmax(0,1fr)_320px] lg:gap-6 xl:grid-cols-[minmax(0,1fr)_360px]"
+        className="mt-4 grid gap-5 lg:mt-6 lg:grid-cols-[minmax(0,1fr)_320px] lg:gap-6 xl:grid-cols-[minmax(0,1fr)_360px]"
       >
         <div className="space-y-6 lg:space-y-8">
-          <EventRadar
-            events={eventClusters}
-            onOpenEvent={(event, anchor) => setSelectedSignalDetail({ event, anchor })}
-          />
+          <div id="briefing-radar" className="scroll-mt-20">
+            <EventRadar
+              events={eventClusters}
+              onOpenEvent={(event, anchor) => setSelectedSignalDetail({ event, anchor })}
+            />
+          </div>
 
           <NewsColumn
+            sectionId="briefing-featured"
             title="精选证据"
             eyebrow="精选证据"
             items={featuredItems}
@@ -414,18 +444,28 @@ export function BriefingShell({
             onClick={openDetail}
           />
 
+          <div id="briefing-thinking" className="scroll-mt-20 space-y-4 lg:hidden">
+            <ThinkingPanel
+              insights={thinkingInsights}
+              onOpen={(insight, anchor) => setSelectedThinkingDetail({ insight, anchor })}
+            />
+            <DeepReadCard item={deepRead} onClick={openDeepRead} />
+          </div>
+
           <NewsColumn
+            sectionId="briefing-stream"
             title={`${streamTitle}证据库`}
             eyebrow={streamEyebrow}
             items={streamItems}
             limit={range === "week" ? 36 : 18}
+            dense
             emptyText="当前筛选下没有更多资讯。"
             onPatchItem={patchItem}
             onClick={openDetail}
           />
         </div>
 
-        <aside className="space-y-4 lg:sticky lg:top-6 lg:self-start lg:space-y-5">
+        <aside className="hidden space-y-4 lg:sticky lg:top-6 lg:block lg:self-start lg:space-y-5">
           <ThinkingPanel
             insights={thinkingInsights}
             onOpen={(insight, anchor) => setSelectedThinkingDetail({ insight, anchor })}
@@ -434,6 +474,11 @@ export function BriefingShell({
           <TagInsights items={visibleItems} />
           <BriefingMetaPanel meta={meta} />
         </aside>
+
+        <div className="space-y-4 lg:hidden">
+          <TagInsights items={visibleItems} />
+          <BriefingMetaPanel meta={meta} />
+        </div>
       </motion.section>
 
       {selectedDetail ? (

@@ -14,6 +14,7 @@ type DetailAnchor = { top: number; left: number; width: number; height: number }
 interface Props {
   item: NewsItemDTO;
   featured?: boolean;
+  dense?: boolean;
   onPatchItem: (itemId: string, patch: Partial<NewsItemDTO>) => void;
   onClick: (item: NewsItemDTO, anchor: DetailAnchor) => void;
 }
@@ -39,7 +40,7 @@ function scoreTone(score: number | null) {
   return "bg-[var(--warning-soft)] text-[var(--warning)]";
 }
 
-export function NewsCard({ item, featured = false, onPatchItem, onClick }: Props) {
+export function NewsCard({ item, featured = false, dense = false, onPatchItem, onClick }: Props) {
   const [imageHidden, setImageHidden] = useState(false);
   const imageUrl = !imageHidden ? proxyImageUrl(item.imageUrl) : null;
   const score = scorePercent(item.aiScore);
@@ -78,13 +79,13 @@ export function NewsCard({ item, featured = false, onPatchItem, onClick }: Props
         );
       }}
       className={`group relative cursor-pointer overflow-hidden rounded-[var(--radius-lg)] border border-[var(--hairline)] bg-[var(--material-elevated)] transition-[border-color,background-color,transform] duration-[var(--duration-quick)] hover:border-[var(--hairline-strong)] hover:bg-[var(--material-muted)] ${
-        featured ? "min-h-[220px]" : ""
+        featured && !dense ? "min-h-[220px]" : ""
       }`}
     >
       <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/12 to-transparent" />
       {!item.isRead ? <span className="absolute left-3 top-3 h-1.5 w-1.5 rounded-full bg-[var(--primary)]" /> : null}
 
-      {featured && imageUrl ? (
+      {featured && !dense && imageUrl ? (
         <div className="relative h-32 overflow-hidden border-b border-[var(--hairline)] bg-[var(--material-inset)]">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
@@ -97,7 +98,7 @@ export function NewsCard({ item, featured = false, onPatchItem, onClick }: Props
         </div>
       ) : null}
 
-      <div className={featured ? "p-4 sm:p-5" : "p-4"}>
+      <div className={dense ? "p-3.5" : featured ? "p-4 sm:p-5" : "p-4"}>
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
             <div className="flex flex-wrap items-center gap-1.5 text-[11px] text-[var(--text-muted)]">
@@ -124,17 +125,19 @@ export function NewsCard({ item, featured = false, onPatchItem, onClick }: Props
         </div>
 
         <h3 className={`mt-2 line-clamp-2 font-medium leading-snug transition-colors group-hover:text-[var(--primary)] ${
-          featured ? "text-[1.05rem]" : "text-[15px]"
+          dense ? "text-sm" : featured ? "text-[1.05rem]" : "text-[15px]"
         } ${item.isRead ? "text-[var(--text-secondary)]" : "text-[var(--text-primary)]"}`}>
           {item.title}
         </h3>
 
-        <p className="mt-2 line-clamp-3 font-[var(--font-reading)] text-sm leading-6 text-[var(--text-secondary)]">
+        <p className={`mt-2 font-[var(--font-reading)] text-[var(--text-secondary)] ${
+          dense ? "line-clamp-2 text-xs leading-5" : "line-clamp-3 text-sm leading-6"
+        }`}>
           {summaryText}
         </p>
 
         {item.aiTags.length > 0 ? (
-          <div className="mt-3 flex flex-wrap gap-1.5">
+          <div className={`${dense ? "mt-2 hidden sm:flex" : "mt-3 flex"} flex-wrap gap-1.5`}>
             {item.aiTags.slice(0, featured ? 4 : 3).map((tag) => (
               <span
                 key={tag}
@@ -146,7 +149,7 @@ export function NewsCard({ item, featured = false, onPatchItem, onClick }: Props
           </div>
         ) : null}
 
-        <div className="mt-4 flex items-center justify-between gap-3">
+        <div className={`${dense ? "mt-3" : "mt-4"} flex items-center justify-between gap-3`}>
           <div className="flex items-center gap-2 text-[11px] text-[var(--text-muted)]">
             <span className="inline-flex items-center gap-1">
               <Clock3 size={12} />

@@ -12,6 +12,8 @@ interface Props {
   items: NewsItemDTO[];
   limit?: number;
   featured?: boolean;
+  dense?: boolean;
+  sectionId?: string;
   emptyText?: string;
   onPatchItem: (itemId: string, patch: Partial<NewsItemDTO>) => void;
   onClick: (item: NewsItemDTO, anchor: DetailAnchor) => void;
@@ -23,6 +25,8 @@ export function NewsColumn({
   items,
   limit = 10,
   featured = false,
+  dense = false,
+  sectionId,
   emptyText = "暂无可展示资讯",
   onPatchItem,
   onClick,
@@ -30,7 +34,7 @@ export function NewsColumn({
   const visible = items.slice(0, limit);
 
   return (
-    <motion.section variants={listItemFloat} className="space-y-3">
+    <motion.section id={sectionId} variants={listItemFloat} className="scroll-mt-20 space-y-3">
       <div className="flex items-end justify-between gap-4 border-b border-[var(--hairline)] pb-3">
         <div className="min-w-0">
           <p className="text-[11px] uppercase text-[var(--text-muted)]">{eyebrow}</p>
@@ -47,12 +51,13 @@ export function NewsColumn({
           <p className="mt-3 text-sm text-[var(--text-muted)]">{emptyText}</p>
         </div>
       ) : (
-        <div className={featured ? "grid gap-3 sm:grid-cols-2 lg:grid-cols-3" : "grid gap-3 sm:grid-cols-2 xl:grid-cols-1"}>
+        <div className={featured ? "grid gap-3 sm:grid-cols-2 lg:grid-cols-3" : dense ? "grid gap-2 sm:grid-cols-2 xl:grid-cols-1" : "grid gap-3 sm:grid-cols-2 xl:grid-cols-1"}>
           {visible.map((item) => (
             <NewsCard
               key={item.id}
               item={item}
               featured={featured}
+              dense={dense}
               onPatchItem={onPatchItem}
               onClick={onClick}
             />

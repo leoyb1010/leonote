@@ -1,6 +1,6 @@
 {
   "name": "leonote",
-  "version": "1.6.19",
+  "version": "1.7.0",
   "private": true,
   "scripts": {
     "dev": "next dev",

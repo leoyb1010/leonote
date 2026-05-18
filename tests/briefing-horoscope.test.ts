@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { buildSourceDrivenChineseSummary } from "@/lib/briefing/horoscope";
+import { buildSourceDrivenChineseSummary, isCurrentSourceDate } from "@/lib/briefing/horoscope";
 
 describe("briefing horoscope summaries", () => {
   it("uses the source date and source-specific signals in Chinese summaries", () => {
@@ -24,5 +24,33 @@ describe("briefing horoscope summaries", () => {
     expect(summary).toContain("关系与沟通");
     expect(summary).toContain("共识");
     expect(summary).not.toContain("今天适合保持平衡感");
+  });
+
+  it("accepts the same Asia/Shanghai source day", () => {
+    const sourceDate = new Date("2026-05-18T04:00:00Z");
+    const now = new Date("2026-05-18T10:00:00Z");
+
+    expect(isCurrentSourceDate(sourceDate, now)).toBe(true);
+  });
+
+  it("accepts yesterday's source day before 08:00 in Asia/Shanghai", () => {
+    const sourceDate = new Date("2026-05-17T04:00:00Z");
+    const now = new Date("2026-05-17T23:30:00Z");
+
+    expect(isCurrentSourceDate(sourceDate, now)).toBe(true);
+  });
+
+  it("rejects yesterday's source day at or after 08:00 in Asia/Shanghai", () => {
+    const sourceDate = new Date("2026-05-17T04:00:00Z");
+    const now = new Date("2026-05-18T00:00:00Z");
+
+    expect(isCurrentSourceDate(sourceDate, now)).toBe(false);
+  });
+
+  it("rejects source days older than yesterday even before 08:00 in Asia/Shanghai", () => {
+    const sourceDate = new Date("2026-05-16T04:00:00Z");
+    const now = new Date("2026-05-17T23:30:00Z");
+
+    expect(isCurrentSourceDate(sourceDate, now)).toBe(false);
   });
 });

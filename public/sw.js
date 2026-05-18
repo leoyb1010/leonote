@@ -1,4 +1,4 @@
-const CACHE_NAME = "leonote-runtime-v20260510";
+const CACHE_NAME = "leonote-runtime-v20260518";
 const STATIC_ASSETS = ["/manifest.json", "/favicon.ico", "/icon-192.png", "/icon-512.png", "/offline.html"];
 
 self.addEventListener("install", (event) => {
@@ -32,6 +32,11 @@ self.addEventListener("fetch", (event) => {
   const url = new URL(req.url);
   if (url.pathname.startsWith("/api/")) return;
   if (url.pathname.startsWith("/_next/")) return;
+  if (url.searchParams.has("_rsc")) return;
+  if (req.headers.get("rsc") === "1") return;
+  if (req.headers.get("next-router-prefetch")) return;
+  if (req.headers.get("next-router-state-tree")) return;
+  if (req.headers.get("accept")?.includes("text/x-component")) return;
 
   const acceptsHtml =
     req.headers.get("accept")?.includes("text/html");

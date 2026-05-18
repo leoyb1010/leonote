@@ -349,17 +349,17 @@ function MarketPulseStrip({
       {visible.length === 0 ? (
         <p className="text-xs text-[var(--text-muted)]">市场数据收集中。</p>
       ) : (
-        <div className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1">
+        <div className="grid grid-cols-1 gap-2 min-[380px]:grid-cols-2 sm:-mx-1 sm:flex sm:overflow-x-auto sm:px-1 sm:pb-1">
           {visible.map((item) => {
             const up = item.changePct >= 0;
             const Icon = up ? ArrowUpRight : ArrowDownRight;
             return (
               <span
                 key={item.symbol}
-                className="inline-flex shrink-0 items-center gap-2 rounded-[var(--radius-pill)] border border-[var(--hairline)] bg-[var(--material-elevated)] px-3 py-1.5 text-xs text-[var(--text-secondary)]"
+                className="inline-flex min-w-0 items-center gap-1.5 rounded-[var(--radius-pill)] border border-[var(--hairline)] bg-[var(--material-elevated)] px-2.5 py-1.5 text-xs text-[var(--text-secondary)] sm:shrink-0 sm:gap-2 sm:px-3"
               >
-                <span className="font-medium text-[var(--text-primary)]">{item.name}</span>
-                <span className="numeric-display text-[var(--text-muted)]">{formatMarketPrice(item)}</span>
+                <span className="min-w-0 truncate font-medium text-[var(--text-primary)]">{item.name}</span>
+                <span className="shrink-0 numeric-display text-[var(--text-muted)]">{formatMarketPrice(item)}</span>
                 <span className={`inline-flex items-center gap-0.5 numeric-display ${up ? "text-[var(--danger)]" : "text-[var(--success)]"}`}>
                   <Icon size={11} />
                   {up ? "+" : ""}{item.changePct.toFixed(2)}%
@@ -403,10 +403,8 @@ export function BriefingHero({
       variants={cardFloatIn}
       initial="initial"
       animate="animate"
-      className="card-premium relative overflow-hidden p-4 sm:p-5 md:p-6"
+      className="card-premium relative overflow-hidden p-3.5 sm:p-5 md:p-6"
     >
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_18%_0%,rgba(255,255,255,0.055),transparent_32%),radial-gradient(circle_at_92%_18%,var(--primary-soft),transparent_28%)]" />
-
       <div className="relative z-10">
         <div className="flex flex-wrap items-center gap-2 text-xs text-[var(--text-muted)]">
           <span className="inline-flex items-center gap-1.5 rounded-[var(--radius-pill)] border border-[var(--hairline)] bg-[var(--material-inset)] px-2.5 py-1">
@@ -442,12 +440,12 @@ export function BriefingHero({
               aria-label="简报标题"
               value={title}
               onChange={(event) => onTitleChange(event.target.value)}
-              className="w-full max-w-3xl bg-transparent text-[1.7rem] font-semibold leading-tight text-[var(--text-primary)] outline-none transition-colors placeholder:text-[var(--text-placeholder)] focus:text-[var(--primary)] sm:text-[2.15rem]"
+              className="w-full max-w-3xl bg-transparent text-[1.55rem] font-semibold leading-tight text-[var(--text-primary)] outline-none transition-colors placeholder:text-[var(--text-placeholder)] focus:text-[var(--primary)] sm:text-[2.15rem]"
               placeholder="每日简报"
             />
             </motion.div>
 
-            <div className="mt-4 flex flex-wrap gap-2">
+            <div className="mt-4 flex gap-2 overflow-x-auto pb-1 sm:flex-wrap sm:overflow-visible sm:pb-0">
               <Button variant="primary" size="sm" onClick={onRefresh} disabled={loading} className="gap-1.5">
                 {loading ? <Loader2 size={14} className="animate-spin" /> : <RefreshCw size={14} />}
                 刷新简报

@@ -25,7 +25,7 @@
 </p>
 
 <p>
-  <img alt="Version" src="https://img.shields.io/badge/Version-v1.6.19-7B84F6?style=for-the-badge">
+  <img alt="Version" src="https://img.shields.io/badge/Version-v1.7.0-7B84F6?style=for-the-badge">
   <img alt="License" src="https://img.shields.io/badge/License-Personal%20Use%20Only-F26D6D?style=for-the-badge">
   <img alt="Next.js" src="https://img.shields.io/badge/Next.js-16-111111?style=for-the-badge&logo=nextdotjs">
   <img alt="Tauri" src="https://img.shields.io/badge/Tauri-2-24C8DB?style=for-the-badge&logo=tauri">
@@ -34,7 +34,7 @@
 </p>
 
 <p>
-  <strong>A self-hosted personal knowledge residence for notes, long-term memory, daily briefings, and lightweight finance.</strong><br>
+  <strong>A self-hosted personal knowledge residence for notes, long-term memory, daily briefings, a gear library, and lightweight finance.</strong><br>
   Built for quiet writing, calm retrieval, and a consistent experience across desktop, tablet, mobile, PWA, and Tauri WebView shells.
 </p>
 
@@ -58,12 +58,12 @@
 </p>
 
 <p align="center">
-  <sub>Screenshots are maintained for the current v1.6.19 Quiet Material UI across desktop, note editing, and mobile briefing layouts.</sub>
+  <sub>Screenshots are maintained for the current v1.7.0 Quiet Material UI across desktop, note editing, and mobile briefing layouts.</sub>
 </p>
 
 ## Overview
 
-Leonote is a self-hosted personal note-taking and knowledge home. It combines Markdown notes, projects, tags, search, long-term AI memory, a daily intelligence briefing, and lightweight expense tracking in one calm private workspace.
+Leonote is a self-hosted personal note-taking and knowledge home. It combines Markdown notes, projects, tags, search, long-term AI memory, a daily intelligence briefing, a gear library, and lightweight expense tracking in one calm private workspace.
 
 The product follows a **Quiet Material** design language: restrained surfaces, subtle borders, careful typography, and layouts designed for repeated daily use rather than visual noise.
 
@@ -74,7 +74,7 @@ The product follows a **Quiet Material** design language: restrained surfaces, s
 - **AI-assisted thinking**: an event radar for domestic/international/AI-tech/market signals plus seven high-impact thoughts.
 - **Global AI assistant**: a context-aware AI panel that can be opened from the current page.
 - **Inline attachments**: paste or drag images and documents directly into note content.
-- **Lightweight ledger**: fast expense capture, category management, weekly/monthly summary, and soft delete.
+- **Gear library & ledger**: capture device or item models, price, channel, warranty, serial number, status, and location, with optional linked expenses plus the original ledger flow.
 - **Search**: SQLite FTS5 full-text search with Chinese phrase matching.
 - **Self-hosted first**: one server, one SQLite database, browser/PWA/mobile/desktop access.
 
@@ -159,19 +159,15 @@ RSSHUB_BASE_URL="https://rsshub.app"
 
 ## Version
 
-Current version: **v1.6.19**
+Current version: **v1.7.0**
 
 Recent release focus:
 
-- Daily horoscope refresh now forces the horoscope pipeline, accepts only Asia/Shanghai same-day source dates, and shows the source horoscope date in the UI.
-- Source-driven Simplified Chinese horoscope summaries now change with the live horoscope text even when no AI key is configured.
-- Security and reliability hardening for image proxy SSRF protection, attachment MIME handling, AI prompt budgets, RSS body limits, horoscope cache freshness, and trusted-proxy rate limiting.
-- Compact Daily Briefing hero with no large blank area under the title.
-- Market temperature follows the requested order: SSE, SZSE, US stocks, Hong Kong stocks, USD/CNY, gold, crypto, and oil.
-- Event radar keeps a daily mix of 1-2 international events, 1-2 domestic events, and 3-5 AI/tech events.
-- Visible Daily Briefing component labels are normalized to Simplified Chinese in the product UI.
-- Informal community help threads are filtered out before they can appear in the briefing radar.
-- The standalone X monitoring module has been removed.
+- `/ledger` now opens as a two-mode Gear Library + Ledger page. The gear library supports quick natural-language capture, item details, status/location/warranty/serial fields, and optional linked expenses.
+- The original ledger flow remains available in the same page for quick expense capture, categories, weekly/monthly summaries, and soft deletion.
+- The PWA service worker now bypasses Next.js RSC and App Router navigation requests, fixing stale-cache failures that could show “This page couldn’t load” after clicking Ledger.
+- The mobile Daily Briefing layout is reorganized around Radar, Featured, Thinking, and News sections, with tighter 320px / 390px responsive behavior.
+- Horoscope source freshness is now explicit: Asia/Shanghai same-day sources are valid, western sources dated yesterday are allowed only from 00:00 through 07:59 Shanghai time, and yesterday is rejected from 08:00 onward.
 
 For the full Chinese changelog, see [README.md](README.md#版本记录).
 
