@@ -10,11 +10,11 @@ interface BottomNavProps {
 }
 
 const navItems = [
-  { id: "briefing", label: "简报", icon: Newspaper, href: "/briefing" },
   { id: "today", label: "今天", icon: Sun, href: "/" },
-  { id: "schedule", label: "日程", icon: CalendarClock, href: "/schedule" },
-  { id: "notes", label: "笔记库", icon: Library, href: "/notes" },
+  { id: "briefing", label: "简报", icon: Newspaper, href: "/briefing" },
   { id: "new", label: "", icon: Plus, href: "/notes/new", isAction: true },
+  { id: "notes", label: "笔记", icon: Library, href: "/notes" },
+  { id: "ledger", label: "装备库", icon: Boxes, href: "/ledger" },
 ];
 
 const createItems = [
@@ -47,11 +47,12 @@ export function BottomNav({ currentPath }: BottomNavProps) {
                 type="button"
                 onClick={() => setSheetOpen(true)}
                 className={cn(
-                  "flex items-center justify-center w-10 h-10 rounded-xl transition-all",
+                  "flex items-center justify-center w-11 h-11 rounded-2xl transition-all",
                   active
                     ? "bg-[var(--primary)] text-[var(--text-primary)] shadow-lg shadow-[var(--primary-soft)]"
                     : "bg-[var(--primary-soft)] text-[var(--primary)] active:scale-95"
                 )}
+                aria-label="打开创建菜单"
               >
                 <Icon size={20} />
               </button>
@@ -62,15 +63,16 @@ export function BottomNav({ currentPath }: BottomNavProps) {
             <Link
               key={item.id}
               href={item.href}
+              aria-current={active ? "page" : undefined}
               className={cn(
-                "flex flex-col items-center justify-center gap-0.5 min-w-0 px-2 py-1 rounded-lg transition-colors",
+                "relative flex min-w-0 flex-1 flex-col items-center justify-center gap-0.5 rounded-lg px-1 py-1 transition-colors before:absolute before:left-1/2 before:top-0 before:h-0.5 before:w-6 before:-translate-x-1/2 before:rounded-full before:transition-opacity",
                 active
-                  ? "text-[var(--primary)]"
-                  : "text-[var(--text-muted)]"
+                  ? "text-[var(--primary)] before:bg-[var(--primary)] before:opacity-100"
+                  : "text-[var(--text-muted)] before:opacity-0"
               )}
             >
               <Icon size={18} />
-              <span className="text-[10px] font-medium truncate">{item.label}</span>
+              <span className="max-w-[58px] truncate text-[10px] font-medium leading-[1.1]">{item.label}</span>
             </Link>
           );
         })}

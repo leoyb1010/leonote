@@ -574,7 +574,7 @@ export function GearLibrary({ initialItems, initialSummary, expenseCategories }:
 
       <GearQuickCapture categories={expenseCategories} onCreated={handleCreated} />
 
-      <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+      <section className="grid grid-cols-2 gap-2 xl:grid-cols-4">
         <MetricCard label="装备数量" value={String(summary.total)} hint={`${summary.active} 件在用`} icon={<Package size={14} />} />
         <MetricCard label="估算投入" value={formatMoney(summary.totalValue)} hint="只统计在用与维修中" icon={<CircleDollarSign size={14} />} />
         <MetricCard label="想买清单" value={String(summary.wishlist)} hint="候选设备先放这里" icon={<Search size={14} />} />
@@ -600,7 +600,7 @@ export function GearLibrary({ initialItems, initialSummary, expenseCategories }:
 
       <section>
         <div className="mb-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex flex-wrap gap-2">
+          <div className="-mx-4 flex flex-nowrap gap-2 overflow-x-auto px-4 sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0">
             {statusOptions.map((item) => (
               <button
                 key={item.value}

@@ -4,6 +4,7 @@ import { getSessionUserId } from "@/lib/session";
 import { prisma } from "@/lib/prisma";
 import { ensureProject, listNotes, syncNoteTags, toNoteDTO } from "@/lib/server-notes";
 import { guardUserWriteRequest } from "@/lib/request-guard";
+import { ensureNoteFtsReady } from "@/lib/note-fts";
 
 const schema = z.object({
   title: z.string().min(1),
@@ -48,7 +49,7 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   const userId = await getSessionUserId();
   if (!userId) return NextResponse.json({ ok: false, message: "未登录" }, { status: 401 });
-  const guarded = guardUserWriteRequest(request, userId, "notes");
+  const guarded = guardUserWriteRequest(request, userId, "notes", { limit: 180 });
   if (guarded) return guarded;
 
   const body = await request.json();
@@ -60,6 +61,12 @@ export async function POST(request: Request) {
     projectId = await resolveProjectId(userId, parsed.data.projectId || null, parsed.data.projectName);
   } catch {
     return NextResponse.json({ ok: false, message: "项目不存在或不属于当前账号" }, { status: 400 });
+  }
+
+  try {
+    await ensureNoteFtsReady();
+  } catch {
+    return NextResponse.json({ ok: false, message: "全文索引初始化失败，请稍后再试" }, { status: 500 });
   }
 
   const note = await prisma.note.create({

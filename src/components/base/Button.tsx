@@ -37,7 +37,7 @@ const sizeStyles: Record<ButtonSize, string> = {
 
 export function buttonClass(variant: ButtonVariant, size: ButtonSize, className?: string) {
   return cn(
-    "inline-flex items-center justify-center whitespace-nowrap text-center font-medium transition-[background-color,border-color,color,opacity] duration-[var(--duration-quick)] cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed xl:min-h-[40px] 2xl:min-h-[44px]",
+    "inline-flex items-center justify-center whitespace-nowrap text-center font-medium transition-[background-color,border-color,color,opacity] duration-[var(--duration-quick)] cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed",
     variantStyles[variant],
     sizeStyles[size],
     className
@@ -56,10 +56,24 @@ export function Button({
   ...props
 }: ButtonProps) {
   const classes = buttonClass(variant, size, className);
+  const spinner = (
+    <svg className="animate-spin h-3.5 w-3.5" viewBox="0 0 24 24" aria-hidden="true">
+      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+    </svg>
+  );
 
   if (asChild && React.isValidElement(children)) {
-    return React.cloneElement(children as React.ReactElement<{ className?: string }>, {
-      className: cn(classes, (children.props as { className?: string }).className),
+    const child = children as React.ReactElement<{ className?: string; children?: React.ReactNode; "aria-disabled"?: boolean }>;
+    return React.cloneElement(child, {
+      className: cn(classes, child.props.className, (disabled || loading) && "pointer-events-none opacity-40"),
+      "aria-disabled": disabled || loading || undefined,
+      children: (
+        <>
+          {loading ? spinner : icon ? <span className="shrink-0">{icon}</span> : null}
+          {child.props.children}
+        </>
+      ),
     });
   }
 
@@ -71,12 +85,7 @@ export function Button({
       disabled={disabled || loading}
       {...props}
     >
-      {loading ? (
-        <svg className="animate-spin h-3.5 w-3.5" viewBox="0 0 24 24">
-          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-        </svg>
-      ) : icon ? (
+      {loading ? spinner : icon ? (
         <span className="shrink-0">{icon}</span>
       ) : null}
       {children}

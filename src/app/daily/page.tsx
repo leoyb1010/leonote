@@ -3,7 +3,7 @@ import { PageContainer } from "@/components/layout/PageContainer";
 
 export default function DailyPage() {
   return (
-    <PageContainer width="default">
+    <PageContainer width="dashboard">
       <ServerDailyClient />
     </PageContainer>
   );

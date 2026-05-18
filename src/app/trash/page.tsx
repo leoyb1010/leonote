@@ -4,7 +4,7 @@ import { PageHeader } from "@/components/layout/PageHeader";
 
 export default function TrashPage() {
   return (
-    <PageContainer width="default">
+    <PageContainer width="dashboard">
       <PageHeader title="回收站" />
       <ServerFilterView type="deleted" />
     </PageContainer>

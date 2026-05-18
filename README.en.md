@@ -25,7 +25,7 @@
 </p>
 
 <p>
-  <img alt="Version" src="https://img.shields.io/badge/Version-v1.8.0-7B84F6?style=for-the-badge">
+  <img alt="Version" src="https://img.shields.io/badge/Version-v1.8.1-7B84F6?style=for-the-badge">
   <img alt="License" src="https://img.shields.io/badge/License-Personal%20Use%20Only-F26D6D?style=for-the-badge">
   <img alt="Next.js" src="https://img.shields.io/badge/Next.js-16-111111?style=for-the-badge&logo=nextdotjs">
   <img alt="Tauri" src="https://img.shields.io/badge/Tauri-2-24C8DB?style=for-the-badge&logo=tauri">
@@ -58,7 +58,7 @@
 </p>
 
 <p align="center">
-  <sub>Screenshots are maintained for the current v1.8.0 Quiet Material UI across desktop, note editing, mobile briefing, and schedule workspace layouts.</sub>
+  <sub>Screenshots are maintained for the current v1.8.1 Quiet Material UI across desktop, note editing, mobile briefing, and schedule workspace layouts.</sub>
 </p>
 
 ## Overview
@@ -159,10 +159,15 @@ RSSHUB_BASE_URL="https://rsshub.app"
 
 ## Version
 
-Current version: **v1.8.0**
+Current version: **v1.8.1**
 
 Recent release focus:
 
+- Repaired new-note saving when an existing SQLite database is missing the `NoteFts` virtual table: v1.8.1 adds an idempotent migration plus runtime FTS self-healing before note create/update/delete.
+- Tightened the mobile shell with Today / Briefing / New / Notes / Gear bottom navigation, safe-area spacing, PWA shortcuts, and a service worker update prompt with static bundle caching.
+- Expanded dashboard containers across Today, Briefing, Notes, Archive, Favorites, Search, Daily, and Trash so desktop layouts feel full at 1440px-1920px without wasting side gutters.
+- Refined the Briefing page density, market strip, news-card optimistic rollback, Ledger URL tab state, Today quick-capture keyboard behavior, command palette coverage, and shared Button behavior.
+- Refreshed README screenshots for desktop briefing, home, note editing, and mobile briefing after Playwright validation.
 - New personal schedule module with Today / Week timelines, event creation, done/restore/delete actions, color markers, and note/project/gear links.
 - The Today page now surfaces schedule blocks, and project cards show upcoming linked schedule events.
 - The Cal-like workspace visual system is expanded across navigation, page headers, dashboard metrics, object-library lists, and quick action areas.

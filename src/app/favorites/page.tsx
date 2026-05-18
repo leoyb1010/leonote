@@ -5,7 +5,7 @@ import { PageHeader } from "@/components/layout/PageHeader";
 
 export default function FavoritesPage() {
   return (
-    <PageContainer width="default">
+    <PageContainer width="dashboard">
       <PageHeader title="收藏与记忆" />
       <div className="space-y-6">
         <MemoryFactsPanel />

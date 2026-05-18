@@ -4,7 +4,7 @@
 
 import React, { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Search, FileText, FolderKanban, Sparkles, Settings, Sun, Plus } from "lucide-react";
+import { Bookmark, Boxes, CalendarClock, FilePlus2, FileText, FolderKanban, Newspaper, Search, Settings, Sparkles, Sun } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 interface CommandItem {
@@ -43,12 +43,16 @@ export function CommandPalette() {
   }, [open]);
 
   const allCommands: CommandItem[] = [
-    { id: "new-note", label: "新建笔记", description: "创建一篇新笔记", icon: <Plus size={16} />, action: () => router.push("/notes/new"), shortcut: "⌘N" },
-    { id: "today", label: "今天", description: "查看今日回顾", icon: <Sun size={16} />, action: () => router.push("/") },
+    { id: "new-note", label: "新建笔记", description: "创建一篇新笔记", icon: <FilePlus2 size={16} />, action: () => router.push("/notes/new"), shortcut: "⌘N" },
+    { id: "briefing", label: "简报", description: "每日资讯与思考", icon: <Newspaper size={16} />, action: () => router.push("/briefing") },
+    { id: "today", label: "今天", description: "查看今日工作台", icon: <Sun size={16} />, action: () => router.push("/") },
     { id: "notes", label: "所有笔记", description: "浏览全部笔记", icon: <FileText size={16} />, action: () => router.push("/notes") },
+    { id: "schedule", label: "日程", description: "今天和本周时间线", icon: <CalendarClock size={16} />, action: () => router.push("/schedule") },
     { id: "projects", label: "项目", description: "管理项目看板", icon: <FolderKanban size={16} />, action: () => router.push("/projects") },
-    { id: "ai", label: "AI 问答", description: "向 AI 提问", icon: <Sparkles size={16} />, action: () => router.push("/ai") },
-    { id: "search", label: "搜索笔记", description: "全文搜索", icon: <Search size={16} />, action: () => router.push("/search") },
+    { id: "ledger", label: "装备库", description: "装备与记账", icon: <Boxes size={16} />, action: () => router.push("/ledger") },
+    { id: "ai", label: "AI 助手", description: "向 AI 提问", icon: <Sparkles size={16} />, action: () => router.push("/ai") },
+    { id: "favorites", label: "收藏", description: "收藏与长期记忆", icon: <Bookmark size={16} />, action: () => router.push("/favorites") },
+    { id: "search", label: "搜索", description: "全文搜索笔记", icon: <Search size={16} />, action: () => router.push("/search") },
     { id: "settings", label: "设置", description: "AI 配置、导入导出", icon: <Settings size={16} />, action: () => router.push("/settings") },
   ];
 

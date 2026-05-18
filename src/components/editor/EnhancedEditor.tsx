@@ -197,10 +197,15 @@ export function EnhancedEditor({ initialNote }: { initialNote?: NoteShape }) {
             body: JSON.stringify(payload),
           },
         );
-        const data = await res.json();
+        const data = await res.json().catch(() => ({ message: "" }));
         if (!res.ok) {
           setSaveState("error");
-          setMessage(data.message || "这次没有保存成功，请先复制内容");
+          setMessage(data.message || `这次没有保存成功（${res.status}），请先复制内容。`);
+          return null;
+        }
+        if (!data.note?.id) {
+          setSaveState("error");
+          setMessage("保存返回异常，请先复制内容后再试。");
           return null;
         }
         const id = data.note.id as string;

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { ArrowRight, Boxes, Package, WalletCards } from "lucide-react";
 import { EmptyState } from "@/components/base/EmptyState";
 import { Button } from "@/components/base/Button";
@@ -70,9 +71,19 @@ function updateDaily(daily: ExpenseSummaryDTO["daily"], dateValue: string, delta
 }
 
 export function LedgerPage({ signedIn, categories, summary, gearItems, gearSummary }: Props) {
+  const router = useRouter();
+  const pathname = usePathname();
+  const params = useSearchParams();
   const [recent, setRecent] = useState<ExpenseDTO[]>(summary?.recent ?? []);
   const [localSummary, setLocalSummary] = useState(summary);
-  const [activeView, setActiveView] = useState<"gear" | "ledger">("gear");
+  const activeView = params.get("tab") === "ledger" ? "ledger" : "gear";
+
+  function setActiveView(next: "gear" | "ledger") {
+    const nextParams = new URLSearchParams(params.toString());
+    if (next === "gear") nextParams.delete("tab");
+    else nextParams.set("tab", "ledger");
+    router.replace(`${pathname}${nextParams.toString() ? `?${nextParams}` : ""}`, { scroll: false });
+  }
 
   function handleCreated(expense: ExpenseDTO) {
     setRecent((prev) => [expense, ...prev].slice(0, 10));
@@ -141,7 +152,7 @@ export function LedgerPage({ signedIn, categories, summary, gearItems, gearSumma
   }
 
   const tabClass = (view: "gear" | "ledger") => cn(
-    "inline-flex min-h-10 flex-1 items-center justify-center gap-2 rounded-xl px-3 text-sm transition sm:flex-none",
+    "inline-flex min-h-10 flex-1 items-center justify-center gap-2 rounded-xl px-3 text-sm transition",
     activeView === view
       ? "bg-[var(--text-primary)] text-[var(--bg-app)]"
       : "text-[var(--text-secondary)] hover:bg-[var(--interactive-hover)] hover:text-[var(--text-primary)]",
@@ -150,7 +161,7 @@ export function LedgerPage({ signedIn, categories, summary, gearItems, gearSumma
   return (
     <div className="space-y-6">
       <section className="rounded-[var(--radius-2xl)] border border-[var(--hairline)] bg-[var(--material-elevated)] p-4 shadow-[var(--shadow-sm)] sm:p-5">
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+        <div className="flex min-w-0 flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
           <div className="flex min-w-0 gap-3">
             <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[var(--material-inset)] text-[var(--primary)]">
               <Boxes size={19} />
@@ -163,7 +174,7 @@ export function LedgerPage({ signedIn, categories, summary, gearItems, gearSumma
               </p>
             </div>
           </div>
-          <div className="rounded-[var(--radius-2xl)] border border-[var(--hairline)] bg-[var(--material-inset)] p-1 sm:inline-flex">
+          <div className="inline-flex w-full shrink-0 rounded-[var(--radius-2xl)] border border-[var(--hairline)] bg-[var(--material-inset)] p-1 sm:w-auto">
             <button type="button" className={tabClass("gear")} onClick={() => setActiveView("gear")}>
               <Package size={16} />
               装备库

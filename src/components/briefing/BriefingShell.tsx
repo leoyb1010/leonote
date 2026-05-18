@@ -300,11 +300,29 @@ export function BriefingShell({
   }, []);
 
   useEffect(() => {
-    const id = window.setInterval(() => {
-      void refreshMarkets(false);
-    }, 60_000);
+    let id: number | null = null;
+    const start = () => {
+      if (id != null) return;
+      id = window.setInterval(() => {
+        void refreshMarkets(false);
+      }, 60_000);
+    };
+    const stop = () => {
+      if (id == null) return;
+      window.clearInterval(id);
+      id = null;
+    };
+    const onVisibility = () => {
+      if (document.hidden) stop();
+      else start();
+    };
 
-    return () => window.clearInterval(id);
+    if (!document.hidden) start();
+    document.addEventListener("visibilitychange", onVisibility);
+    return () => {
+      stop();
+      document.removeEventListener("visibilitychange", onVisibility);
+    };
   }, [refreshMarkets]);
 
   function patchItem(itemId: string, patch: Partial<Pick<NewsItemDTO, "isRead" | "isFavorited" | "isImported" | "importedNoteId">>) {
@@ -357,8 +375,6 @@ export function BriefingShell({
   }
 
   const streamTitle = category === "all" ? "全部资讯" : `${categoryLabel(category)}资讯`;
-  const streamEyebrow = range === "favorites" ? "收藏" : range === "week" ? "本周" : "证据";
-
   return (
     <PageContainer width="dashboard">
       <BriefingHero
@@ -422,7 +438,7 @@ export function BriefingShell({
         variants={listStagger}
         initial="initial"
         animate="animate"
-        className="mt-4 grid gap-5 lg:mt-6 lg:grid-cols-[minmax(0,1fr)_320px] lg:gap-6 xl:grid-cols-[minmax(0,1fr)_360px]"
+        className="mt-4 grid gap-5 lg:mt-6 lg:grid-cols-[minmax(0,1fr)_320px] lg:gap-6 xl:grid-cols-[minmax(0,1fr)_360px] 2xl:grid-cols-[minmax(0,1fr)_400px] 2xl:gap-8 3xl:grid-cols-[minmax(0,1fr)_440px]"
       >
         <div className="space-y-6 lg:space-y-8">
           <div id="briefing-radar" className="scroll-mt-20">
@@ -434,8 +450,8 @@ export function BriefingShell({
 
           <NewsColumn
             sectionId="briefing-featured"
-            title="精选证据"
-            eyebrow="精选证据"
+            title="今日精选"
+            eyebrow="精选"
             items={featuredItems}
             limit={category === "all" ? 4 : 3}
             featured
@@ -455,8 +471,8 @@ export function BriefingShell({
 
           <NewsColumn
             sectionId="briefing-stream"
-            title={`${streamTitle}证据库`}
-            eyebrow={streamEyebrow}
+            title={streamTitle}
+            eyebrow={range === "favorites" ? "收藏" : range === "week" ? "本周" : "资讯流"}
             items={streamItems}
             limit={range === "week" ? 36 : 18}
             dense

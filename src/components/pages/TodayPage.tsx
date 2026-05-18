@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { BookOpenText, Boxes, CalendarClock, FilePlus2, FolderPlus, Gauge, History, Library, Newspaper, PenLine, Search, Sparkles, Sun, WalletCards } from "lucide-react";
 import Link from "next/link";
 import { motion } from "framer-motion";
@@ -110,6 +110,7 @@ function QuickCapture({ onCreated }: { onCreated?: (note: QuickCaptureNote) => v
   const [value, setValue] = useState("");
   const [saving, setSaving] = useState(false);
   const [toast, setToast] = useState("");
+  const [composing, setComposing] = useState(false);
 
   async function submit() {
     const text = value.trim();
@@ -142,8 +143,11 @@ function QuickCapture({ onCreated }: { onCreated?: (note: QuickCaptureNote) => v
         <textarea
           value={value}
           onChange={(event) => setValue(event.target.value)}
+          onCompositionStart={() => setComposing(true)}
+          onCompositionEnd={() => setComposing(false)}
           onKeyDown={(event) => {
-            if (event.key === "Enter" && event.shiftKey) {
+            if (composing) return;
+            if (event.key === "Enter" && !event.shiftKey) {
               event.preventDefault();
               void submit();
             }
@@ -153,7 +157,7 @@ function QuickCapture({ onCreated }: { onCreated?: (note: QuickCaptureNote) => v
           rows={1}
         />
         <div className="flex flex-col items-stretch gap-2 px-2 pb-1 sm:flex-row sm:items-center sm:justify-between">
-          <span className="text-xs text-[var(--text-muted)]">Enter 换行 · Shift + Enter 保存</span>
+          <span className="text-xs text-[var(--text-muted)]">Shift + Enter 换行 · Enter 保存</span>
           <Button size="md" icon={<PenLine size={15} />} onClick={submit} loading={saving} variant="primary" className="w-full sm:w-auto">
             安放
           </Button>
@@ -253,23 +257,27 @@ function timeLabel(value: string) {
 export function TodayPage({ data, signedIn }: TodayPageProps) {
   const [recent, setRecent] = useState(data?.recent ?? []);
   const [counts, setCounts] = useState(data?.counts ?? { total: 0, favorite: 0, pinned: 0 });
-  const [mounted, setMounted] = useState(false);
+  const [openMenu, setOpenMenu] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- standard mounted pattern for hydration safety
-    setMounted(true);
-  }, []);
+    if (!openMenu) return;
+    const onDocClick = (event: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) setOpenMenu(false);
+    };
+    document.addEventListener("mousedown", onDocClick);
+    return () => document.removeEventListener("mousedown", onDocClick);
+  }, [openMenu]);
 
-  const dateStr = mounted
-    ? new Date().toLocaleDateString("zh-CN", {
-        year: "numeric",
-        month: "long",
-        day: "numeric",
-        weekday: "long",
-      })
-    : "";
+  const dateStr = new Date().toLocaleDateString("zh-CN", {
+    timeZone: "Asia/Shanghai",
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+    weekday: "long",
+  });
 
-  const greeting = mounted ? getGreeting() : "";
+  const greeting = getGreeting();
 
   // Signed out
   if (!signedIn) {
@@ -413,54 +421,45 @@ export function TodayPage({ data, signedIn }: TodayPageProps) {
             </p>
           )}
         </div>
-        <details className="relative w-full shrink-0 open:z-[80] sm:w-auto">
-          <summary
+        <div ref={menuRef} className="relative w-full shrink-0 sm:w-auto">
+          <button
+            type="button"
             data-testid="today-start-writing"
-            className={buttonClass("primary", "lg", "w-full list-none sm:w-auto [&::-webkit-details-marker]:hidden")}
+            onClick={() => setOpenMenu((value) => !value)}
+            className={buttonClass("primary", "lg", "w-full sm:w-auto")}
           >
             开始书写
-          </summary>
-          <div
-            data-testid="today-create-menu"
-            className="absolute right-0 top-[calc(100%+0.5rem)] z-[70] w-full min-w-[260px] rounded-[var(--radius-2xl)] border border-[var(--hairline)] bg-[var(--material-elevated)] p-2 shadow-[var(--shadow-md)] sm:w-[320px]"
-          >
-            <p className="px-3 py-2 text-sm font-medium text-[var(--text-primary)]">选择要写什么</p>
-            {/* Native anchors keep this menu usable even if client routing has not hydrated yet. */}
-            {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
-            <a
-              href="/notes/new"
-              className="flex min-h-[56px] items-center gap-3 rounded-2xl px-4 text-sm text-[var(--text-secondary)] transition-colors hover:bg-[var(--interactive-hover)] hover:text-[var(--text-primary)]"
+          </button>
+          {openMenu ? (
+            <div
+              data-testid="today-create-menu"
+              className="absolute right-0 top-[calc(100%+0.5rem)] z-[70] w-full min-w-[260px] rounded-[var(--radius-2xl)] border border-[var(--hairline)] bg-[var(--material-elevated)] p-2 shadow-[var(--shadow-md)] sm:w-[320px]"
             >
-              <FilePlus2 size={18} className="shrink-0 text-[var(--primary)]" />
-              <span>
-                <span className="block font-medium text-[var(--text-primary)]">新笔记</span>
-                <span className="mt-0.5 block text-xs text-[var(--text-muted)]">打开完整编辑器</span>
-              </span>
-            </a>
-            {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
-            <a
-              href="/ledger"
-              className="flex min-h-[56px] items-center gap-3 rounded-2xl px-4 text-sm text-[var(--text-secondary)] transition-colors hover:bg-[var(--interactive-hover)] hover:text-[var(--text-primary)]"
-            >
-              <WalletCards size={18} className="shrink-0 text-[var(--primary)]" />
-              <span>
-                <span className="block font-medium text-[var(--text-primary)]">记一笔</span>
-                <span className="mt-0.5 block text-xs text-[var(--text-muted)]">记录今天的花费</span>
-              </span>
-            </a>
-            {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
-            <a
-              href="/projects"
-              className="flex min-h-[56px] items-center gap-3 rounded-2xl px-4 text-sm text-[var(--text-secondary)] transition-colors hover:bg-[var(--interactive-hover)] hover:text-[var(--text-primary)]"
-            >
-              <FolderPlus size={18} className="shrink-0 text-[var(--primary)]" />
-              <span>
-                <span className="block font-medium text-[var(--text-primary)]">项目笔记</span>
-                <span className="mt-0.5 block text-xs text-[var(--text-muted)]">进入项目空间继续写</span>
-              </span>
-            </a>
-          </div>
-        </details>
+              <p className="px-3 py-2 text-sm font-medium text-[var(--text-primary)]">选择要写什么</p>
+              <Link href="/notes/new" onClick={() => setOpenMenu(false)} className="flex min-h-[56px] items-center gap-3 rounded-2xl px-4 text-sm text-[var(--text-secondary)] transition-colors hover:bg-[var(--interactive-hover)] hover:text-[var(--text-primary)]">
+                <FilePlus2 size={18} className="shrink-0 text-[var(--primary)]" />
+                <span>
+                  <span className="block font-medium text-[var(--text-primary)]">新笔记</span>
+                  <span className="mt-0.5 block text-xs text-[var(--text-muted)]">打开完整编辑器</span>
+                </span>
+              </Link>
+              <Link href="/ledger?tab=ledger" onClick={() => setOpenMenu(false)} className="flex min-h-[56px] items-center gap-3 rounded-2xl px-4 text-sm text-[var(--text-secondary)] transition-colors hover:bg-[var(--interactive-hover)] hover:text-[var(--text-primary)]">
+                <WalletCards size={18} className="shrink-0 text-[var(--primary)]" />
+                <span>
+                  <span className="block font-medium text-[var(--text-primary)]">记一笔</span>
+                  <span className="mt-0.5 block text-xs text-[var(--text-muted)]">记录今天的花费</span>
+                </span>
+              </Link>
+              <Link href="/projects" onClick={() => setOpenMenu(false)} className="flex min-h-[56px] items-center gap-3 rounded-2xl px-4 text-sm text-[var(--text-secondary)] transition-colors hover:bg-[var(--interactive-hover)] hover:text-[var(--text-primary)]">
+                <FolderPlus size={18} className="shrink-0 text-[var(--primary)]" />
+                <span>
+                  <span className="block font-medium text-[var(--text-primary)]">项目笔记</span>
+                  <span className="mt-0.5 block text-xs text-[var(--text-muted)]">进入项目空间继续写</span>
+                </span>
+              </Link>
+            </div>
+          ) : null}
+        </div>
       </div>
     </motion.section>
   );
@@ -469,14 +468,14 @@ export function TodayPage({ data, signedIn }: TodayPageProps) {
     <div className="min-w-0 space-y-6">
       {heroSection}
 
-      <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+      <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <DashboardMetric label="全部笔记" value={String(counts.total)} hint={`${counts.pinned} 篇置顶`} icon={<Library size={15} />} />
         <DashboardMetric label="收藏内容" value={String(counts.favorite)} hint="长期值得回看" icon={<BookOpenText size={15} />} />
         <DashboardMetric label="今日日程" value={String(schedule.today)} hint={`${schedule.week} 项本周安排`} icon={<CalendarClock size={15} />} />
         <DashboardMetric label="本周开销" value={formatMoney(weeklyExpense.total)} hint="装备与日常都可追踪" icon={<WalletCards size={15} />} />
       </section>
 
-      <section className="grid gap-3 md:grid-cols-4">
+      <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <QuickLink href="/briefing" icon={<Newspaper size={17} />} label="每日简报" hint="雷达、精选、思考" />
         <QuickLink href="/notes" icon={<Search size={17} />} label="笔记库" hint="搜索和对象管理" />
         <QuickLink href="/schedule" icon={<CalendarClock size={17} />} label="日程" hint="今天和本周时间线" />
@@ -559,7 +558,7 @@ export function TodayPage({ data, signedIn }: TodayPageProps) {
   );
 
   const desktopRightRail = showRightRail ? (
-    <motion.aside className="hidden min-w-0 space-y-4 2xl:block" variants={railSlideIn} initial="initial" animate="animate">
+    <motion.aside className="hidden min-w-0 space-y-4 border-l border-[var(--hairline)] pl-6 2xl:block 3xl:pl-8" variants={railSlideIn} initial="initial" animate="animate">
       {renderRailCards()}
     </motion.aside>
   ) : null;
@@ -571,7 +570,7 @@ export function TodayPage({ data, signedIn }: TodayPageProps) {
   // Empty state
   if (counts.total === 0) {
     return (
-      <div className="grid min-w-0 gap-8 2xl:grid-cols-[minmax(0,1fr)_320px]">
+      <div className="grid min-w-0 gap-6 xl:grid-cols-[minmax(0,1fr)_300px] xl:gap-8 2xl:grid-cols-[minmax(0,1fr)_340px] 3xl:grid-cols-[minmax(0,1fr)_380px]">
         <main className="min-w-0 space-y-8">
           {mainContent}
           <div className="quiet-inset rounded-[var(--radius-2xl)] px-4 py-10 text-center">
@@ -587,7 +586,7 @@ export function TodayPage({ data, signedIn }: TodayPageProps) {
   }
 
   return (
-    <div className="grid min-w-0 gap-8 2xl:grid-cols-[minmax(0,1fr)_320px]">
+    <div className="grid min-w-0 gap-6 xl:grid-cols-[minmax(0,1fr)_300px] xl:gap-8 2xl:grid-cols-[minmax(0,1fr)_340px] 3xl:grid-cols-[minmax(0,1fr)_380px]">
       <main className="min-w-0 space-y-8">
         {mainContent}
         {mobileRail}

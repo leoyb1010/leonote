@@ -25,7 +25,7 @@
 </p>
 
 <p>
-  <img alt="Version" src="https://img.shields.io/badge/Version-v1.8.0-7B84F6?style=for-the-badge">
+  <img alt="Version" src="https://img.shields.io/badge/Version-v1.8.1-7B84F6?style=for-the-badge">
   <img alt="License" src="https://img.shields.io/badge/License-Personal%20Use%20Only-F26D6D?style=for-the-badge">
   <img alt="Next.js" src="https://img.shields.io/badge/Next.js-16-111111?style=for-the-badge&logo=nextdotjs">
   <img alt="Tauri" src="https://img.shields.io/badge/Tauri-2-24C8DB?style=for-the-badge&logo=tauri">
@@ -58,7 +58,7 @@
 </p>
 
 <p align="center">
-  <sub>截图随 v1.8.0 Quiet Material 文档维护，覆盖桌面端、笔记编辑、移动端简报与日程工作台。</sub>
+  <sub>截图随 v1.8.1 Quiet Material 文档维护，覆盖桌面端、笔记编辑、移动端简报与日程工作台。</sub>
 </p>
 
 ## 核心模块
@@ -352,6 +352,7 @@ npm run ci           # 全链路：lint → typecheck → test → build
 
 | 版本 | 日期 | 更新内容 |
 |---|---|---|
+| **v1.8.1** | 2026-05-18 | 按 review 文档完成第一轮 + 第二轮升级收尾：修复新建笔记保存失败的根因，当前数据库缺失 `NoteFts` 虚拟表时会导致 Prisma 创建笔记触发器报错，现在新增修复迁移与运行时自愈，创建/更新/删除笔记前会确保 FTS 表、触发器和回填数据存在；移动端底部导航改为「今天 / 简报 / 新建 / 笔记 / 装备库」，补齐装备库入口、safe-area 底部间距和 PWA manifest 快捷入口；首页、简报、笔记库、归档、收藏、搜索、日记和废纸篓统一使用更宽的工作台容器，减少 1440px-1920px 网页端两侧空白；简报继续压缩 Hero 与市场温度区，精选证据和全部资讯恢复大屏多列密度，行情刷新在页面隐藏时暂停，资讯收藏/已读失败会回滚；首页开始书写菜单改为受控弹层，快速记录支持 Enter 保存、Shift+Enter 换行并避开中文输入法误触；记账/装备库标签状态写入 URL，刷新或直接访问 `/ledger?tab=ledger` 不再丢状态；按钮 `asChild` 支持 loading/icon，命令面板补齐核心页面入口；PWA service worker 增加静态资源 cache-first 与更新提示，减少 App Router chunk stale 导致的首次点击失败；清理旧版重复 `app-shell` / `bottom-nav` 残留文件；刷新 README 最新桌面端、笔记编辑和移动端简报截图，并完成 typecheck、lint、test、build、CI 与多分辨率 Playwright 验证 |
 | **v1.8.0** | 2026-05-18 | 新增个人日程模块 `/schedule` 与 `/api/schedule`：支持今日/本周时间线、创建时间块、完成/恢复/软删除、颜色标记，并可关联笔记、项目和装备；首页接入今日日程，项目卡片显示近期关联日程；设计系统按 Cal-like 工作台方向继续统一，PageContainer 大屏宽度提升到 1680px，导航、PageHeader、首页、笔记库、项目、装备/记账入口统一为更清晰的对象库与工作台语言；补充日程 helper 回归测试 |
 | **v1.7.0** | 2026-05-18 | `/ledger` 升级为「装备库 + 记账」双模式：新增 GearItem 数据模型、迁移、装备 API、自然语言快速入库、商品链接识别预填、装备详情编辑、状态/位置/保修/序列号记录，并支持带价格装备同步生成关联支出；修复 PWA service worker 缓存 Next RSC / App Router 导航导致 `/ledger` 点击后出现 “This page couldn’t load” 的问题，新增路由级错误恢复页；每日简报移动端重排为雷达、精选、思考、资讯四段阅读路径，压缩 Hero、雷达和资讯卡片在 320px / 390px 小屏下的横向溢出；星座源日期规则正式明确为 Asia/Shanghai 同日有效，上海时间 00:00-07:59 可接受西方源昨天日期，08:00 后拒绝昨天源，并补充回归测试 |
 | **v1.6.19** | 2026-05-17 | 修复每日星座“看起来一直没刷新”的根因：`刷新简报` 现在会强制刷新星座链路；实时源日期必须等于 Asia/Shanghai 当日，拒绝昨天/前天内容继续占缓存；无 AI Key 时不再只套泛化主题句，而是根据实时英文源文本中的沟通、计划、优先级、意外消息、学习表达等信号生成简体中文摘要；星座卡片与详情增加“运势日”显示，方便确认源内容日期；新增星座摘要回归测试 |

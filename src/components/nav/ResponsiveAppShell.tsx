@@ -40,7 +40,7 @@ export function ResponsiveAppShell({ children, header }: ResponsiveAppShellProps
       <div className="flex min-w-0 flex-1 flex-col">
         {header}
 
-        <main className="min-w-0 flex-1 pb-[88px] md:pb-0">
+        <main className="min-w-0 flex-1 pb-[calc(56px+env(safe-area-inset-bottom)+16px)] md:!pb-0">
           <motion.div
             key={pathname}
             variants={pageBreathIn}

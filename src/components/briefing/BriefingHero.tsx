@@ -349,14 +349,14 @@ function MarketPulseStrip({
       {visible.length === 0 ? (
         <p className="text-xs text-[var(--text-muted)]">市场数据收集中。</p>
       ) : (
-        <div className="grid grid-cols-1 gap-2 min-[380px]:grid-cols-2 sm:-mx-1 sm:flex sm:overflow-x-auto sm:px-1 sm:pb-1">
+        <div className="grid grid-cols-1 gap-2 min-[380px]:grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 2xl:grid-cols-5 3xl:grid-cols-9">
           {visible.map((item) => {
             const up = item.changePct >= 0;
             const Icon = up ? ArrowUpRight : ArrowDownRight;
             return (
               <span
                 key={item.symbol}
-                className="inline-flex min-w-0 items-center gap-1.5 rounded-[var(--radius-pill)] border border-[var(--hairline)] bg-[var(--material-elevated)] px-2.5 py-1.5 text-xs text-[var(--text-secondary)] sm:shrink-0 sm:gap-2 sm:px-3"
+                className="inline-flex min-w-0 items-center gap-1.5 rounded-[var(--radius-pill)] border border-[var(--hairline)] bg-[var(--material-elevated)] px-2.5 py-1.5 text-xs text-[var(--text-secondary)] sm:gap-2 sm:px-3"
               >
                 <span className="min-w-0 truncate font-medium text-[var(--text-primary)]">{item.name}</span>
                 <span className="shrink-0 numeric-display text-[var(--text-muted)]">{formatMarketPrice(item)}</span>
@@ -433,14 +433,14 @@ export function BriefingHero({
           onRefresh={onMarketRefresh}
         />
 
-        <div className="mt-4 grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(360px,480px)] lg:items-end">
+        <div className="mt-4 grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(360px,480px)] lg:items-end 3xl:grid-cols-[minmax(0,1fr)_minmax(420px,560px)]">
           <div className="min-w-0">
             <motion.div variants={heroTitleReveal}>
             <input
               aria-label="简报标题"
               value={title}
               onChange={(event) => onTitleChange(event.target.value)}
-              className="w-full max-w-3xl bg-transparent text-[1.55rem] font-semibold leading-tight text-[var(--text-primary)] outline-none transition-colors placeholder:text-[var(--text-placeholder)] focus:text-[var(--primary)] sm:text-[2.15rem]"
+              className="w-full max-w-3xl bg-transparent text-[1.55rem] font-semibold leading-tight text-[var(--text-primary)] outline-none transition-colors placeholder:text-[var(--text-placeholder)] focus:text-[var(--primary)] sm:text-[2.15rem] 2xl:text-[2.6rem] 3xl:text-[3rem]"
               placeholder="每日简报"
             />
             </motion.div>
@@ -461,7 +461,7 @@ export function BriefingHero({
             </div>
           </div>
 
-          <div className="grid gap-2 sm:grid-cols-2">
+          <div className="grid gap-2 sm:grid-cols-2 3xl:grid-cols-3">
             <MiniMetric
               icon={<Newspaper size={13} />}
               label="资讯"
@@ -474,7 +474,7 @@ export function BriefingHero({
               value={<span className="numeric-display">{score == null ? "..." : `${score}`}</span>}
               hint={qualityLabel(score)}
             />
-            <div className="rounded-[var(--radius-lg)] border border-[var(--hairline)] bg-[var(--material-inset)] px-3 py-2.5 sm:col-span-2">
+            <div className="rounded-[var(--radius-lg)] border border-[var(--hairline)] bg-[var(--material-inset)] px-3 py-2.5 sm:col-span-2 3xl:col-span-1">
               <div className="flex items-center gap-1.5 text-[11px] text-[var(--text-muted)]">
                 <Tags size={13} />
                 重要标签

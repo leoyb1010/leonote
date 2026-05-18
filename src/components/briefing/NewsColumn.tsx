@@ -51,7 +51,7 @@ export function NewsColumn({
           <p className="mt-3 text-sm text-[var(--text-muted)]">{emptyText}</p>
         </div>
       ) : (
-        <div className={featured ? "grid gap-2 sm:grid-cols-2" : dense ? "grid gap-2 sm:grid-cols-2 xl:grid-cols-1" : "grid gap-3 sm:grid-cols-2 xl:grid-cols-1"}>
+        <div className={featured ? "grid gap-3 sm:grid-cols-2 2xl:grid-cols-2" : dense ? "grid gap-2 sm:grid-cols-2 xl:grid-cols-1 2xl:grid-cols-2" : "grid gap-3 sm:grid-cols-2 xl:grid-cols-1 2xl:grid-cols-2"}>
           {visible.map((item) => (
             <NewsCard
               key={item.id}

@@ -49,22 +49,32 @@ export function NewsCard({ item, featured = false, dense = false, onPatchItem, o
   async function markRead() {
     if (item.isRead) return;
     onPatchItem(item.id, { isRead: true });
-    await fetch("/api/briefing/state", {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ itemId: item.id, isRead: true }),
-    });
+    try {
+      const res = await fetch("/api/briefing/state", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ itemId: item.id, isRead: true }),
+      });
+      if (!res.ok) throw new Error("mark-read-failed");
+    } catch {
+      onPatchItem(item.id, { isRead: false });
+    }
   }
 
   async function toggleFavorite(e: MouseEvent) {
     e.stopPropagation();
     const next = !item.isFavorited;
     onPatchItem(item.id, { isFavorited: next });
-    await fetch("/api/briefing/state", {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ itemId: item.id, isFavorited: next }),
-    });
+    try {
+      const res = await fetch("/api/briefing/state", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ itemId: item.id, isFavorited: next }),
+      });
+      if (!res.ok) throw new Error("favorite-failed");
+    } catch {
+      onPatchItem(item.id, { isFavorited: !next });
+    }
   }
 
   return (
@@ -83,7 +93,7 @@ export function NewsCard({ item, featured = false, dense = false, onPatchItem, o
       }`}
     >
       <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/12 to-transparent" />
-      {!item.isRead ? <span className="absolute left-3 top-3 h-1.5 w-1.5 rounded-full bg-[var(--primary)]" /> : null}
+      {!item.isRead ? <span className="absolute left-3 top-3 z-[1] h-2 w-2 rounded-full bg-[var(--primary)] shadow-sm ring-2 ring-[var(--material-elevated)]" /> : null}
 
       {featured && !dense && imageUrl ? (
         <div className="relative h-32 overflow-hidden border-b border-[var(--hairline)] bg-[var(--material-inset)]">
@@ -91,6 +101,9 @@ export function NewsCard({ item, featured = false, dense = false, onPatchItem, o
           <img
             src={imageUrl}
             alt=""
+            loading="lazy"
+            decoding="async"
+            fetchPriority="low"
             onError={() => setImageHidden(true)}
             className="h-full w-full object-cover opacity-78 transition-transform duration-[var(--duration-slow)] group-hover:scale-[1.025]"
           />

@@ -1,12 +1,17 @@
 {
+  "id": "/",
   "name": "Leonote",
   "short_name": "Leonote",
   "description": "安静、可信、理性的个人知识工作台",
   "start_url": "/",
+  "scope": "/",
   "display": "standalone",
+  "display_override": ["standalone", "minimal-ui"],
   "background_color": "#080a0f",
   "theme_color": "#080a0f",
   "orientation": "any",
+  "lang": "zh-CN",
+  "categories": ["productivity", "utilities", "lifestyle"],
   "icons": [
     {
       "src": "/icon-192.png",
@@ -23,6 +28,26 @@
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "新笔记",
+      "short_name": "新笔记",
+      "url": "/notes/new",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "每日简报",
+      "short_name": "简报",
+      "url": "/briefing",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "装备库",
+      "short_name": "装备",
+      "url": "/ledger",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
     }
   ]
 }

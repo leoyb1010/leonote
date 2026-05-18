@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { ensureProject, requireOwnedNote, toNoteDTO } from "@/lib/server-notes";
 import { updateNoteWithRevision } from "@/lib/note-mutations";
 import { guardUserWriteRequest } from "@/lib/request-guard";
+import { ensureNoteFtsReady } from "@/lib/note-fts";
 
 const schema = z.object({
   title: z.string().optional(),
@@ -44,7 +45,7 @@ export async function GET(_request: Request, context: { params: Promise<{ id: st
 export async function PATCH(request: Request, context: { params: Promise<{ id: string }> }) {
   const userId = await getSessionUserId();
   if (!userId) return NextResponse.json({ ok: false, message: "未登录" }, { status: 401 });
-  const guarded = guardUserWriteRequest(request, userId, "notes");
+  const guarded = guardUserWriteRequest(request, userId, "notes", { limit: 180 });
   if (guarded) return guarded;
 
   const { id } = await context.params;
@@ -63,6 +64,12 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
   }
 
   const reason = request.headers.get("x-leonote-save-reason") || "save";
+
+  try {
+    await ensureNoteFtsReady();
+  } catch {
+    return NextResponse.json({ ok: false, message: "全文索引初始化失败，请稍后再试" }, { status: 500 });
+  }
 
   const updated = await updateNoteWithRevision(
     { id: existing.id, title: existing.title, content: existing.content, excerpt: existing.excerpt, userId },
@@ -92,6 +99,12 @@ export async function DELETE(request: Request, context: { params: Promise<{ id: 
   const existing = await requireOwnedNote(id, userId);
   if (!existing) return NextResponse.json({ ok: false, message: "笔记不存在" }, { status: 404 });
   if (!existing.deletedAt) return NextResponse.json({ ok: false, message: "请先移入回收站" }, { status: 400 });
+
+  try {
+    await ensureNoteFtsReady();
+  } catch {
+    return NextResponse.json({ ok: false, message: "全文索引初始化失败，请稍后再试" }, { status: 500 });
+  }
 
   await prisma.note.delete({ where: { id } });
   return NextResponse.json({ ok: true });
