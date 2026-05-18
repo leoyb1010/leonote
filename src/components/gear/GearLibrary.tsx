@@ -513,12 +513,19 @@ export function GearLibrary({ initialItems, initialSummary, expenseCategories }:
 
   return (
     <div className="space-y-6">
-      <section className="border-b border-[var(--hairline)] pb-5">
-        <p className="text-xs tracking-wide text-[var(--text-muted)]">Gear Library</p>
-        <h1 className="mt-2 text-[1.55rem] font-semibold text-[var(--text-primary)] sm:text-3xl">装备库</h1>
-        <p className="mt-3 max-w-2xl text-sm leading-6 text-[var(--text-secondary)]">
-          把设备、物品型号、保修和购买记录收在一个地方；需要时也能顺手同步成一笔记账。
-        </p>
+      <section className="grid gap-3 rounded-[var(--radius-2xl)] border border-[var(--hairline)] bg-[var(--material-elevated)] p-4 shadow-[var(--shadow-sm)] lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center">
+        <div className="min-w-0">
+          <p className="text-xs text-[var(--text-muted)]">Gear Library</p>
+          <h2 className="mt-1 text-xl font-semibold text-[var(--text-primary)]">我的装备对象库</h2>
+          <p className="mt-2 max-w-2xl text-sm leading-6 text-[var(--text-secondary)]">
+            设备型号、购买渠道、保修、价格和状态统一管理，链接读取和手动录入可以混用。
+          </p>
+        </div>
+        <div className="grid grid-cols-3 gap-2 text-center text-xs text-[var(--text-muted)]">
+          <span className="rounded-xl border border-[var(--hairline)] bg-[var(--material-inset)] px-3 py-2">链接识别</span>
+          <span className="rounded-xl border border-[var(--hairline)] bg-[var(--material-inset)] px-3 py-2">保修提醒</span>
+          <span className="rounded-xl border border-[var(--hairline)] bg-[var(--material-inset)] px-3 py-2">关联记账</span>
+        </div>
       </section>
 
       <GearQuickCapture categories={expenseCategories} onCreated={handleCreated} />

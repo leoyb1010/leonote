@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { FilePlus2, FolderPlus, Sun, Sparkles, History, ArrowRight, WalletCards } from "lucide-react";
+import { BookOpenText, Boxes, FilePlus2, FolderPlus, Gauge, History, Library, Newspaper, PenLine, Search, Sparkles, Sun, WalletCards } from "lucide-react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { NoteRow } from "@/components/notes/NoteRow";
@@ -76,13 +76,13 @@ interface QuickCaptureNote {
   pinned?: boolean;
 }
 
-function getGreeting(): { emoji: string; line: string } {
+function getGreeting(): string {
   const hour = new Date().getHours();
-  if (hour >= 5 && hour < 11) return { emoji: "🌅", line: "早上好，今天先留下一点清醒。" };
-  if (hour >= 11 && hour < 14) return { emoji: "☀️", line: "中午好，把正在发生的想法安放下来。" };
-  if (hour >= 14 && hour < 18) return { emoji: "🌤", line: "下午好，把正在发生的想法安放下来。" };
-  if (hour >= 18 && hour < 23) return { emoji: "🌙", line: "晚上好，今天留下些什么就很好。" };
-  return { emoji: "✨", line: "夜深了，轻轻记下，不必整理完。" };
+  if (hour >= 5 && hour < 11) return "早上好，今天先留下一点清醒。";
+  if (hour >= 11 && hour < 14) return "中午好，把正在发生的想法安放下来。";
+  if (hour >= 14 && hour < 18) return "下午好，把正在发生的想法安放下来。";
+  if (hour >= 18 && hour < 23) return "晚上好，今天留下些什么就很好。";
+  return "夜深了，轻轻记下，不必整理完。";
 }
 
 const saveMessages = [
@@ -123,7 +123,7 @@ function QuickCapture({ onCreated }: { onCreated?: (note: QuickCaptureNote) => v
 
   return (
     <div className="relative">
-      <div className="rounded-[28px] border border-[var(--hairline)] bg-[var(--material-elevated)] p-2 shadow-[var(--shadow-sm)]">
+      <div className="rounded-[var(--radius-2xl)] border border-[var(--hairline)] bg-[var(--material-elevated)] p-2 shadow-[var(--shadow-sm)]">
         <textarea
           value={value}
           onChange={(event) => setValue(event.target.value)}
@@ -139,7 +139,7 @@ function QuickCapture({ onCreated }: { onCreated?: (note: QuickCaptureNote) => v
         />
         <div className="flex flex-col items-stretch gap-2 px-2 pb-1 sm:flex-row sm:items-center sm:justify-between">
           <span className="text-xs text-[var(--text-muted)]">Enter 换行 · Shift + Enter 保存</span>
-          <Button size="md" onClick={submit} loading={saving} variant="primary" className="w-full sm:w-auto">
+          <Button size="md" icon={<PenLine size={15} />} onClick={submit} loading={saving} variant="primary" className="w-full sm:w-auto">
             安放
           </Button>
         </div>
@@ -148,6 +148,84 @@ function QuickCapture({ onCreated }: { onCreated?: (note: QuickCaptureNote) => v
         <p className="mt-2.5 text-xs text-[var(--text-muted)] text-center">{toast}</p>
       )}
     </div>
+  );
+}
+
+function DashboardMetric({
+  label,
+  value,
+  hint,
+  icon,
+}: {
+  label: string;
+  value: string;
+  hint: string;
+  icon: React.ReactNode;
+}) {
+  return (
+    <div className="quiet-inset min-w-0 rounded-[var(--radius-xl)] p-4">
+      <div className="flex items-center gap-2 text-xs text-[var(--text-muted)]">
+        <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-[var(--material-elevated)] text-[var(--text-secondary)]">
+          {icon}
+        </span>
+        <span className="truncate">{label}</span>
+      </div>
+      <p className="mt-3 text-2xl font-semibold text-[var(--text-primary)] numeric-display">{value}</p>
+      <p className="mt-1 text-xs leading-5 text-[var(--text-muted)]">{hint}</p>
+    </div>
+  );
+}
+
+function SectionTitle({
+  icon,
+  title,
+  href,
+}: {
+  icon: React.ReactNode;
+  title: string;
+  href?: string;
+}) {
+  return (
+    <div className="mb-3 flex min-w-0 items-center justify-between gap-3">
+      <div className="flex min-w-0 items-center gap-2">
+        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[var(--material-inset)] text-[var(--text-muted)]">
+          {icon}
+        </span>
+        <h2 className="truncate text-sm font-medium text-[var(--text-secondary)]">{title}</h2>
+      </div>
+      {href ? (
+        <Link href={href} className="inline-flex h-8 shrink-0 items-center rounded-lg px-2 text-xs text-[var(--primary)] hover:bg-[var(--interactive-hover)]">
+          查看
+        </Link>
+      ) : null}
+    </div>
+  );
+}
+
+function QuickLink({
+  href,
+  icon,
+  label,
+  hint,
+}: {
+  href: string;
+  icon: React.ReactNode;
+  label: string;
+  hint: string;
+}) {
+  return (
+    <Link
+      href={href}
+      className="quiet-inset group flex min-h-[72px] min-w-0 items-center gap-3 rounded-[var(--radius-xl)] p-3 transition hover:border-[var(--hairline-strong)] hover:bg-[var(--material-muted)]"
+    >
+      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[var(--material-elevated)] text-[var(--primary)]">
+        {icon}
+      </span>
+      <span className="min-w-0">
+        <span className="block truncate text-sm font-medium text-[var(--text-primary)]">{label}</span>
+        <span className="mt-1 block truncate text-xs text-[var(--text-muted)]">{hint}</span>
+      </span>
+    </Link>
   );
 }
 
@@ -170,7 +248,7 @@ export function TodayPage({ data, signedIn }: TodayPageProps) {
       })
     : "";
 
-  const greeting = mounted ? getGreeting() : { emoji: "", line: "" };
+  const greeting = mounted ? getGreeting() : "";
 
   // Signed out
   if (!signedIn) {
@@ -292,19 +370,24 @@ export function TodayPage({ data, signedIn }: TodayPageProps) {
 
   const heroSection = (
     <motion.section
-      className="leonote-hero relative z-20 pb-6 border-b border-[var(--hairline)]"
+      className="leonote-hero relative z-20 rounded-[var(--radius-2xl)] border border-[var(--hairline)] bg-[var(--material-elevated)] p-4 shadow-[var(--shadow-sm)] sm:p-5"
       variants={heroTitleReveal}
       initial="initial"
       animate="animate"
     >
-      <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-end">
-        <div>
-          <p className="text-xs text-[var(--text-muted)] tracking-wide">{dateStr}</p>
-          <h1 className="mt-2 text-lg font-semibold leading-snug tracking-[-0.01em] text-[var(--text-primary)] sm:text-[1.375rem] sm:tracking-[-0.03em]">
-            {greeting.line}
+      <div className="flex flex-col items-start justify-between gap-4 lg:flex-row lg:items-start">
+        <div className="min-w-0">
+          <div className="flex items-center gap-2 text-xs text-[var(--text-muted)]">
+            <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-[var(--material-inset)] text-[var(--text-secondary)]">
+              <Gauge size={15} />
+            </span>
+            <span>{dateStr}</span>
+          </div>
+          <h1 className="mt-4 text-xl font-semibold leading-snug text-[var(--text-primary)] sm:text-2xl">
+            {greeting}
           </h1>
           {counts.total > 0 && (
-            <p className="mt-2 text-sm text-[var(--text-secondary)]">
+            <p className="mt-2 max-w-2xl text-sm leading-6 text-[var(--text-secondary)]">
               你已经安放了 {counts.total} 篇笔记。最近的思考，正在慢慢形成脉络。
             </p>
           )}
@@ -362,24 +445,28 @@ export function TodayPage({ data, signedIn }: TodayPageProps) {
   );
 
   const mainContent = (
-    <div className="min-w-0 space-y-8">
+    <div className="min-w-0 space-y-6">
       {heroSection}
 
-      {/* QuickCapture */}
+      <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        <DashboardMetric label="全部笔记" value={String(counts.total)} hint={`${counts.pinned} 篇置顶`} icon={<Library size={15} />} />
+        <DashboardMetric label="收藏内容" value={String(counts.favorite)} hint="长期值得回看" icon={<BookOpenText size={15} />} />
+        <DashboardMetric label="本周新增" value={String(weeklySettling.created)} hint={`${weeklySettling.edited} 次编辑`} icon={<Sparkles size={15} />} />
+        <DashboardMetric label="本周开销" value={formatMoney(weeklyExpense.total)} hint="装备与日常都可追踪" icon={<WalletCards size={15} />} />
+      </section>
+
+      <section className="grid gap-3 md:grid-cols-4">
+        <QuickLink href="/briefing" icon={<Newspaper size={17} />} label="每日简报" hint="雷达、精选、思考" />
+        <QuickLink href="/notes" icon={<Search size={17} />} label="笔记库" hint="搜索和对象管理" />
+        <QuickLink href="/ledger" icon={<Boxes size={17} />} label="装备库" hint="设备、价格、保修" />
+        <QuickLink href="/projects" icon={<FolderPlus size={17} />} label="项目" hint="按主题整理" />
+      </section>
+
       <QuickCapture onCreated={handleNoteCreated} />
 
-      {/* Recent Notes */}
       {recent.length > 0 && (
         <section>
-          <div className="mb-3 flex min-w-0 items-center justify-between gap-3">
-            <h2 className="text-sm font-medium text-[var(--text-secondary)]">最近编辑</h2>
-            <Link
-              href="/notes"
-              className="inline-flex shrink-0 items-center gap-1 text-xs text-[var(--primary)] hover:underline"
-            >
-              查看全部 <ArrowRight size={12} />
-            </Link>
-          </div>
+          <SectionTitle icon={<Library size={15} />} title="最近编辑" href="/notes" />
           <div className="min-w-0 divide-y divide-[var(--hairline)] rounded-[var(--radius-xl)] border border-[var(--hairline)] bg-[var(--material-elevated)] p-1">
             {recent.slice(0, 5).map((note) => (
               <NoteRow key={note.id} note={note} />
@@ -391,15 +478,7 @@ export function TodayPage({ data, signedIn }: TodayPageProps) {
       {/* Projects */}
       {projects.length > 0 && (
         <section>
-          <div className="mb-3 flex min-w-0 items-center justify-between gap-3">
-            <h2 className="text-sm font-medium text-[var(--text-secondary)]">进行中的项目</h2>
-            <Link
-              href="/projects"
-              className="inline-flex shrink-0 items-center gap-1 text-xs text-[var(--primary)] hover:underline"
-            >
-              查看全部 <ArrowRight size={12} />
-            </Link>
-          </div>
+          <SectionTitle icon={<FolderPlus size={15} />} title="进行中的项目" href="/projects" />
           <div className="min-w-0 divide-y divide-[var(--hairline)] rounded-[var(--radius-xl)] border border-[var(--hairline)] bg-[var(--material-elevated)] p-1">
             {projects.slice(0, 4).map((proj) => (
               <Link
@@ -418,7 +497,7 @@ export function TodayPage({ data, signedIn }: TodayPageProps) {
       {/* Tags */}
       {tags.length > 0 && (
         <section>
-          <h2 className="text-sm font-medium text-[var(--text-secondary)] mb-3">常用标签</h2>
+          <SectionTitle icon={<Search size={15} />} title="常用标签" />
           <div className="flex flex-wrap gap-2">
             {tags.map((tag) => (
               <Link

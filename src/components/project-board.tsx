@@ -3,10 +3,11 @@
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { useMemo, useState } from "react";
-import { FolderKanban, MoveRight, Plus } from "lucide-react";
+import { FolderKanban, KanbanSquare, MoveRight, Plus } from "lucide-react";
 import { GlassPanel } from "@/components/ui/GlassPanel";
 import { NoteCard } from "@/components/notes/NoteCard";
 import { Button, buttonClass } from "@/components/base/Button";
+import { PageHeader } from "@/components/layout/PageHeader";
 import { staggerContainer, staggerItem } from "@/lib/animations";
 
 type PreviewNote = { id: string; title: string; excerpt: string; tags: string[]; favorite?: boolean; pinned?: boolean; archived?: boolean; updatedAt?: string };
@@ -90,10 +91,15 @@ export function ProjectBoard({ initialProjects, signedIn }: { initialProjects: P
   }
 
   return (
-    <div className="space-y-5">
-      <h1 className="text-2xl font-bold text-[var(--text-primary)]">项目</h1>
+    <div className="space-y-6">
+      <PageHeader
+        eyebrow="Object Board"
+        icon={<KanbanSquare size={19} />}
+        title="项目工作台"
+        description={`${items.length} 个项目 · 笔记可以在项目之间迁移和沉淀`}
+      />
 
-      <GlassPanel blur="xl" className="rounded-[var(--radius-lg)] p-5">
+      <section className="rounded-[var(--radius-2xl)] border border-[var(--hairline)] bg-[var(--material-elevated)] p-4 shadow-[var(--shadow-sm)] sm:p-5">
         <div className="flex flex-col items-start justify-between gap-3 sm:flex-row sm:items-center">
           <div>
             <div className="text-xs font-semibold text-[var(--text-muted)]">New Project</div>
@@ -102,11 +108,11 @@ export function ProjectBoard({ initialProjects, signedIn }: { initialProjects: P
           <span className="rounded-[var(--radius-pill)] border border-[var(--border-default)] bg-[var(--interactive-active)] px-3 py-1 text-xs text-[var(--text-muted)]">看板视图</span>
         </div>
         <div className="mt-4 grid gap-3 md:grid-cols-[minmax(0,1fr)_minmax(280px,0.9fr)_auto]">
-          <input value={name} onChange={(e) => setName(e.target.value)} placeholder="项目名称" className="w-full h-10 rounded-[var(--radius-md)] border border-[var(--border-default)] bg-[var(--surface-base)] px-4 text-sm text-[var(--text-primary)] outline-none placeholder:text-[var(--text-placeholder)] focus:border-[var(--border-focus)] transition-colors" />
-          <textarea value={description} onChange={(e) => setDescription(e.target.value)} placeholder="项目简介、目标或工作范围" className="min-h-[64px] w-full rounded-[var(--radius-md)] border border-[var(--border-default)] bg-[var(--surface-base)] px-4 py-3 text-sm text-[var(--text-primary)] outline-none placeholder:text-[var(--text-placeholder)] focus:border-[var(--border-focus)] transition-colors resize-none" />
+          <input value={name} onChange={(e) => setName(e.target.value)} placeholder="项目名称" className="h-11 w-full rounded-xl border border-[var(--hairline)] bg-[var(--material-inset)] px-4 text-sm text-[var(--text-primary)] outline-none placeholder:text-[var(--text-placeholder)] focus:border-[var(--border-focus)] transition-colors" />
+          <textarea value={description} onChange={(e) => setDescription(e.target.value)} placeholder="项目简介、目标或工作范围" className="min-h-[64px] w-full resize-none rounded-xl border border-[var(--hairline)] bg-[var(--material-inset)] px-4 py-3 text-sm text-[var(--text-primary)] outline-none placeholder:text-[var(--text-placeholder)] focus:border-[var(--border-focus)] transition-colors" />
           <Button onClick={() => void createProject()} icon={<Plus size={16} />} className="w-full md:w-auto">创建项目</Button>
         </div>
-      </GlassPanel>
+      </section>
 
       {message && (
         <div className="rounded-[var(--radius-md)] border border-[var(--border-default)] bg-[var(--interactive-hover)] px-4 py-3 text-sm text-[var(--text-muted)]">{message}</div>
@@ -118,7 +124,7 @@ export function ProjectBoard({ initialProjects, signedIn }: { initialProjects: P
           const statusLabel = STATUS_OPTIONS.find((o) => o.value === (project.status || "active"))?.label ?? "进行中";
           return (
             <motion.div key={project.id} variants={staggerItem} layout>
-              <GlassPanel blur="lg" className="rounded-[var(--radius-xl)] p-5 transition duration-300">
+              <GlassPanel blur="lg" className="rounded-[var(--radius-2xl)] border-[var(--hairline)] p-5 transition duration-300">
                 {editing ? (
                   <div className="space-y-3">
                     <input value={editingName} onChange={(e) => setEditingName(e.target.value)} placeholder="项目名称" className="w-full h-10 rounded-[var(--radius-sm)] border border-[var(--border-default)] bg-[var(--surface-base)] px-4 text-sm text-[var(--text-primary)] outline-none" />

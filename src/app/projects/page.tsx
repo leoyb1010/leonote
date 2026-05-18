@@ -8,7 +8,7 @@ export default async function ProjectsPage() {
   const projects = userId ? await getProjectCards(userId) : [];
 
   return (
-    <PageContainer width="default">
+    <PageContainer width="dashboard">
       <ProjectBoard initialProjects={projects} signedIn={Boolean(userId)} />
     </PageContainer>
   );

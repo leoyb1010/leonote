@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
-import { FilePlus2, FileText, FolderPlus, Newspaper, Plus, Sparkles, Sun, WalletCards } from "lucide-react";
+import { Boxes, FilePlus2, FolderPlus, Library, Newspaper, Plus, Sparkles, Sun, WalletCards } from "lucide-react";
 
 interface BottomNavProps {
   currentPath: string;
@@ -13,12 +13,13 @@ const navItems = [
   { id: "briefing", label: "简报", icon: Newspaper, href: "/briefing" },
   { id: "today", label: "今天", icon: Sun, href: "/" },
   { id: "new", label: "", icon: Plus, href: "/notes/new", isAction: true },
-  { id: "notes", label: "笔记", icon: FileText, href: "/notes" },
+  { id: "notes", label: "笔记库", icon: Library, href: "/notes" },
   { id: "ai", label: "AI", icon: Sparkles, href: "/ai" },
 ];
 
 const createItems = [
   { label: "新笔记", href: "/notes/new", icon: FilePlus2 },
+  { label: "装备入库", href: "/ledger", icon: Boxes },
   { label: "记一笔", href: "/ledger", icon: WalletCards },
   { label: "新项目", href: "/projects", icon: FolderPlus },
 ];
@@ -32,7 +33,7 @@ export function BottomNav({ currentPath }: BottomNavProps) {
   };
 
   return (
-    <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-[var(--surface-overlay)] border-t border-[var(--border-default)] backdrop-blur-[12px] safe-area-bottom">
+    <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 border-t border-[var(--hairline)] bg-[var(--material-elevated)]/92 backdrop-blur-xl safe-area-bottom">
       <div className="flex items-center justify-around h-14 px-2 max-w-lg mx-auto">
         {navItems.map((item) => {
           const active = isActive(item.href);

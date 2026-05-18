@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { ArrowRight, Package, WalletCards } from "lucide-react";
+import { ArrowRight, Boxes, Package, WalletCards } from "lucide-react";
 import { EmptyState } from "@/components/base/EmptyState";
 import { Button } from "@/components/base/Button";
 import { formatMoney } from "@/lib/format-money";
@@ -148,17 +148,33 @@ export function LedgerPage({ signedIn, categories, summary, gearItems, gearSumma
   );
 
   return (
-    <div className="space-y-8">
-      <div className="rounded-[var(--radius-2xl)] border border-[var(--hairline)] bg-[var(--material-inset)] p-1 sm:inline-flex">
-        <button type="button" className={tabClass("gear")} onClick={() => setActiveView("gear")}>
-          <Package size={16} />
-          装备库
-        </button>
-        <button type="button" className={tabClass("ledger")} onClick={() => setActiveView("ledger")}>
-          <WalletCards size={16} />
-          记账
-        </button>
-      </div>
+    <div className="space-y-6">
+      <section className="rounded-[var(--radius-2xl)] border border-[var(--hairline)] bg-[var(--material-elevated)] p-4 shadow-[var(--shadow-sm)] sm:p-5">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+          <div className="flex min-w-0 gap-3">
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[var(--material-inset)] text-[var(--primary)]">
+              <Boxes size={19} />
+            </span>
+            <div className="min-w-0">
+              <p className="text-xs text-[var(--text-muted)]">Object Library</p>
+              <h1 className="mt-1 text-2xl font-semibold text-[var(--text-primary)]">装备库与记账</h1>
+              <p className="mt-2 max-w-2xl text-sm leading-6 text-[var(--text-secondary)]">
+                设备、物品、价格、保修和日常支出放在同一个工作台里。
+              </p>
+            </div>
+          </div>
+          <div className="rounded-[var(--radius-2xl)] border border-[var(--hairline)] bg-[var(--material-inset)] p-1 sm:inline-flex">
+            <button type="button" className={tabClass("gear")} onClick={() => setActiveView("gear")}>
+              <Package size={16} />
+              装备库
+            </button>
+            <button type="button" className={tabClass("ledger")} onClick={() => setActiveView("ledger")}>
+              <WalletCards size={16} />
+              记账
+            </button>
+          </div>
+        </div>
+      </section>
 
       {activeView === "gear" ? (
         <GearLibrary

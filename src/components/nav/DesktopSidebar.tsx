@@ -7,14 +7,14 @@ import Link from "next/link";
 import {
   Newspaper,
   Sun,
-  FileText,
+  Library,
   FolderKanban,
   Sparkles,
   Settings,
   ChevronLeft,
   ChevronRight,
   User,
-  WalletCards,
+  Boxes,
 } from "lucide-react";
 
 export interface NavItem {
@@ -27,9 +27,9 @@ export interface NavItem {
 const navItems: NavItem[] = [
   { id: "briefing", label: "简报", icon: <Newspaper size={20} />, href: "/briefing" },
   { id: "today", label: "今天", icon: <Sun size={20} />, href: "/" },
-  { id: "notes", label: "笔记", icon: <FileText size={20} />, href: "/notes" },
+  { id: "notes", label: "笔记库", icon: <Library size={20} />, href: "/notes" },
   { id: "projects", label: "项目", icon: <FolderKanban size={20} />, href: "/projects" },
-  { id: "ledger", label: "记账", icon: <WalletCards size={20} />, href: "/ledger" },
+  { id: "ledger", label: "装备库", icon: <Boxes size={20} />, href: "/ledger" },
   { id: "ai", label: "AI", icon: <Sparkles size={20} />, href: "/ai" },
 ];
 
@@ -57,7 +57,7 @@ export function DesktopSidebar({
     <motion.aside
       animate={{ width: collapsed ? 72 : 264 }}
       transition={{ duration: 0.22, ease: [0.2, 0, 0, 1] }}
-      className="hidden md:flex 2xl:[--sidebar-width:288px] 2xl:!w-[288px] flex-col shrink-0 h-screen sticky top-0 border-r border-[var(--hairline)] bg-[var(--bg-app)]/95"
+      className="hidden md:flex 2xl:[--sidebar-width:288px] 2xl:!w-[288px] flex-col shrink-0 h-screen sticky top-0 border-r border-[var(--hairline)] bg-[var(--material-canvas)]/95 backdrop-blur-xl"
     >
       {/* Header: Logo + subtitle */}
       <div
@@ -68,8 +68,11 @@ export function DesktopSidebar({
       >
         {!collapsed ? (
           <>
-            <div className="text-[15px] font-semibold tracking-[-0.02em] text-[var(--text-primary)]">Leonote</div>
-            <div className="mt-1 text-xs text-[var(--text-muted)] leading-relaxed">安静保存你的长期思考</div>
+            <div className="flex items-center gap-2">
+              <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-[var(--text-primary)] text-xs font-semibold text-[var(--bg-app)]">L</div>
+              <div className="text-[15px] font-semibold text-[var(--text-primary)]">Leonote</div>
+            </div>
+            <div className="mt-2 text-xs text-[var(--text-muted)] leading-relaxed">个人知识与装备工作台</div>
           </>
         ) : (
           <div className="text-[15px] font-semibold tracking-[-0.02em] text-[var(--text-primary)]">L</div>
