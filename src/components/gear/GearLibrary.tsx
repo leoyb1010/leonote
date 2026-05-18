@@ -2,11 +2,11 @@
 
 import { useMemo, useState } from "react";
 import type { ReactNode } from "react";
-import { Check, CircleDollarSign, Package, Pencil, Search, ShieldCheck, Trash2, Wrench } from "lucide-react";
+import { Check, CircleDollarSign, Link, Package, Pencil, Search, ShieldCheck, Trash2, WandSparkles, Wrench } from "lucide-react";
 import { Button } from "@/components/base/Button";
 import { formatMoney } from "@/lib/format-money";
 import type { ExpenseCategoryDTO } from "@/components/ledger/types";
-import type { GearDTO, GearStatus, GearSummaryDTO } from "./types";
+import type { GearDTO, GearLinkPreviewDTO, GearStatus, GearSummaryDTO } from "./types";
 
 type Props = {
   initialItems: GearDTO[];
@@ -88,8 +88,38 @@ function GearQuickCapture({
   const [status, setStatus] = useState<GearStatus>("active");
   const [createExpense, setCreateExpense] = useState(true);
   const [expenseCategoryId, setExpenseCategoryId] = useState<string | null>(categories[0]?.id ?? null);
+  const [link, setLink] = useState("");
+  const [linkDraft, setLinkDraft] = useState<GearLinkPreviewDTO | null>(null);
+  const [readingLink, setReadingLink] = useState(false);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
+
+  async function readLink() {
+    const url = link.trim();
+    if (!url || readingLink) return;
+
+    setReadingLink(true);
+    setMessage("");
+    const res = await fetch("/api/gear/link-preview", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ url }),
+    });
+    const data = await res.json().catch(() => ({}));
+    setReadingLink(false);
+
+    if (!res.ok || !data.ok) {
+      setMessage(data.message ?? "这个链接暂时读不到，先手动录入");
+      return;
+    }
+
+    const preview = data.preview as GearLinkPreviewDTO;
+    setLinkDraft(preview);
+    setValue(preview.rawText);
+    if (!category && preview.draft.category) setCategory(preview.draft.category);
+    setCreateExpense(false);
+    setMessage(`已读取 ${preview.sourceHost}，确认后入库。`);
+  }
 
   async function submit() {
     const rawText = value.trim();
@@ -97,10 +127,25 @@ function GearQuickCapture({
 
     setSaving(true);
     setMessage("");
+    const activeLinkDraft = linkDraft && rawText === linkDraft.rawText ? linkDraft.draft : null;
     const res = await fetch("/api/gear", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ rawText, category: category || undefined, status, createExpense, expenseCategoryId }),
+      body: JSON.stringify({
+        rawText,
+        name: activeLinkDraft?.name,
+        brand: activeLinkDraft?.brand,
+        model: activeLinkDraft?.model,
+        category: category || activeLinkDraft?.category || undefined,
+        status,
+        purchasePrice: activeLinkDraft?.purchasePrice,
+        currency: activeLinkDraft?.currency,
+        purchaseChannel: activeLinkDraft?.purchaseChannel,
+        specs: activeLinkDraft?.specs,
+        notes: activeLinkDraft?.notes,
+        createExpense,
+        expenseCategoryId,
+      }),
     });
     const data = await res.json().catch(() => ({}));
     setSaving(false);
@@ -111,6 +156,8 @@ function GearQuickCapture({
     }
 
     setValue("");
+    setLink("");
+    setLinkDraft(null);
     setMessage("已放进装备库。");
     window.setTimeout(() => setMessage(""), 2200);
     onCreated(data.item);
@@ -122,9 +169,41 @@ function GearQuickCapture({
         <Package size={14} />
         快速入库
       </div>
+      <div className="mt-3 grid gap-2 sm:grid-cols-[1fr_auto]">
+        <label className="flex h-11 min-w-0 items-center gap-2 rounded-xl border border-[var(--hairline)] bg-[var(--material-inset)] px-3 text-sm text-[var(--text-secondary)]">
+          <Link size={14} className="shrink-0 text-[var(--text-muted)]" />
+          <input
+            value={link}
+            onChange={(event) => setLink(event.target.value)}
+            onKeyDown={(event) => {
+              if (event.key === "Enter") {
+                event.preventDefault();
+                void readLink();
+              }
+            }}
+            placeholder="粘贴商品链接自动识别型号和价格"
+            className="min-w-0 flex-1 bg-transparent outline-none placeholder:text-[var(--text-placeholder)]"
+            inputMode="url"
+          />
+        </label>
+        <Button variant="secondary" icon={<WandSparkles size={15} />} loading={readingLink} onClick={readLink} className="w-full sm:w-auto">
+          读取
+        </Button>
+      </div>
+      {linkDraft ? (
+        <div className="mt-2 rounded-xl border border-[var(--hairline)] bg-[var(--material-inset)] px-3 py-2 text-xs leading-5 text-[var(--text-muted)]">
+          <span className="text-[var(--text-secondary)]">{linkDraft.title}</span>
+          {linkDraft.draft.purchasePrice ? (
+            <span className="ml-2">{formatMoney(linkDraft.draft.purchasePrice, linkDraft.draft.currency)}</span>
+          ) : null}
+        </div>
+      ) : null}
       <textarea
         value={value}
-        onChange={(event) => setValue(event.target.value)}
+        onChange={(event) => {
+          setValue(event.target.value);
+          if (linkDraft && event.target.value !== linkDraft.rawText) setLinkDraft(null);
+        }}
         onKeyDown={(event) => {
           if (event.key === "Enter" && event.shiftKey) {
             event.preventDefault();

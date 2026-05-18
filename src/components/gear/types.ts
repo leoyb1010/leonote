@@ -61,3 +61,23 @@ export type GearSummaryDTO = {
   warrantyExpiring: GearDTO[];
   recent: GearDTO[];
 };
+
+export type GearLinkPreviewDTO = {
+  sourceUrl: string;
+  sourceHost: string;
+  title: string;
+  description: string;
+  imageUrl: string;
+  rawText: string;
+  draft: {
+    name: string;
+    brand: string;
+    model: string;
+    category: GearCategory;
+    purchasePrice: number | null;
+    currency: string;
+    purchaseChannel: string;
+    specs: Record<string, string | number | boolean>;
+    notes: string;
+  };
+};

@@ -163,7 +163,7 @@ Current version: **v1.7.0**
 
 Recent release focus:
 
-- `/ledger` now opens as a two-mode Gear Library + Ledger page. The gear library supports quick natural-language capture, item details, status/location/warranty/serial fields, and optional linked expenses.
+- `/ledger` now opens as a two-mode Gear Library + Ledger page. The gear library supports quick natural-language capture, product-link metadata preview, item details, status/location/warranty/serial fields, and optional linked expenses.
 - The original ledger flow remains available in the same page for quick expense capture, categories, weekly/monthly summaries, and soft deletion.
 - The PWA service worker now bypasses Next.js RSC and App Router navigation requests, fixing stale-cache failures that could show “This page couldn’t load” after clicking Ledger.
 - The mobile Daily Briefing layout is reorganized around Radar, Featured, Thinking, and News sections, with tighter 320px / 390px responsive behavior.
