@@ -50,7 +50,13 @@ function startProxy() {
       `http://127.0.0.1:${INTERNAL_PORT}${req.url}`,
       {
         method: req.method,
-        headers: req.headers,
+        headers: {
+          ...req.headers,
+          // Force internal server to return uncompressed HTML so we can
+          // safely do text replacement (inject data-cfasync).  Cloudflare
+          // will re-compress for the client anyway.
+          "accept-encoding": "identity",
+        },
       },
       (proxyRes) => {
         const isHtml = (proxyRes.headers["content-type"] || "").includes("text/html");
