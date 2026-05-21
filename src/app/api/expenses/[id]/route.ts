@@ -45,13 +45,15 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     }
   }
 
+  const d = parsed.data;
   const updated = await prisma.expense.update({
     where: { id },
     data: {
-      ...parsed.data,
-      note: parsed.data.note?.trim(),
-      occurredAt: parsed.data.occurredAt ? new Date(parsed.data.occurredAt) : undefined,
-      currency: parsed.data.currency?.toUpperCase(),
+      ...(d.amount !== undefined ? { amount: d.amount } : {}),
+      ...(d.categoryId !== undefined ? { categoryId: d.categoryId } : {}),
+      ...(d.note !== undefined ? { note: d.note.trim() } : {}),
+      ...(d.occurredAt !== undefined ? { occurredAt: d.occurredAt ? new Date(d.occurredAt) : undefined } : {}),
+      ...(d.currency !== undefined ? { currency: d.currency.toUpperCase() } : {}),
     },
     include: { category: true },
   });

@@ -93,7 +93,7 @@ export async function fetchTavilyNews() {
 
     // Skip Tavily if RSS already has 15+ items for this category today
     if (rssCount >= 15) {
-      console.log(`[tavily] skipping ${category}: RSS already has ${rssCount} items today`);
+      console.debug(`[tavily] skipping ${category}: RSS already has ${rssCount} items today`);
       continue;
     }
 

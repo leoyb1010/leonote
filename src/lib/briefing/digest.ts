@@ -49,7 +49,7 @@ export async function generateBriefingDigest() {
 
     const selectedToTranslate = toTranslate.slice(0, translationItemLimit());
     if (selectedToTranslate.length > 0) {
-      console.log(`[digest] translating ${selectedToTranslate.length}/${toTranslate.length} English items`);
+      console.debug(`[digest] translating ${selectedToTranslate.length}/${toTranslate.length} English items`);
 
       const titleTexts = selectedToTranslate.map((t) => t.title);
       const translatedTitles = await translateBatch(titleTexts);

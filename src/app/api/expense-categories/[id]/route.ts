@@ -50,7 +50,7 @@ export async function DELETE(request: Request, { params }: { params: Promise<{ i
   const category = await requireOwnedCategory(id, userId);
   if (!category) return NextResponse.json({ ok: false, message: "这个类型不在这里" }, { status: 404 });
 
-  const expenseCount = await prisma.expense.count({ where: { userId, categoryId: id } });
+  const expenseCount = await prisma.expense.count({ where: { userId, categoryId: id, deletedAt: null } });
   if (expenseCount > 0) {
     return NextResponse.json(
       { ok: false, message: "这个类型还连着记录，先归档会更稳妥" },

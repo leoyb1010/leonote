@@ -47,26 +47,44 @@ export function PwaRegister() {
   useEffect(() => {
     if (!("serviceWorker" in navigator)) return;
 
-    navigator.serviceWorker.register("/sw.js").then((registration) => {
-      void registration.update();
-
-      if (registration.waiting) {
-        setWaitingWorker(registration.waiting);
+    navigator.serviceWorker.getRegistration("/sw.js").then((existing) => {
+      if (existing) {
+        // Already registered — just check for updates
+        void existing.update();
+        if (existing.waiting) setWaitingWorker(existing.waiting);
+        existing.addEventListener("updatefound", () => {
+          const nextWorker = existing.installing;
+          if (!nextWorker) return;
+          nextWorker.addEventListener("statechange", () => {
+            if (nextWorker.state === "installed" && navigator.serviceWorker.controller) {
+              setWaitingWorker(nextWorker);
+            }
+          });
+        });
+        return;
       }
 
-      registration.addEventListener("updatefound", () => {
-        const nextWorker = registration.installing;
-        if (!nextWorker) return;
+      navigator.serviceWorker.register("/sw.js").then((registration) => {
+        void registration.update();
 
-        nextWorker.addEventListener("statechange", () => {
-          if (nextWorker.state === "installed" && navigator.serviceWorker.controller) {
-            setWaitingWorker(nextWorker);
-          }
+        if (registration.waiting) {
+          setWaitingWorker(registration.waiting);
+        }
+
+        registration.addEventListener("updatefound", () => {
+          const nextWorker = registration.installing;
+          if (!nextWorker) return;
+
+          nextWorker.addEventListener("statechange", () => {
+            if (nextWorker.state === "installed" && navigator.serviceWorker.controller) {
+              setWaitingWorker(nextWorker);
+            }
+          });
         });
-      });
-    }).catch(() => {
-        // Silent fail - SW is progressive enhancement
-      });
+      }).catch(() => {
+          // Silent fail - SW is progressive enhancement
+        });
+    });
 
   }, []);
 

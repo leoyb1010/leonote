@@ -10,7 +10,7 @@ const TRANSLATE_MAX_ITEMS = Number(process.env.BRIEFING_TRANSLATE_MAX_ITEMS || 1
 let cachedKey = "";
 
 async function getAIKey(): Promise<string> {
-  if (AI_ENV_KEY) { console.log("[translate] using env AI key"); return AI_ENV_KEY; }
+  if (AI_ENV_KEY) { console.debug("[translate] using env AI key"); return AI_ENV_KEY; }
   if (cachedKey) { return cachedKey; }
 
   try {

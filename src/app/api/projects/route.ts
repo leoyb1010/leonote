@@ -16,7 +16,7 @@ export async function GET() {
 
   const projects = await prisma.project.findMany({
     where: { userId },
-    include: { _count: { select: { notes: true } } },
+    include: { _count: { select: { notes: { where: { deletedAt: null } } } } },
     orderBy: [{ updatedAt: "desc" }, { createdAt: "desc" }],
   });
 
@@ -35,20 +35,27 @@ export async function POST(request: Request) {
 
   const baseSlug = slugifyProjectName(parsed.data.name);
   let slug = baseSlug;
-  let index = 1;
-  while (await prisma.project.findUnique({ where: { slug_userId: { slug, userId } } })) {
-    index += 1;
-    slug = `${baseSlug}-${index}`;
+  let project;
+  for (let attempt = 1; attempt <= 10; attempt++) {
+    try {
+      project = await prisma.project.create({
+        data: {
+          name: parsed.data.name.trim(),
+          description: parsed.data.description?.trim() || "",
+          slug,
+          userId,
+        },
+      });
+      break;
+    } catch (err: unknown) {
+      const isUniqueViolation =
+        err instanceof Error && /Unique.*slug_userId|constraint.*slug_userId/i.test(err.message);
+      if (!isUniqueViolation) throw err;
+      slug = `${baseSlug}-${attempt + 1}`;
+    }
   }
 
-  const project = await prisma.project.create({
-    data: {
-      name: parsed.data.name.trim(),
-      description: parsed.data.description?.trim() || "",
-      slug,
-      userId,
-    },
-  });
+  if (!project) return NextResponse.json({ ok: false, message: "创建项目失败，请重试" }, { status: 500 });
 
   return NextResponse.json({ ok: true, project });
 }

@@ -24,34 +24,47 @@ export async function syncNoteTags(noteId: string, userId: string, inputTags: st
   const names = normalizeTagNames(inputTags);
   await db.noteTag.deleteMany({ where: { noteId } });
 
-  for (const name of names) {
-    const tag = await db.tag.upsert({
-      where: { name_userId: { name, userId } },
-      update: {},
-      create: { name, userId },
-    });
+  if (names.length === 0) return;
 
-    await db.noteTag.create({ data: { noteId, tagId: tag.id } });
-  }
+  // Parallel upsert all tags, then batch-link
+  const tags = await Promise.all(
+    names.map((name) =>
+      db.tag.upsert({
+        where: { name_userId: { name, userId } },
+        update: {},
+        create: { name, userId },
+      }),
+    ),
+  );
+
+  await db.noteTag.createMany({
+    data: tags.map((tag) => ({ noteId, tagId: tag.id })),
+  });
 }
 
 export async function ensureProject(userId: string, name?: string, db: DbClient = prisma) {
   if (!name?.trim()) return null;
   const cleanName = name.trim();
   const baseSlug = slugifyProjectName(cleanName);
-  let slug = baseSlug;
-  let count = 1;
 
-  while (await db.project.findUnique({ where: { slug_userId: { slug, userId } } })) {
-    const existing = await db.project.findFirst({ where: { userId, name: cleanName } });
-    if (existing) return existing;
-    count += 1;
-    slug = `${baseSlug}-${count}`;
+  // Check if project with same name already exists
+  const existing = await db.project.findFirst({ where: { userId, name: cleanName } });
+  if (existing) return existing;
+
+  // Try creating with base slug; on unique constraint collision, append suffix and retry
+  let slug = baseSlug;
+  for (let attempt = 1; attempt <= 10; attempt++) {
+    try {
+      return await db.project.create({ data: { name: cleanName, slug, userId } });
+    } catch (err: unknown) {
+      const isUniqueViolation =
+        err instanceof Error && /Unique.*slug_userId|constraint.*slug_userId/i.test(err.message);
+      if (!isUniqueViolation) throw err;
+      slug = `${baseSlug}-${attempt + 1}`;
+    }
   }
 
-  return db.project.create({
-    data: { name: cleanName, slug, userId },
-  });
+  throw new Error("ensureProject: slug collision after 10 attempts");
 }
 
 export function toNoteDTO(note: {
@@ -139,7 +152,7 @@ export async function listNotes(userId: string, options?: { status?: string; q?:
 
 export async function requireOwnedNote(id: string, userId: string) {
   return prisma.note.findFirst({
-    where: { id, userId },
+    where: { id, userId, deletedAt: null },
     include: {
       project: true,
       tags: { include: { tag: true } },

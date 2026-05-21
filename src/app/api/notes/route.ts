@@ -69,19 +69,23 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: false, message: "全文索引初始化失败，请稍后再试" }, { status: 500 });
   }
 
-  const note = await prisma.note.create({
-    data: {
-      title: parsed.data.title,
-      content: parsed.data.content,
-      excerpt: parsed.data.excerpt || parsed.data.content.slice(0, 120),
-      source: parsed.data.source,
-      userId,
-      projectId,
-    },
-    include: { project: true, tags: { include: { tag: true } } },
+  const note = await prisma.$transaction(async (tx) => {
+    const created = await tx.note.create({
+      data: {
+        title: parsed.data.title,
+        content: parsed.data.content,
+        excerpt: parsed.data.excerpt || parsed.data.content.slice(0, 120),
+        source: parsed.data.source,
+        userId,
+        projectId,
+      },
+      include: { project: true, tags: { include: { tag: true } } },
+    });
+
+    await syncNoteTags(created.id, userId, parsed.data.tags, tx);
+
+    return tx.note.findUniqueOrThrow({ where: { id: created.id }, include: { project: true, tags: { include: { tag: true } } } });
   });
 
-  await syncNoteTags(note.id, userId, parsed.data.tags);
-  const refreshed = await prisma.note.findUniqueOrThrow({ where: { id: note.id }, include: { project: true, tags: { include: { tag: true } } } });
-  return NextResponse.json({ ok: true, note: toNoteDTO(refreshed) });
+  return NextResponse.json({ ok: true, note: toNoteDTO(note) });
 }

@@ -21,7 +21,7 @@ type CategoryFilter = BriefingCategory | "all";
 type DetailAnchor = { top: number; left: number; width: number; height: number; x?: number; y?: number };
 type SelectedDetail = { item: NewsItemDTO; anchor: DetailAnchor };
 type SelectedThinkingDetail = { insight: BriefingThinkingInsight; anchor: DetailAnchor };
-type SelectedSignalDetail =
+type SelectedEventDetail =
   | { event: BriefingEventClusterDTO; anchor: DetailAnchor };
 
 interface Props {
@@ -228,7 +228,7 @@ export function BriefingShell({
   const [briefingTitle, setBriefingTitle] = useState("每日简报");
   const [selectedDetail, setSelectedDetail] = useState<SelectedDetail | null>(null);
   const [selectedThinkingDetail, setSelectedThinkingDetail] = useState<SelectedThinkingDetail | null>(null);
-  const [selectedSignalDetail, setSelectedSignalDetail] = useState<SelectedSignalDetail | null>(null);
+  const [selectedEventDetail, setSelectedEventDetail] = useState<SelectedEventDetail | null>(null);
   const [loading, setLoading] = useState(false);
   const [importingDigest, setImportingDigest] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -444,7 +444,7 @@ export function BriefingShell({
           <div id="briefing-radar" className="scroll-mt-20">
             <EventRadar
               events={eventClusters}
-              onOpenEvent={(event, anchor) => setSelectedSignalDetail({ event, anchor })}
+              onOpenEvent={(event, anchor) => setSelectedEventDetail({ event, anchor })}
             />
           </div>
 
@@ -507,9 +507,9 @@ export function BriefingShell({
         />
       ) : null}
       <EventDetailModal
-        selected={selectedSignalDetail}
+        selected={selectedEventDetail}
         items={items}
-        onClose={() => setSelectedSignalDetail(null)}
+        onClose={() => setSelectedEventDetail(null)}
       />
       <ThinkingDetailModal
         selected={selectedThinkingDetail}

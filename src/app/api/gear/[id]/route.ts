@@ -55,25 +55,29 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
   if (guarded) return guarded;
 
   const { id } = await params;
-  const item = await requireOwnedGearItem(id, userId);
-  if (!item) return NextResponse.json({ ok: false, message: "这个装备不在这里" }, { status: 404 });
-
   const body = await request.json();
   const parsed = gearPatchSchema.safeParse(body);
   if (!parsed.success) return NextResponse.json({ ok: false, message: "设备信息还没写完整" }, { status: 400 });
   const { specs, purchaseDate, warrantyUntil, currency, ...rest } = parsed.data;
 
-  const updated = await prisma.gearItem.update({
-    where: { id },
-    data: {
-      ...rest,
-      currency: currency?.toUpperCase(),
-      purchaseDate: toDate(purchaseDate),
-      warrantyUntil: toDate(warrantyUntil),
-      specsJson: cleanSpecs(specs),
-    },
-    include: { linkedExpense: { include: { category: true } } },
+  const updated = await prisma.$transaction(async (tx) => {
+    const item = await tx.gearItem.findFirst({ where: { id, userId, deletedAt: null } });
+    if (!item) return null;
+
+    return tx.gearItem.update({
+      where: { id },
+      data: {
+        ...rest,
+        currency: currency?.toUpperCase(),
+        purchaseDate: toDate(purchaseDate),
+        warrantyUntil: toDate(warrantyUntil),
+        specsJson: cleanSpecs(specs),
+      },
+      include: { linkedExpense: { include: { category: true } } },
+    });
   });
+
+  if (!updated) return NextResponse.json({ ok: false, message: "这个装备不在这里" }, { status: 404 });
 
   return NextResponse.json({ ok: true, item: toGearDTO(updated) });
 }
@@ -85,13 +89,16 @@ export async function DELETE(request: Request, { params }: { params: Promise<{ i
   if (guarded) return guarded;
 
   const { id } = await params;
-  const item = await requireOwnedGearItem(id, userId);
-  if (!item) return NextResponse.json({ ok: false, message: "这个装备不在这里" }, { status: 404 });
 
-  await prisma.gearItem.update({
-    where: { id },
-    data: { deletedAt: new Date() },
+  const deleted = await prisma.$transaction(async (tx) => {
+    const item = await tx.gearItem.findFirst({ where: { id, userId, deletedAt: null } });
+    if (!item) return null;
+
+    await tx.gearItem.update({ where: { id }, data: { deletedAt: new Date() } });
+    return true;
   });
+
+  if (!deleted) return NextResponse.json({ ok: false, message: "这个装备不在这里" }, { status: 404 });
 
   return NextResponse.json({ ok: true });
 }

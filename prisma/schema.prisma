@@ -31,6 +31,8 @@ model User {
   // intentionally omitted. AISetting has @unique on userId but no FK cascade;
   // MemoryFact has userId with no FK constraint (application-level only);
   // UserBriefingState has no FK to User (ownership enforced via @@unique).
+  aiSetting   AISetting?
+  memoryFacts MemoryFact[]
 }
 
 model Note {
@@ -140,6 +142,8 @@ model AISetting {
   enableAutoOrganize Boolean @default(true)
   updatedAt         DateTime @updatedAt
   createdAt         DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model MemoryFact {
@@ -155,6 +159,8 @@ model MemoryFact {
   sourceId    String?
   updatedAt   DateTime  @updatedAt
   createdAt   DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId, isActive])
   @@index([userId, type])

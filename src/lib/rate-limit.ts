@@ -7,6 +7,8 @@ const buckets = new Map<string, Bucket>();
 // RECOMMENDATION: For multi-instance/production deployments, replace this with a
 // Redis-backed rate limiter (e.g., using ioredis + sliding window or token bucket).
 // Periodic cleanup runs at 5000+ entries to bound memory growth.
+// TODO: For multi-instance / production scale-out, replace with Redis-backed
+// sliding-window limiter (e.g. @upstash/ratelimit) or DB-backed counter.
 export function checkRateLimit(
   key: string,
   limit: number,

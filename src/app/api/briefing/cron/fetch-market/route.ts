@@ -10,6 +10,10 @@ export async function POST(request: Request) {
   const denied = requireBriefingCron(request);
   if (denied) return denied;
 
+  if (process.env.BRIEFING_ENABLED === "false" || process.env.BRIEFING_ENABLED === "0") {
+    return NextResponse.json({ ok: true, skipped: true, reason: "BRIEFING_ENABLED=false" });
+  }
+
   const run = await prisma.cronRun.create({ data: { task: "fetch-market", ok: false } });
 
   try {
