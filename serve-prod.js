@@ -40,6 +40,29 @@ function loadDotEnv(dir) {
     }
   }
 }
+// Next.js standalone mode does NOT copy static or public files into
+// .next/standalone/ automatically.  We must sync them before starting
+// the server, otherwise all chunk requests return 404 → ChunkLoadError
+// → "This page couldn't load" on client-side navigation / refresh.
+// @see https://nextjs.org/docs/app/api-reference/config/next-config-js/output#automatically-copying-traced-files
+const STANDALONE_NEXT = path.join(STANDALONE_DIR, ".next/standalone/.next");
+const BUILD_NEXT = path.join(STANDALONE_DIR, ".next");
+
+function syncDir(src, dest) {
+  if (!fs.existsSync(src)) return;
+  fs.mkdirSync(dest, { recursive: true });
+  // Use cp -r for reliable recursive copy (handles symlinks, perms, etc.)
+  try {
+    const { execSync } = require("child_process");
+    execSync(`cp -r "${src}/." "${dest}/"`, { stdio: "pipe" });
+  } catch {
+    // Fallback: skip if copy fails (non-critical, chunks may already exist)
+  }
+}
+
+syncDir(path.join(BUILD_NEXT, "static"), path.join(STANDALONE_NEXT, "static"));
+syncDir(path.join(STANDALONE_DIR, "public"), path.join(STANDALONE_DIR, ".next/standalone/public"));
+
 loadDotEnv(STANDALONE_DIR);
 loadDotEnv(path.join(STANDALONE_DIR, ".next/standalone"));
 
