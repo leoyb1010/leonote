@@ -15,10 +15,33 @@
 const http = require("http");
 const { spawn } = require("child_process");
 const path = require("path");
+const fs = require("fs");
 
 const PUBLIC_PORT = parseInt(process.env.PORT || "4317", 10);
 const INTERNAL_PORT = PUBLIC_PORT + 1;
 const STANDALONE_DIR = __dirname;
+
+// Load .env from both project root and standalone dir (if present).
+// PM2 does not auto-load .env files, so we must do it manually for
+// runtime-resolved variables like DATABASE_URL that Prisma needs.
+function loadDotEnv(dir) {
+  const envPath = path.join(dir, ".env");
+  if (!fs.existsSync(envPath)) return;
+  const content = fs.readFileSync(envPath, "utf-8");
+  for (const line of content.split("\n")) {
+    const trimmed = line.trim();
+    if (!trimmed || trimmed.startsWith("#")) continue;
+    const eqIdx = trimmed.indexOf("=");
+    if (eqIdx < 0) continue;
+    const key = trimmed.slice(0, eqIdx).trim();
+    const val = trimmed.slice(eqIdx + 1).trim().replace(/^"(.*)"$/, "$1");
+    if (!(key in process.env)) {
+      process.env[key] = val;
+    }
+  }
+}
+loadDotEnv(STANDALONE_DIR);
+loadDotEnv(path.join(STANDALONE_DIR, ".next/standalone"));
 
 // Start the Next.js standalone server on INTERNAL_PORT
 const nextServer = spawn(process.execPath, [path.join(STANDALONE_DIR, ".next/standalone/server.js")], {
