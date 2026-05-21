@@ -9,6 +9,7 @@ import {
   SCHEDULE_SOURCE_OPTIONS,
   SCHEDULE_STATUS_OPTIONS,
   toScheduleDTO,
+  type ScheduleStatus,
 } from "@/lib/schedule";
 
 export const dynamic = "force-dynamic";
@@ -58,7 +59,7 @@ export async function GET(request: Request) {
   const events = await listScheduleEvents(userId, {
     from: from ? toDate(from) ?? undefined : undefined,
     to: to ? toDate(to) ?? undefined : undefined,
-    status: SCHEDULE_STATUS_OPTIONS.includes(status as never) ? status as never : "all",
+    status: (SCHEDULE_STATUS_OPTIONS as readonly string[]).includes(status) ? (status as ScheduleStatus) : "all",
     projectId,
   });
 

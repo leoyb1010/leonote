@@ -109,6 +109,10 @@ export async function listExpenses(
 export function getMonthRange(now = new Date()) {
   const start = new Date(now.getFullYear(), now.getMonth(), 1);
   start.setHours(0, 0, 0, 0);
+  // NOTE: `end: now` returns the current moment, NOT the last day of the month.
+  // This is intentional: the monthly summary uses this for month-to-date aggregates
+  // (monthlyGroups, weekly) while daily-row queries use `monthEnd` (last day
+  // 23:59:59.999) for full-month coverage. See `getExpenseSummary`.
   return { start, end: now };
 }
 

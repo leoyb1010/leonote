@@ -51,6 +51,9 @@ self.addEventListener("fetch", (event) => {
             caches.open(RUNTIME_CACHE).then((cache) => cache.put(req, copy));
           }
           return res;
+        }).catch(() => {
+          // Network fetch failed; return a minimal response to avoid unhandled rejection
+          return new Response("", { status: 504 });
         })
       ))
     );

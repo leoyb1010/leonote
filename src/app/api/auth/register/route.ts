@@ -1,9 +1,9 @@
+import { cookies, headers } from "next/headers";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
-import { hashPassword } from "@/lib/auth";
+import { createSessionValue, getSessionCookieOptions, hashPassword, SESSION_COOKIE } from "@/lib/auth";
 import { checkRateLimit } from "@/lib/rate-limit";
-import { headers } from "next/headers";
 import { getClientRateLimitKey } from "@/lib/request-guard";
 
 const schema = z.object({
@@ -76,6 +76,14 @@ export async function POST(request: Request) {
     }
     throw err;
   }
+
+  // Automatically sign in after registration
+  const token = createSessionValue(user.id, user.tokenVersion);
+  const [, expRaw] = token.split(".");
+  const exp = Number(expRaw);
+
+  const cookieStore = await cookies();
+  cookieStore.set(SESSION_COOKIE, token, getSessionCookieOptions(exp));
 
   return NextResponse.json({
     ok: true,

@@ -22,6 +22,8 @@ export async function PATCH(request: Request) {
   const exists = await prisma.newsItem.findUnique({ where: { id: parsed.data.itemId }, select: { id: true } });
   if (!exists) return NextResponse.json({ ok: false, message: "资讯不存在" }, { status: 404 });
 
+  // Ownership is enforced by the @@unique([userId, itemId]) compound key on
+  // UserBriefingState — the session userId is baked into the upsert where clause.
   const state = await prisma.userBriefingState.upsert({
     where: { userId_itemId: { userId, itemId: parsed.data.itemId } },
     create: {

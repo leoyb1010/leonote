@@ -19,7 +19,7 @@ async function getAIKey(): Promise<string> {
       select: { apiKey: true },
     });
     if (setting?.apiKey) {
-      cachedKey = decryptSecret(setting.apiKey);
+      cachedKey = decryptSecret(setting.apiKey) ?? "";
       console.log("[translate] using DB AI key, len=", cachedKey.length);
       return cachedKey;
     }
@@ -166,6 +166,11 @@ export async function translateBatch(texts: string[]): Promise<string[]> {
       if (translated[i] && translated[i] !== chunk[i]) {
         result[offset + i] = translated[i];
       }
+    }
+
+    // Rate-limit: delay between chunks to avoid hitting API rate limits
+    if (offset + chunkSize < limitedTexts.length) {
+      await new Promise((resolve) => setTimeout(resolve, 200));
     }
   }
 

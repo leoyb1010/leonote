@@ -3,7 +3,7 @@ import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { getSessionUserId } from "@/lib/session";
 import { guardUserWriteRequest } from "@/lib/request-guard";
-import { GEAR_CATEGORY_OPTIONS, GEAR_STATUS_OPTIONS, listGearItems, parseGearCapture, toGearDTO } from "@/lib/gear";
+import { GEAR_CATEGORY_OPTIONS, GEAR_STATUS_OPTIONS, listGearItems, parseGearCapture, toGearDTO, type GearStatus, type GearCategory } from "@/lib/gear";
 import { requireOwnedCategory } from "@/lib/expense";
 
 export const dynamic = "force-dynamic";
@@ -71,8 +71,8 @@ export async function GET(request: Request) {
   const category = searchParams.get("category") || "all";
   const query = searchParams.get("q") || undefined;
   const items = await listGearItems(userId, {
-    status: GEAR_STATUS_OPTIONS.includes(status as never) ? status as never : "all",
-    category: GEAR_CATEGORY_OPTIONS.includes(category as never) ? category as never : "all",
+    status: (GEAR_STATUS_OPTIONS as readonly string[]).includes(status) ? (status as GearStatus) : "all",
+    category: (GEAR_CATEGORY_OPTIONS as readonly string[]).includes(category) ? (category as GearCategory) : "all",
     query,
   });
 

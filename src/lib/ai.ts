@@ -33,7 +33,7 @@ export async function getAISettings(
   const saved = await prisma.aISetting.findUnique({ where: { userId } });
   return {
     baseUrl: saved?.baseUrl || DEFAULT_BASE_URL,
-    apiKey: saved?.apiKey ? decryptSecret(saved.apiKey) : DEFAULT_API_KEY,
+    apiKey: saved?.apiKey ? (decryptSecret(saved.apiKey) ?? DEFAULT_API_KEY) : DEFAULT_API_KEY,
     model: saved?.model || DEFAULT_MODEL,
     fallbackModel: saved?.fallbackModel || FALLBACK_MODEL,
     enableAutoOrganize: saved?.enableAutoOrganize ?? true,

@@ -332,7 +332,9 @@ export async function fetchGearLinkPreview(rawUrl: string): Promise<GearLinkPrev
     }
 
     if (!response || !response.ok) throw new Error("链接内容不可访问");
-    const finalUrl = (await assertSafeUrl(currentUrl)).toString();
+    // Validate the response's resolved URL (not just currentUrl) to guard against
+    // servers returning a different final URL after non-standard redirects
+    const finalUrl = (await assertSafeUrl(response.url || currentUrl)).toString();
     const contentType = response.headers.get("content-type") || "";
     if (!ALLOWED_CONTENT_TYPES.some((type) => contentType.includes(type))) throw new Error("链接不是可读取的商品页面");
 

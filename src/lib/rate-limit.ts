@@ -4,6 +4,8 @@ const buckets = new Map<string, Bucket>();
 // In-process fixed window rate limiter. Adequate for single-instance self-hosting.
 // Limitations: counters reset on server restart; multi-instance deployments
 // require shared storage (Redis / DB-backed limiter) to avoid split-brain.
+// RECOMMENDATION: For multi-instance/production deployments, replace this with a
+// Redis-backed rate limiter (e.g., using ioredis + sliding window or token bucket).
 // Periodic cleanup runs at 5000+ entries to bound memory growth.
 export function checkRateLimit(
   key: string,

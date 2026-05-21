@@ -14,9 +14,10 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
   const existing = await requireOwnedNote(id, userId);
   if (!existing) return NextResponse.json({ ok: false, message: "笔记不存在" }, { status: 404 });
 
+  // Preserve the original isArchived status; only clear deletedAt
   const note = await prisma.note.update({
     where: { id },
-    data: { deletedAt: null, isArchived: false },
+    data: { deletedAt: null },
     include: { tags: { include: { tag: true } } },
   });
 

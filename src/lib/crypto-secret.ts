@@ -18,9 +18,14 @@ export function encryptSecret(plain: string) {
   return `v1.${iv.toString("base64url")}.${tag.toString("base64url")}.${encrypted.toString("base64url")}`;
 }
 
-export function decryptSecret(value: string) {
+export function decryptSecret(value: string): string | null {
   if (!value) return "";
-  if (!value.startsWith("v1.")) return value;
+  if (!value.startsWith("v1.")) {
+    // Non-encrypted values may be plaintext API keys stored before encryption was
+    // introduced. Warn and return null to avoid exposing them as-is.
+    console.warn("[crypto-secret] decryptSecret called with non-v1 value — returning null to avoid exposing plaintext secrets");
+    return null;
+  }
   const [, ivRaw, tagRaw, dataRaw] = value.split(".");
   const decipher = crypto.createDecipheriv(
     "aes-256-gcm",

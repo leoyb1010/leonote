@@ -26,6 +26,11 @@ model User {
   expenseCategories ExpenseCategory[]
   expenses          Expense[]
   gearItems         GearItem[]
+
+  // NOTE: Reverse relations for AISetting, MemoryFact, and UserBriefingState are
+  // intentionally omitted. AISetting has @unique on userId but no FK cascade;
+  // MemoryFact has userId with no FK constraint (application-level only);
+  // UserBriefingState has no FK to User (ownership enforced via @@unique).
 }
 
 model Note {
@@ -124,6 +129,8 @@ model DailyNote {
 }
 
 model AISetting {
+  // NOTE: No FK to User with ON DELETE CASCADE. Deleting a User does not
+  // automatically delete the associated AISetting row — cleanup is manual.
   id                String   @id @default(cuid())
   userId            String   @unique
   baseUrl           String   @default("https://api.deepseek.com")
@@ -136,6 +143,8 @@ model AISetting {
 }
 
 model MemoryFact {
+  // NOTE: No FK to User with ON DELETE CASCADE. Deleting a User does not
+  // automatically delete associated MemoryFact rows — cleanup is manual.
   id          String    @id @default(cuid())
   userId      String
   type        String    @default("preference")
@@ -333,6 +342,9 @@ model NewsItem {
 }
 
 model UserBriefingState {
+  // NOTE: No FK to User. Ownership is enforced at the application layer via
+  // the session userId, and the @@unique([userId, itemId]) compound key prevents
+  // cross-user state access. Parent (NewsItem) cascades on delete.
   id             String   @id @default(cuid())
   userId         String
   itemId         String

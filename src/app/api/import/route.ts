@@ -235,7 +235,16 @@ export async function POST(request: Request) {
     const text = await file.text();
     const title = file.name.replace(/\.(md|txt|html)$/i, "") || "导入笔记";
     const typeTag = lower.endsWith(".md") ? "Markdown" : lower.endsWith(".txt") ? "文本" : "网页";
-    const content = lower.endsWith(".html") ? text.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim() : text;
+    const content = lower.endsWith(".html")
+      ? (() => {
+          try {
+            return text.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
+          } catch {
+            // Regex-based HTML stripping is fragile; fall back to the raw text
+            return text.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
+          }
+        })()
+      : text;
     const { organized, finalContent } = await buildContent(title, content, lower.endsWith(".md") ? "markdown" : "text");
     if (noteId && mode !== "standalone") {
       const updated = await applyToExistingNote({ noteId, userId, content: finalContent, mode });

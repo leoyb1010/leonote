@@ -31,11 +31,17 @@ async function createNoteFtsObjects() {
       DELETE FROM NoteFts WHERE noteId = old.id;
     END
   `);
-  await prisma.$executeRawUnsafe(`
-    INSERT INTO NoteFts(noteId, userId, title, content, excerpt)
-    SELECT id, userId, title, content, excerpt FROM Note
-    WHERE id NOT IN (SELECT noteId FROM NoteFts)
-  `);
+  // Only backfill if FTS table is empty to avoid scanning the full Note table on
+  // every server start. New notes are covered by the INSERT trigger above.
+  const existingCount = await prisma.$queryRawUnsafe<Array<{ cnt: number }>>(
+    `SELECT COUNT(*) as cnt FROM NoteFts`
+  ).then((rows) => rows[0]?.cnt ?? 0);
+  if (existingCount === 0) {
+    await prisma.$executeRawUnsafe(`
+      INSERT INTO NoteFts(noteId, userId, title, content, excerpt)
+      SELECT id, userId, title, content, excerpt FROM Note
+    `);
+  }
 }
 
 export async function ensureNoteFtsReady() {

@@ -394,6 +394,16 @@ npm run ci           # 全链路：lint → typecheck → test → build
 | **v0.2.0** | 2026-04-26 | Prisma + SQLite 数据层；Next.js App Router 迁移；基础笔记 CRUD API；登录页面 |
 | **v0.1.0** | 2026-04-25 | 项目初始化：Next.js 16 + React 19 + TypeScript + Tailwind CSS；Tauri 2 桌面壳；基础工程脚手架 |
 
+## Security & Quality Review (2026-05-21)
+
+### 修复清单
+- **Critical**: SSRF 重定向链防护 (validate redirect targets before following); 密码修改后立即签发新 Session 并递增 tokenVersion; 注册成功后自动设 Session Cookie (无需手动登录); Cron Token HTTP 明文传输增加 warn
+- **High**: 登出时先递增 tokenVersion 再清 Cookie (被窃 token 真正失效); 限流模块标注 Redis 推荐; HTML 导入正则加固 (try-catch回退); 费用摘要月份边界文档注释; Briefing 翻译批处理增加 200ms 延迟; Briefing state 更新所有权检查文档化
+- **Medium**: 回收站恢复保留原始 isArchived; FTS 后填改为计数检查 (避免每请求全表扫描); crypto-secret 非 v1 值返回 null + warn; schema.prisma 补充缺失FK注释; `as never` 类型断言改为正确类型收窄
+- **Low**: offline.html style Type补全; Service Worker fetch 增加 .catch() 错误处理
+
+所有修复通过 TypeScript 零错误编译。
+
 ## License
 
 Private — 个人使用项目。

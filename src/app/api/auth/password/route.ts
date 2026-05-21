@@ -2,6 +2,8 @@ import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import {
+  createSessionValue,
+  getSessionCookieOptions,
   hashPassword,
   readSessionValue,
   SESSION_COOKIE,
@@ -61,13 +63,23 @@ export async function POST(request: Request) {
   }
 
   const passwordHash = await hashPassword(parsed.data.newPassword);
-  await prisma.user.update({
+  // Increment tokenVersion to invalidate all existing sessions, then issue a new
+  // session cookie so the user stays logged in after password change.
+  const updated = await prisma.user.update({
     where: { id: user.id },
     data: {
       passwordHash,
       tokenVersion: { increment: 1 },
     },
+    select: { tokenVersion: true },
   });
 
-  return NextResponse.json({ ok: true, message: "密码已更新，请重新登录" });
+  const token = createSessionValue(user.id, updated.tokenVersion);
+  const [, expRaw] = token.split(".");
+  const exp = Number(expRaw);
+
+  const cookieStore = await cookies();
+  cookieStore.set(SESSION_COOKIE, token, getSessionCookieOptions(exp));
+
+  return NextResponse.json({ ok: true, message: "密码已更新" });
 }

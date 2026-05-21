@@ -2,6 +2,11 @@ import cron from "node-cron";
 
 const baseUrl = process.env.LEONOTE_INTERNAL_URL || "http://localhost:4317";
 
+// Warn if cron requests are sent over plain HTTP in non-development environments
+if (baseUrl.startsWith("http://") && process.env.NODE_ENV !== "development") {
+  console.warn("[briefing-cron] LEONOTE_INTERNAL_URL is using http:// — consider https:// in production to protect cron tokens");
+}
+
 if (!process.env.BRIEFING_CRON_TOKEN) {
   throw new Error("BRIEFING_CRON_TOKEN is required");
 }
