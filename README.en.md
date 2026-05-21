@@ -85,7 +85,7 @@ git clone https://github.com/leoyb1010/leonote.git
 cd leonote
 
 cp .env.example .env
-# Edit .env and set at least AUTH_SECRET.
+# Edit .env and set at least AUTH_SECRET and DATABASE_URL.
 # Example secret: openssl rand -base64 48
 
 npm install

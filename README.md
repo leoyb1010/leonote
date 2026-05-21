@@ -82,7 +82,7 @@ git clone https://github.com/leoyb1010/leonote.git
 cd leonote
 
 cp .env.example .env
-# 编辑 .env，至少设置 AUTH_SECRET
+# 编辑 .env，至少设置 AUTH_SECRET 和 DATABASE_URL
 # 生成随机密钥: openssl rand -base64 48
 
 npm install
