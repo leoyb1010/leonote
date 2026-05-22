@@ -1,0 +1,45 @@
+name: Auto Deploy on Push
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: leonote-runner
+    steps:
+      - name: Pull latest code
+        run: |
+          cd /Users/leo/leonote
+          git -c credential.helper='store --file /Users/leo/.git-credentials-leonote' pull origin main
+
+      - name: Install dependencies
+        run: |
+          cd /Users/leo/leonote
+          npm install
+
+      - name: Build (Next.js standalone)
+        run: |
+          cd /Users/leo/leonote
+          npm run build
+
+      - name: Prepare standalone
+        run: |
+          cd /Users/leo/leonote
+          npm run standalone:prepare
+
+      - name: Run database migrations
+        run: |
+          cd /Users/leo/leonote
+          npx prisma migrate deploy
+
+      - name: Deploy (PM2 restart)
+        run: |
+          /Users/leo/.npm-global/bin/pm2 restart leonote
+          /Users/leo/.npm-global/bin/pm2 restart leonote-cron
+
+      - name: Verify deployment
+        run: |
+          sleep 5
+          curl -sf --noproxy '*' http://localhost:4317/ -o /dev/null && echo "Leonote: OK" || echo "WARNING: Health check failed"
+          /Users/leo/.npm-global/bin/pm2 save
