@@ -3,21 +3,15 @@
 import { AnimatePresence, motion } from "framer-motion";
 import {
   Camera,
-  CameraOff,
   Check,
   Columns2,
   Eye,
   FileUp,
   Focus,
-  Image as ImageIcon,
-  Loader2,
   MoreHorizontal,
   Paperclip,
   PenLine,
-  Sparkles,
-  Trash2,
   Wand2,
-  X,
 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -25,6 +19,10 @@ import { cn } from "@/lib/utils";
 import { ImportExportPanel } from "@/components/import-export-panel";
 import { Button } from "@/components/base/Button";
 import { MarkdownPreview } from "@/components/editor/MarkdownPreview";
+import { CameraCaptureModal } from "./CameraCaptureModal";
+import { AISummaryPanel, type SummaryStatus } from "./AISummaryPanel";
+import { AttachmentInlineList, type Attachment } from "./AttachmentInlineList";
+import { SaveStateBadge, type SaveState } from "./SaveStateBadge";
 
 type NoteShape = {
   id?: string;
@@ -32,10 +30,9 @@ type NoteShape = {
   content?: string;
   tags?: string[];
   project?: { id: string; name: string } | null;
-  attachments?: AttachmentShape[];
+  attachments?: Attachment[];
 };
 
-type SaveState = "idle" | "dirty" | "saving" | "saved" | "error";
 type ViewMode = "write" | "preview" | "split";
 type SaveOptions = {
   manual?: boolean;
@@ -47,24 +44,14 @@ type SaveOptions = {
 type InsertionRange = { start: number; end: number };
 
 type SummaryState = {
-  status: "idle" | "loading" | "ready" | "inserting" | "error";
+  status: SummaryStatus;
   text: string;
 };
 
 type ProjectOption = { id: string; name: string };
 
-type AttachmentShape = {
-  id: string;
-  noteId: string;
-  filename: string;
-  mimeType: string;
-  size: number;
-  url: string;
-};
-
 const AUTOSAVE_KEY = "leonote.autosave.enabled";
 
-// v1.4: quiet save messages
 const saveMessages = { manual: "已安静保存。", auto: "正在安放…" };
 
 export function EnhancedEditor({ initialNote }: { initialNote?: NoteShape }) {
@@ -76,7 +63,7 @@ export function EnhancedEditor({ initialNote }: { initialNote?: NoteShape }) {
   const [projectId, setProjectId] = useState(initialNote?.project?.id ?? "");
   const [newProjectName, setNewProjectName] = useState("");
   const [projects, setProjects] = useState<ProjectOption[]>([]);
-  const [attachments, setAttachments] = useState<AttachmentShape[]>(initialNote?.attachments ?? []);
+  const [attachments, setAttachments] = useState<Attachment[]>(initialNote?.attachments ?? []);
   const [uploadMessage, setUploadMessage] = useState("");
   const [uploading, setUploading] = useState(false);
   const [message, setMessage] = useState("");
@@ -88,9 +75,6 @@ export function EnhancedEditor({ initialNote }: { initialNote?: NoteShape }) {
   const [saveToast, setSaveToast] = useState(false);
   const [focusMode, setFocusMode] = useState(false);
   const [cameraOpen, setCameraOpen] = useState(false);
-  const [cameraStream, setCameraStream] = useState<MediaStream | null>(null);
-  const [cameraLoading, setCameraLoading] = useState(false);
-  const [cameraError, setCameraError] = useState("");
   const [autoSaveEnabled, setAutoSaveEnabled] = useState(() => {
     if (typeof window === "undefined") return false;
     return window.localStorage.getItem(AUTOSAVE_KEY) === "1";
@@ -104,9 +88,6 @@ export function EnhancedEditor({ initialNote }: { initialNote?: NoteShape }) {
   const isComposingRef = useRef(false);
   const toastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const attachmentInputRef = useRef<HTMLInputElement | null>(null);
-  const cameraInputRef = useRef<HTMLInputElement | null>(null);
-  const cameraVideoRef = useRef<HTMLVideoElement | null>(null);
-  const cameraCanvasRef = useRef<HTMLCanvasElement | null>(null);
   const pendingCameraRangeRef = useRef<InsertionRange | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
 
@@ -273,18 +254,6 @@ export function EnhancedEditor({ initialNote }: { initialNote?: NoteShape }) {
   useEffect(() => () => cancelAutoSaveTimer(), []);
 
   useEffect(() => {
-    if (!cameraStream || !cameraVideoRef.current) return;
-    cameraVideoRef.current.srcObject = cameraStream;
-    void cameraVideoRef.current.play().catch(() => {
-      setCameraError("摄像头已打开，但预览启动失败，请重试。");
-    });
-  }, [cameraStream]);
-
-  useEffect(() => () => {
-    cameraStream?.getTracks().forEach((track) => track.stop());
-  }, [cameraStream]);
-
-  useEffect(() => {
     const onBeforeUnload = (event: BeforeUnloadEvent) => {
       if (saveState === "dirty" || saveState === "saving") {
         event.preventDefault();
@@ -372,7 +341,7 @@ export function EnhancedEditor({ initialNote }: { initialNote?: NoteShape }) {
     setSummary((state) => ({ ...state, status: "ready" }));
   };
 
-  const buildAttachmentMarkdown = (attachment: AttachmentShape) => {
+  const buildAttachmentMarkdown = (attachment: Attachment) => {
     const label = attachment.filename.replace(/[\]\[]/g, "");
     if (attachment.mimeType.startsWith("image/")) {
       return `![${label}](${attachment.url})`;
@@ -413,7 +382,7 @@ export function EnhancedEditor({ initialNote }: { initialNote?: NoteShape }) {
       return;
     }
 
-    const uploaded: AttachmentShape[] = [];
+    const uploaded: Attachment[] = [];
     for (const file of selected) {
       const form = new FormData();
       form.append("file", file);
@@ -437,71 +406,14 @@ export function EnhancedEditor({ initialNote }: { initialNote?: NoteShape }) {
     setUploading(false);
   };
 
-  const closeCamera = () => {
-    setCameraStream((stream) => {
-      stream?.getTracks().forEach((track) => track.stop());
-      return null;
-    });
-    setCameraOpen(false);
-    setCameraLoading(false);
-    setCameraError("");
-  };
-
-  const openCamera = async () => {
+  const openCamera = () => {
     pendingCameraRangeRef.current = currentInsertionRange();
-    setCameraError("");
-    if (!navigator.mediaDevices?.getUserMedia) {
-      cameraInputRef.current?.click();
-      return;
-    }
-
     setCameraOpen(true);
-    setCameraLoading(true);
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        audio: false,
-        video: {
-          facingMode: { ideal: "environment" },
-          width: { ideal: 1600 },
-          height: { ideal: 1200 },
-        },
-      });
-      setCameraStream(stream);
-    } catch (error) {
-      setCameraError(error instanceof Error ? error.message : "无法打开摄像头，请检查浏览器权限。");
-    } finally {
-      setCameraLoading(false);
-    }
   };
 
-  const captureCameraPhoto = async () => {
-    const video = cameraVideoRef.current;
-    const canvas = cameraCanvasRef.current;
-    if (!video || !canvas || video.videoWidth === 0 || video.videoHeight === 0) {
-      setCameraError("摄像头画面还没有准备好，请稍等一秒再拍。");
-      return;
-    }
-
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
-    const context = canvas.getContext("2d");
-    if (!context) {
-      setCameraError("无法读取摄像头画面。");
-      return;
-    }
-    context.drawImage(video, 0, 0, canvas.width, canvas.height);
-    const blob = await new Promise<Blob | null>((resolve) => {
-      canvas.toBlob(resolve, "image/jpeg", 0.92);
-    });
-    if (!blob) {
-      setCameraError("照片生成失败，请重试。");
-      return;
-    }
-
-    const file = new File([blob], `camera-${new Date().toISOString().replace(/[:.]/g, "-")}.jpg`, { type: "image/jpeg" });
-    const insertionRange = pendingCameraRangeRef.current ?? currentInsertionRange();
-    closeCamera();
-    await uploadFiles([file], insertionRange);
+  const handleCameraCaptured = async (file: File) => {
+    const range = pendingCameraRangeRef.current ?? currentInsertionRange();
+    await uploadFiles([file], range);
   };
 
   const handlePaste = (event: React.ClipboardEvent<HTMLTextAreaElement>) => {
@@ -520,7 +432,7 @@ export function EnhancedEditor({ initialNote }: { initialNote?: NoteShape }) {
     void uploadFiles(files, range);
   };
 
-  const removeAttachment = async (attachment: AttachmentShape) => {
+  const removeAttachment = async (attachment: Attachment) => {
     const res = await fetch(`/api/notes/${attachment.noteId}/attachments/${attachment.id}`, { method: "DELETE" });
     if (!res.ok) {
       setUploadMessage("删除附件失败。");
@@ -530,12 +442,6 @@ export function EnhancedEditor({ initialNote }: { initialNote?: NoteShape }) {
     setUploadMessage("附件已删除，正文中的引用可按需手动移除。");
   };
 
-  const formatFileSize = (size: number) => {
-    if (size < 1024) return `${size} B`;
-    if (size < 1024 * 1024) return `${(size / 1024).toFixed(1)} KB`;
-    return `${(size / 1024 / 1024).toFixed(1)} MB`;
-  };
-
   return (
     <div
       className={cn(
@@ -543,7 +449,6 @@ export function EnhancedEditor({ initialNote }: { initialNote?: NoteShape }) {
         focusMode ? "max-w-[820px]" : "max-w-[760px]",
       )}
     >
-      {/* v1.4 Save Toast */}
       <AnimatePresence>
         {saveToast && (
           <motion.div
@@ -560,153 +465,20 @@ export function EnhancedEditor({ initialNote }: { initialNote?: NoteShape }) {
         )}
       </AnimatePresence>
 
-      <AnimatePresence>
-        {cameraOpen ? (
-          <motion.div
-            className="fixed inset-0 z-[80] flex items-end justify-center bg-[var(--overlay-scrim)] px-3 pb-3 pt-[calc(1rem+env(safe-area-inset-top))] backdrop-blur-sm sm:items-center sm:p-6"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-          >
-            <motion.section
-              className="floating-card-premium flex max-h-[calc(100dvh-24px)] w-full max-w-2xl flex-col overflow-hidden rounded-[var(--radius-2xl)]"
-              initial={{ opacity: 0, y: 18, scale: 0.98 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: 18, scale: 0.98 }}
-              transition={{ duration: 0.2, ease: [0.2, 0, 0, 1] }}
-            >
-              <header className="flex shrink-0 items-center justify-between gap-3 border-b border-[var(--hairline)] px-4 py-3">
-                <div>
-                  <div className="flex items-center gap-1.5 text-xs text-[var(--text-muted)]">
-                    <Camera className="h-3.5 w-3.5" />
-                    系统摄像头
-                  </div>
-                  <h3 className="mt-1 text-sm font-medium text-[var(--text-primary)]">拍照并插入正文</h3>
-                </div>
-                <button
-                  type="button"
-                  onClick={closeCamera}
-                  className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-[var(--hairline)] text-[var(--text-muted)] transition hover:bg-[var(--interactive-hover)] hover:text-[var(--text-primary)]"
-                  aria-label="关闭摄像头"
-                >
-                  <X className="h-4 w-4" />
-                </button>
-              </header>
-              <div className="min-h-0 flex-1 overflow-y-auto p-4">
-                <div className="relative overflow-hidden rounded-[var(--radius-xl)] border border-[var(--hairline)] bg-black">
-                  <video ref={cameraVideoRef} muted playsInline autoPlay className="aspect-[4/3] w-full object-cover" />
-                  {cameraLoading ? (
-                    <div className="absolute inset-0 flex items-center justify-center bg-black/70 text-sm text-white">
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      正在打开摄像头
-                    </div>
-                  ) : null}
-                  {!cameraStream && !cameraLoading ? (
-                    <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/70 px-6 text-center text-sm leading-6 text-white/80">
-                      <CameraOff className="mb-2 h-5 w-5" />
-                      {cameraError || "摄像头尚未连接。"}
-                    </div>
-                  ) : null}
-                </div>
-                {cameraError ? (
-                  <p className="mt-3 rounded-[var(--radius-lg)] border border-[var(--danger-soft)] bg-[var(--material-inset)] px-3 py-2 text-xs leading-5 text-[var(--text-secondary)]">
-                    {cameraError}
-                  </p>
-                ) : null}
-                <canvas ref={cameraCanvasRef} className="hidden" />
-              </div>
-              <footer className="flex shrink-0 flex-wrap items-center justify-between gap-2 border-t border-[var(--hairline)] px-4 py-3">
-                <button
-                  type="button"
-                  onClick={() => cameraInputRef.current?.click()}
-                  className="rounded-full border border-[var(--hairline)] px-3 py-2 text-xs text-[var(--text-secondary)] transition hover:bg-[var(--interactive-hover)]"
-                >
-                  选择照片
-                </button>
-                <div className="flex gap-2">
-                  <button
-                    type="button"
-                    onClick={openCamera}
-                    disabled={cameraLoading}
-                    className="rounded-full border border-[var(--hairline)] px-3 py-2 text-xs text-[var(--text-secondary)] transition hover:bg-[var(--interactive-hover)] disabled:opacity-50"
-                  >
-                    重新打开
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => void captureCameraPhoto()}
-                    disabled={!cameraStream || uploading}
-                    className="inline-flex items-center gap-1.5 rounded-full bg-[var(--text-primary)] px-4 py-2 text-xs font-medium text-[var(--surface-base)] transition hover:opacity-90 disabled:opacity-50"
-                  >
-                    {uploading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Camera className="h-3.5 w-3.5" />}
-                    插入正文
-                  </button>
-                </div>
-              </footer>
-            </motion.section>
-          </motion.div>
-        ) : null}
-      </AnimatePresence>
+      <CameraCaptureModal
+        open={cameraOpen}
+        uploading={uploading}
+        onClose={() => setCameraOpen(false)}
+        onCaptured={handleCameraCaptured}
+      />
 
-      {/* v1.4 AI Summary Panel */}
-      <AnimatePresence>
-        {(summary.status === "ready" || summary.status === "inserting") && summary.text ? (
-          <motion.section
-            layout
-            initial={{ opacity: 0, y: -8 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -8 }}
-            transition={{ duration: 0.22, ease: [0.2, 0, 0, 1] }}
-            className="mb-6 rounded-[var(--radius-xl)] border border-[var(--hairline)] bg-[var(--material-elevated)] p-5 shadow-[var(--shadow-sm)]"
-          >
-            <div className="flex items-start justify-between gap-4">
-              <div>
-                <div className="text-xs font-medium text-[var(--ai-accent)]">静读</div>
-                <h3 className="mt-1 text-sm font-medium text-[var(--text-primary)]">我整理出了一版脉络。</h3>
-              </div>
-              <button
-                type="button"
-                onClick={() => void insertSummary()}
-                disabled={summary.status === "inserting"}
-                className="inline-flex items-center gap-2 rounded-full border border-[var(--hairline)] px-3 py-1.5 text-xs text-[var(--text-primary)] transition hover:bg-[var(--interactive-hover)] disabled:opacity-60"
-              >
-                <Sparkles className="h-3 w-3" />
-                {summary.status === "inserting" ? "插入中" : "插入"}
-              </button>
-            </div>
-            <p className="mt-3 whitespace-pre-wrap text-sm leading-7 text-[var(--text-secondary)]">
-              {summary.text}
-            </p>
-          </motion.section>
-        ) : null}
-      </AnimatePresence>
+      <AISummaryPanel status={summary.status} text={summary.text} onInsert={insertSummary} />
 
-      {/* v1.4 Toolbar */}
+      {/* Toolbar */}
       <div className="mb-6 flex flex-col items-start justify-between gap-3 text-xs text-[var(--text-muted)] sm:flex-row sm:items-center">
-        <div className="flex items-center gap-2">
-          <span
-            className={cn(
-              "inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs",
-              saveState === "saved" && "text-[var(--success)]",
-              saveState === "saving" && "text-[var(--warning)]",
-              saveState === "error" && "text-[var(--danger)]",
-            )}
-          >
-            <span className={cn(
-              "h-1.5 w-1.5 rounded-full",
-              saveState === "saved" && "bg-[var(--success)]",
-              saveState === "saving" && "bg-[var(--warning)] animate-pulse",
-              saveState === "error" && "bg-[var(--danger)]",
-              saveState === "idle" && "bg-[var(--text-faint)]",
-              saveState === "dirty" && "bg-[var(--text-faint)]",
-            )} />
-            {saveState === "saved" ? "已安静保存" : saveState === "saving" ? "正在安放…" : saveState === "error" ? "未保存" : saveState === "dirty" ? "有更改" : ""}
-          </span>
-          {stats.chars > 0 && <span>{stats.chars} 字</span>}
-        </div>
+        <SaveStateBadge saveState={saveState} chars={stats.chars} />
 
         <div className="flex w-full flex-wrap items-center justify-end gap-1 sm:w-auto">
-          {/* Focus Mode toggle */}
           <button
             onClick={() => setFocusMode(!focusMode)}
             className={cn(
@@ -720,7 +492,6 @@ export function EnhancedEditor({ initialNote }: { initialNote?: NoteShape }) {
             <Focus size={14} />
           </button>
 
-          {/* View mode toggle */}
           <div className="flex items-center rounded-md border border-[var(--hairline)] mr-2">
             <button
               onClick={() => setViewMode("write")}
@@ -758,7 +529,6 @@ export function EnhancedEditor({ initialNote }: { initialNote?: NoteShape }) {
             保存
           </Button>
 
-          {/* More menu */}
           <div className="relative">
             <button
               onClick={() => setShowMore(!showMore)}
@@ -783,14 +553,13 @@ export function EnhancedEditor({ initialNote }: { initialNote?: NoteShape }) {
         </div>
       </div>
 
-      {/* v1.4 Editor body */}
+      {/* Editor body */}
       <motion.div
         layout
         transition={{ duration: 0.22, ease: [0.2, 0, 0, 1] }}
         className={cn(viewMode === "split" ? "grid gap-6 lg:grid-cols-[minmax(0,1fr)_1px_minmax(280px,1fr)]" : "")}
       >
         <div className={cn(viewMode === "preview" && "hidden")}>
-          {/* Title */}
           <input
             aria-label="笔记标题"
             value={title}
@@ -801,7 +570,6 @@ export function EnhancedEditor({ initialNote }: { initialNote?: NoteShape }) {
             className="w-full bg-transparent text-2xl font-semibold leading-tight tracking-[-0.04em] text-[var(--text-primary)] outline-none placeholder:text-[var(--text-placeholder)] sm:text-[28px]"
           />
 
-          {/* Metadata */}
           <div className="mt-4 grid gap-3 md:grid-cols-2">
             <div className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
               <select
@@ -842,7 +610,6 @@ export function EnhancedEditor({ initialNote }: { initialNote?: NoteShape }) {
             />
           </div>
 
-          {/* Content textarea */}
           <textarea
             aria-label="笔记内容"
             ref={textareaRef}
@@ -863,7 +630,7 @@ export function EnhancedEditor({ initialNote }: { initialNote?: NoteShape }) {
               <span>可直接粘贴图片/文件，或拖到正文区域。</span>
               <button
                 type="button"
-                onClick={() => void openCamera()}
+                onClick={openCamera}
                 disabled={uploading}
                 className="ml-auto inline-flex items-center gap-1.5 rounded-md border border-[var(--hairline)] px-2 py-1 text-[var(--text-secondary)] transition hover:bg-[var(--interactive-hover)] disabled:opacity-50"
               >
@@ -890,51 +657,16 @@ export function EnhancedEditor({ initialNote }: { initialNote?: NoteShape }) {
                   void uploadFiles(files, currentInsertionRange());
                 }}
               />
-              <input
-                ref={cameraInputRef}
-                type="file"
-                accept="image/*"
-                capture="environment"
-                className="hidden"
-                onChange={(event) => {
-                  const files = Array.from(event.target.files || []);
-                  event.target.value = "";
-                  closeCamera();
-                  void uploadFiles(files, pendingCameraRangeRef.current ?? currentInsertionRange());
-                }}
-              />
             </div>
             {uploadMessage ? <div className="mt-2 text-[var(--text-secondary)]">{uploadMessage}</div> : null}
-            {attachments.length > 0 ? (
-              <div className="mt-3 grid gap-2">
-                {attachments.map((attachment) => (
-                  <div key={attachment.id} className="flex min-w-0 items-center gap-2 rounded-md border border-[var(--hairline)] bg-[var(--surface-base)] px-2.5 py-2">
-                    {attachment.mimeType.startsWith("image/") ? <ImageIcon className="h-3.5 w-3.5 shrink-0 text-[var(--primary)]" /> : <Paperclip className="h-3.5 w-3.5 shrink-0 text-[var(--text-muted)]" />}
-                    <a href={attachment.url} target="_blank" rel="noreferrer" className="min-w-0 flex-1 truncate text-[var(--text-secondary)] hover:text-[var(--text-primary)]">
-                      {attachment.filename}
-                    </a>
-                    <span className="shrink-0 text-[var(--text-faint)]">{formatFileSize(attachment.size)}</span>
-                    <button
-                      type="button"
-                      onClick={() => void removeAttachment(attachment)}
-                      className="shrink-0 rounded-md p-1 text-[var(--text-muted)] transition hover:bg-[var(--interactive-hover)] hover:text-[var(--danger)]"
-                      aria-label={`删除附件 ${attachment.filename}`}
-                    >
-                      <Trash2 className="h-3.5 w-3.5" />
-                    </button>
-                  </div>
-                ))}
-              </div>
-            ) : null}
+            <AttachmentInlineList attachments={attachments} onRemove={removeAttachment} />
           </div>
         </div>
 
-        {/* Split divider */}
         {viewMode === "split" && (
           <div className="hidden lg:block w-px bg-[var(--hairline)]" />
         )}
 
-        {/* Preview */}
         {viewMode !== "write" && (
           <div className={cn(viewMode === "preview" && "min-h-[60vh]")}>
             <div className="text-xs font-medium text-[var(--text-muted)] mb-3">预览</div>
@@ -943,14 +675,12 @@ export function EnhancedEditor({ initialNote }: { initialNote?: NoteShape }) {
         )}
       </motion.div>
 
-      {/* Message */}
       {message && (
         <div className="mt-5 rounded-lg border border-[var(--hairline)] bg-[var(--material-inset)] px-3 py-2 text-xs text-[var(--text-secondary)]">
           {message}
         </div>
       )}
 
-      {/* Import/Export */}
       <div className="mt-8">
         <ImportExportPanel noteId={noteId || undefined} embedded onImported={handleImported} />
       </div>
