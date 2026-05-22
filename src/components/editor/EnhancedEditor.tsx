@@ -99,6 +99,8 @@ export function EnhancedEditor({ initialNote }: { initialNote?: NoteShape }) {
   const initialized = useRef(false);
   const autoSaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const savingRef = useRef(false);
+  const pendingSaveRef = useRef(false);
+  const editVersionRef = useRef(0);
   const isComposingRef = useRef(false);
   const toastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const attachmentInputRef = useRef<HTMLInputElement | null>(null);
@@ -179,8 +181,14 @@ export function EnhancedEditor({ initialNote }: { initialNote?: NoteShape }) {
       targetNoteId,
     }: SaveOptions = {}) => {
       cancelAutoSaveTimer();
-      if (savingRef.current) return targetNoteId || noteId || null;
+      if (savingRef.current) {
+        pendingSaveRef.current = true;
+        setSaveState("dirty");
+        return targetNoteId || noteId || null;
+      }
       savingRef.current = true;
+      pendingSaveRef.current = false;
+      const saveVersion = editVersionRef.current;
       setSaveState("saving");
       setMessage("");
       const payload = buildPayload(contentOverride);
@@ -209,10 +217,17 @@ export function EnhancedEditor({ initialNote }: { initialNote?: NoteShape }) {
           return null;
         }
         const id = data.note.id as string;
-        if (!currentId) setNoteId(id);
-        setSaveState("saved");
-        showToast();
-        setMessage(manual ? saveMessages.manual : saveMessages.auto);
+        if (!currentId) {
+          setNoteId(id);
+        }
+        if (editVersionRef.current === saveVersion && !pendingSaveRef.current) {
+          setSaveState("saved");
+          showToast();
+          setMessage(manual ? saveMessages.manual : saveMessages.auto);
+        } else {
+          setSaveState("dirty");
+          pendingSaveRef.current = true;
+        }
         router.refresh();
         if (closeAfterSave) {
           router.push("/notes");
@@ -226,6 +241,10 @@ export function EnhancedEditor({ initialNote }: { initialNote?: NoteShape }) {
         return null;
       } finally {
         savingRef.current = false;
+        if (pendingSaveRef.current && !isComposingRef.current) {
+          pendingSaveRef.current = false;
+          window.setTimeout(() => void saveDraft(), 0);
+        }
       }
     },
     [buildPayload, showToast, noteId, router],
@@ -236,6 +255,7 @@ export function EnhancedEditor({ initialNote }: { initialNote?: NoteShape }) {
       initialized.current = true;
       return;
     }
+    editVersionRef.current += 1;
     setHasEdited(true);
     setSaveState("dirty");
   }, [title, content, tagsInput, projectId, newProjectName]);
@@ -322,6 +342,7 @@ export function EnhancedEditor({ initialNote }: { initialNote?: NoteShape }) {
     }
     if (typeof importedContent === "string" && importedNoteId === noteId) {
       setContent(importedContent);
+      editVersionRef.current += 1;
       setSaveState("saved");
       setMessage(mode === "replace" ? "已用导入内容替换当前笔记。" : "已把导入内容追加到当前笔记。");
     }

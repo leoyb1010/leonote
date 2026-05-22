@@ -1,6 +1,4 @@
 import { NextResponse } from "next/server";
-import { lookup } from "node:dns/promises";
-import net from "node:net";
 import type { Prisma } from "@prisma/client";
 import { z } from "zod";
 import { getSessionUserId } from "@/lib/session";
@@ -8,12 +6,12 @@ import { prisma } from "@/lib/prisma";
 import { ensureProject, requireOwnedNote, syncNoteTags, toNoteDTO } from "@/lib/server-notes";
 import { organizeImportedContent } from "@/lib/import-organizer";
 import { guardUserWriteRequest } from "@/lib/request-guard";
+import { assertSafePublicUrl, safeFetch } from "@/lib/safe-url";
 
 const MAX_HTML_BYTES = 512_000;
 const MAX_IMPORT_FILE_BYTES = 2 * 1024 * 1024;
 const MAX_MULTIPART_BYTES = MAX_IMPORT_FILE_BYTES + 128 * 1024;
 const REQUEST_TIMEOUT_MS = 5000;
-const BLOCKED_HOSTS = new Set(["localhost", "127.0.0.1", "0.0.0.0", "::1", "metadata.google.internal"]);
 
 const jsonArraySchema = z.array(z.object({
   title: z.string().min(1),
@@ -39,74 +37,19 @@ async function createImportedNote(tx: Prisma.TransactionClient, userId: string, 
   return note.id;
 }
 
-function isBlockedIp(ip: string) {
-  if (net.isIP(ip) === 4) {
-    return (
-      ip.startsWith("10.") ||
-      ip.startsWith("127.") ||
-      ip.startsWith("169.254.") ||
-      /^172\.(1[6-9]|2\d|3[01])\./.test(ip) || // 172.16.0.0/12
-      ip.startsWith("192.168.")
-    );
-  }
-  if (net.isIP(ip) === 6) {
-    const lower = ip.toLowerCase();
-    return lower === "::1" || lower.startsWith("fc") || lower.startsWith("fd") || lower.startsWith("fe80");
-  }
-  return true;
-}
-
-async function assertSafeUrl(raw: string) {
-  const target = new URL(raw);
-  if (!["http:", "https:"].includes(target.protocol)) throw new Error("仅支持 http/https 链接");
-  if (BLOCKED_HOSTS.has(target.hostname.toLowerCase())) throw new Error("不允许访问本地或保留地址");
-  const resolved = await lookup(target.hostname, { all: true });
-  if (!resolved.length || resolved.some((item) => isBlockedIp(item.address))) throw new Error("不允许访问内网或保留地址");
-  return target;
-}
-
-const MAX_REDIRECTS = 3;
 const ALLOWED_CONTENT_TYPES = ["text/html", "text/plain", "application/xhtml+xml"];
 
-async function assertSafeFinalUrl(raw: string) {
-  const parsed = new URL(raw);
-  if (!["http:", "https:"].includes(parsed.protocol)) throw new Error("仅支持 http/https 链接");
-  if (BLOCKED_HOSTS.has(parsed.hostname.toLowerCase())) throw new Error("不允许访问本地或保留地址");
-  const resolved = await lookup(parsed.hostname, { all: true });
-  if (!resolved.length || resolved.some((item) => isBlockedIp(item.address))) throw new Error("不允许访问内网或保留地址");
-  return parsed;
-}
-
 async function fetchLinkSummary(raw: string) {
-  const initialTarget = await assertSafeUrl(raw);
+  await assertSafePublicUrl(raw, { allowHttp: true });
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
   try {
-    let currentUrl = initialTarget.toString();
-    let res: Response | null = null;
-
-    for (let hop = 0; hop <= MAX_REDIRECTS; hop++) {
-      res = await fetch(currentUrl, {
-        redirect: "manual",
-        signal: controller.signal,
-        headers: { "User-Agent": "LeonoteBot/1.0" },
-      });
-
-      if (res.status >= 300 && res.status < 400 && res.headers.has("location")) {
-        const location = res.headers.get("location")!;
-        const nextUrl = new URL(location, currentUrl).toString();
-        await assertSafeUrl(nextUrl);
-        currentUrl = nextUrl;
-        continue;
-      }
-      break;
-    }
-
-    if (!res || !res.ok) throw new Error("内容不可访问");
-
-    const finalUrl = new URL(res.url);
-    await assertSafeFinalUrl(finalUrl.toString());
-
+    const { response: res, url: target } = await safeFetch(
+      raw,
+      { signal: controller.signal, headers: { "User-Agent": "LeonoteBot/1.0" } },
+      { allowHttp: true, maxRedirects: 5 },
+    );
+    if (!res.ok) throw new Error("内容不可访问");
     const contentType = res.headers.get("content-type") || "";
     if (!ALLOWED_CONTENT_TYPES.some((t) => contentType.includes(t))) {
       throw new Error("不支持的内容类型");
@@ -126,7 +69,7 @@ async function fetchLinkSummary(raw: string) {
     html = html.slice(0, MAX_HTML_BYTES);
 
     const titleMatch = html.match(/<title[^>]*>([^<]+)<\/title>/i);
-    const title = titleMatch?.[1]?.trim() || finalUrl.hostname;
+    const title = titleMatch?.[1]?.trim() || target.hostname;
     const summary = html
       .replace(/<script[\s\S]*?<\/script>/gi, " ")
       .replace(/<style[\s\S]*?<\/style>/gi, " ")
@@ -134,7 +77,7 @@ async function fetchLinkSummary(raw: string) {
       .replace(/\s+/g, " ")
       .trim()
       .slice(0, 3000);
-    return { target: finalUrl, title, summary };
+    return { target, title, summary };
   } finally {
     clearTimeout(timer);
   }

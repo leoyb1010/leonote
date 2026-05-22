@@ -28,8 +28,8 @@ describe("encryptSecret / decryptSecret", () => {
     expect(decryptSecret("")).toBe("");
   });
 
-  it("passes through non-v1 values (compat)", () => {
+  it("rejects non-v1 values instead of exposing plaintext secrets", () => {
     const legacy = "plaintext-key";
-    expect(decryptSecret(legacy)).toBe(legacy);
+    expect(decryptSecret(legacy)).toBeNull();
   });
 });

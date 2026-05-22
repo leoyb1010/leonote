@@ -11,6 +11,7 @@ import {
 } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { guardUserWriteRequest } from "@/lib/request-guard";
+import { parseJsonBody } from "@/lib/http";
 
 const schema = z.object({
   currentPassword: z.string().min(1, "请输入当前密码"),
@@ -41,8 +42,9 @@ export async function POST(request: Request) {
   const guarded = guardUserWriteRequest(request, user.id, "password", { limit: 10 });
   if (guarded) return guarded;
 
-  const body = await request.json();
-  const parsed = schema.safeParse(body);
+  const body = await parseJsonBody(request);
+  if (!body.ok) return body.response;
+  const parsed = schema.safeParse(body.data);
   if (!parsed.success)
     return NextResponse.json(
       { ok: false, message: parsed.error.issues[0]?.message || "参数不合法" },

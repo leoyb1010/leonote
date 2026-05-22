@@ -3,6 +3,7 @@ import { z } from "zod";
 import { getSessionUserId } from "@/lib/session";
 import { prisma } from "@/lib/prisma";
 import { guardUserWriteRequest } from "@/lib/request-guard";
+import { parseJsonBody } from "@/lib/http";
 
 const profileSchema = z.object({
   name: z.string().min(1, "昵称不能为空").max(50, "昵称过长"),
@@ -43,8 +44,9 @@ export async function PATCH(request: Request) {
   const guarded = guardUserWriteRequest(request, user.id, "profile", { limit: 20 });
   if (guarded) return guarded;
 
-  const body = await request.json();
-  const parsed = profileSchema.safeParse(body);
+  const body = await parseJsonBody(request);
+  if (!body.ok) return body.response;
+  const parsed = profileSchema.safeParse(body.data);
   if (!parsed.success)
     return NextResponse.json(
       { ok: false, message: parsed.error.issues[0]?.message || "参数不合法" },

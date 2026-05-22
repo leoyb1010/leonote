@@ -149,6 +149,13 @@ LEONOTE_ALLOW_REGISTRATION="false"
 # 仅当前置反代会安全覆盖 X-Forwarded-For / X-Real-IP 时开启
 LEONOTE_TRUST_PROXY_HEADERS="false"
 
+# 允许 AI Base URL 使用 http（默认 false，只允许 https）
+# 仅限可信内网出口代理或本地隔离测试环境使用
+LEONOTE_AI_ALLOW_HTTP="false"
+
+# PWA service worker 缓存版本（可选，建议生产构建时注入 git sha 或发布时间戳）
+NEXT_PUBLIC_LEONOTE_BUILD_ID="local"
+
 # AI 配置（可选，使用 DeepSeek 兼容接口）
 AI_BASE_URL="https://api.deepseek.com"
 AI_MODEL="deepseek-v4-flash"
@@ -164,6 +171,14 @@ BRIEFING_TRANSLATE_MAX_ITEMS="12"
 BRIEFING_TRANSLATE_TIMEOUT_MS="30000"
 RSSHUB_BASE_URL="https://rsshub.app"
 ```
+
+**配置约束：**
+- `AUTH_SECRET` 必须使用足够长的随机字符串；改动后已有 session 会失效
+- `DATABASE_URL` 默认指向 SQLite 文件，生产和测试必须使用不同数据库
+- `LEONOTE_ALLOW_REGISTRATION=false` 时，仅允许首个用户初始化注册
+- `AI_BASE_URL` 和设置页保存的 AI Base URL 默认只允许 `https`
+- 如需允许 `http` AI 地址，必须显式设置 `LEONOTE_AI_ALLOW_HTTP=true`，且仍会拦截 localhost、内网、link-local、metadata、保留地址和不安全跳转
+- `NEXT_PUBLIC_LEONOTE_BUILD_ID` 用于 PWA 缓存命名；生产建议注入 git commit sha，避免 service worker 长期复用旧缓存
 
 ---
 
@@ -253,6 +268,7 @@ RSSHUB_BASE_URL="https://rsshub.app"
 - 导入时 AI 自动整理
 - DeepSeek / OpenAI 兼容接口
 - AI Key 数据库加密存储（AES-256-GCM）
+- AI Base URL 保存与调用前都会做 SSRF 防护，并逐跳校验重定向目标
 
 ### 搜索
 - FTS5 全文搜索 + trigram 分词器，中文短语匹配
@@ -261,7 +277,7 @@ RSSHUB_BASE_URL="https://rsshub.app"
 ### 导入导出
 - 导入：JSON / Markdown / TXT / HTML / 网页链接
 - 导出：JSON 全量导出 / 当前笔记 Markdown 导出
-- 导入链接 SSRF 防御（拦截 localhost/内网/metadata 地址）
+- 导入链接 SSRF 防御：手动逐跳处理重定向，限制跳转次数，拦截 localhost、内网、link-local、metadata 和保留地址
 
 ### 安全
 - Session 签名 cookie（tokenVersion 机制，改密立即失效全部旧会话）
@@ -270,6 +286,17 @@ RSSHUB_BASE_URL="https://rsshub.app"
 - Markdown 预览 XSS 防御（rehype-sanitize）
 - 注册开关控制（首个用户后默认关闭）
 - AUTH_SECRET 强制验证
+- 首个用户注册使用进程内初始化锁 + Prisma transaction，降低并发初始化竞态
+- 所有 JSON API 使用统一 JSON body 解析，非法 JSON 返回 400
+- 笔记更新与标签同步放在同一事务中，避免部分写入
+- 自动保存使用版本/dirty 队列，保存中继续编辑不会被误标为已保存
+
+### PWA
+- `public/sw.js` 提供 manifest、图标和离线页缓存
+- Service worker 通过注册 URL 的 `v` 参数生成 cache name
+- 生产构建建议设置 `NEXT_PUBLIC_LEONOTE_BUILD_ID=$(git rev-parse --short HEAD)`
+- HTML 页面采用 network-first，静态资源采用 cache-first + 后台刷新
+- API 请求不会进入 service worker 缓存
 
 ### 设计 (v1.4 Quiet Material)
 - Quiet Material 设计语言：material-canvas/elevated/inset + hairline border
@@ -328,6 +355,19 @@ npm run test:e2e     # E2E 测试（playwright）
 npm run ci           # 全链路：lint → typecheck → test → build
 ```
 
+### 测试隔离
+
+- 单元测试使用 Vitest，不会启动 Next 服务
+- E2E 使用 Playwright，会自动启动 `npm run dev -- -p 4318`，并在结束后关闭
+- Playwright 默认数据库为 `file:/private/tmp/leonote-e2e.db`
+- 如需自定义 E2E 数据库，请设置 `E2E_DATABASE_URL`
+- 不要把生产 `DATABASE_URL` 传给 Playwright；配置中会检测并阻止误用
+- E2E 默认设置 `LEONOTE_ALLOW_REGISTRATION=true`，避免污染真实首个用户初始化逻辑
+
+```bash
+E2E_DATABASE_URL="file:/private/tmp/leonote-e2e.db" npm run test:e2e
+```
+
 ---
 
 ## 项目文档
@@ -348,10 +388,32 @@ npm run ci           # 全链路：lint → typecheck → test → build
 
 ---
 
+## AI 配置说明
+
+Leonote 使用 OpenAI 兼容的 `/chat/completions` 接口。默认配置指向 DeepSeek：
+
+```env
+AI_BASE_URL="https://api.deepseek.com"
+AI_MODEL="deepseek-v4-flash"
+AI_FALLBACK_MODEL="deepseek-v4-pro"
+```
+
+也可以在设置页为当前账号保存 Base URL、API Key 和模型。API Key 会加密存储，接口返回时只返回脱敏值，不返回密文。
+
+Base URL 安全规则：
+- 默认只允许 `https`
+- `LEONOTE_AI_ALLOW_HTTP=true` 后才允许 `http`
+- 保存和实际调用前都会校验协议、主机名和 DNS 解析结果
+- 调用时手动处理重定向，每一跳都会重新校验
+- 禁止 localhost、内网、link-local、metadata、组播、保留地址和带用户名密码的 URL
+
+---
+
 ## 版本记录
 
 | 版本 | 日期 | 更新内容 |
 |---|---|---|
+| **v1.1.1** | 2026-05-22 | 安全加固：修复导入链接和 AI Base URL SSRF 重定向绕过；JSON API 非法 body 返回 400；笔记标签事务一致性；首个用户注册并发保护；自动保存 dirty 队列；PWA cache version 注入；E2E 数据库隔离说明 |
 | **v1.8.1** | 2026-05-18 | 按 review 文档完成第一轮 + 第二轮升级收尾：修复新建笔记保存失败的根因，当前数据库缺失 `NoteFts` 虚拟表时会导致 Prisma 创建笔记触发器报错，现在新增修复迁移与运行时自愈，创建/更新/删除笔记前会确保 FTS 表、触发器和回填数据存在；移动端底部导航改为「今天 / 简报 / 新建 / 笔记 / 装备库」，补齐装备库入口、safe-area 底部间距和 PWA manifest 快捷入口；首页、简报、笔记库、归档、收藏、搜索、日记和废纸篓统一使用更宽的工作台容器，减少 1440px-1920px 网页端两侧空白；简报继续压缩 Hero 与市场温度区，精选证据和全部资讯恢复大屏多列密度，行情刷新在页面隐藏时暂停，资讯收藏/已读失败会回滚；首页开始书写菜单改为受控弹层，快速记录支持 Enter 保存、Shift+Enter 换行并避开中文输入法误触；记账/装备库标签状态写入 URL，刷新或直接访问 `/ledger?tab=ledger` 不再丢状态；按钮 `asChild` 支持 loading/icon，命令面板补齐核心页面入口；PWA service worker 增加静态资源 cache-first 与更新提示，减少 App Router chunk stale 导致的首次点击失败；清理旧版重复 `app-shell` / `bottom-nav` 残留文件；刷新 README 最新桌面端、笔记编辑和移动端简报截图，并完成 typecheck、lint、test、build、CI 与多分辨率 Playwright 验证 |
 | **v1.8.0** | 2026-05-18 | 新增个人日程模块 `/schedule` 与 `/api/schedule`：支持今日/本周时间线、创建时间块、完成/恢复/软删除、颜色标记，并可关联笔记、项目和装备；首页接入今日日程，项目卡片显示近期关联日程；设计系统按 Cal-like 工作台方向继续统一，PageContainer 大屏宽度提升到 1680px，导航、PageHeader、首页、笔记库、项目、装备/记账入口统一为更清晰的对象库与工作台语言；补充日程 helper 回归测试 |
 | **v1.7.0** | 2026-05-18 | `/ledger` 升级为「装备库 + 记账」双模式：新增 GearItem 数据模型、迁移、装备 API、自然语言快速入库、商品链接识别预填、装备详情编辑、状态/位置/保修/序列号记录，并支持带价格装备同步生成关联支出；修复 PWA service worker 缓存 Next RSC / App Router 导航导致 `/ledger` 点击后出现 “This page couldn’t load” 的问题，新增路由级错误恢复页；每日简报移动端重排为雷达、精选、思考、资讯四段阅读路径，压缩 Hero、雷达和资讯卡片在 320px / 390px 小屏下的横向溢出；星座源日期规则正式明确为 Asia/Shanghai 同日有效，上海时间 00:00-07:59 可接受西方源昨天日期，08:00 后拒绝昨天源，并补充回归测试 |

@@ -4,6 +4,7 @@ import { getSessionUserId } from "@/lib/session";
 import { requireAISettings, callChatText } from "@/lib/ai";
 import { guardUserWriteRequest } from "@/lib/request-guard";
 import { buildGlobalContext } from "@/lib/ai-rag";
+import { parseJsonBody } from "@/lib/http";
 
 const pageContextSchema = z.object({
   pathname: z.string().max(240).optional(),
@@ -28,7 +29,9 @@ export async function POST(request: NextRequest) {
     if (guarded) return guarded;
 
     await requireAISettings(userId);
-    const parsed = requestSchema.safeParse(await request.json());
+    const body = await parseJsonBody(request);
+    if (!body.ok) return body.response;
+    const parsed = requestSchema.safeParse(body.data);
 
     if (!parsed.success) {
       return NextResponse.json({ message: "请输入问题" }, { status: 400 });

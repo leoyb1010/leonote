@@ -5,6 +5,7 @@ import { requireOwnedNote } from "@/lib/server-notes";
 import { callChatJSON } from "@/lib/ai";
 import { prisma } from "@/lib/prisma";
 import { guardUserWriteRequest } from "@/lib/request-guard";
+import { parseJsonBody } from "@/lib/http";
 
 const requestSchema = z.object({ question: z.string().trim().min(1).max(1200) });
 const responseSchema = z.object({
@@ -24,8 +25,9 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
   const guard = guardUserWriteRequest(request, userId, "ai-note-ask", { limit: 30, windowMs: 60_000 });
   if (guard) return guard;
 
-  const body = await request.json();
-  const parsed = requestSchema.safeParse(body);
+  const body = await parseJsonBody(request);
+  if (!body.ok) return body.response;
+  const parsed = requestSchema.safeParse(body.data);
   if (!parsed.success) return NextResponse.json({ message: "问题不能为空" }, { status: 400 });
 
   const { id } = await context.params;

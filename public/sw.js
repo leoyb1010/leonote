@@ -1,4 +1,5 @@
-const CACHE_NAME = "leonote-static-v20260518-navclean";
+const CACHE_VERSION = new URL(self.location.href).searchParams.get("v") || "dev";
+const CACHE_NAME = `leonote-static-${CACHE_VERSION}`;
 const RUNTIME_CACHE = "leonote-runtime-v1";
 const STATIC_ASSETS = ["/manifest.json", "/favicon.ico", "/icon-192.png", "/icon-512.png", "/offline.html"];
 

@@ -46,8 +46,10 @@ export function PwaRegister() {
 
   useEffect(() => {
     if (!("serviceWorker" in navigator)) return;
+    const version = process.env.NEXT_PUBLIC_LEONOTE_BUILD_ID || "dev";
+    const swUrl = `/sw.js?v=${encodeURIComponent(version)}`;
 
-    navigator.serviceWorker.getRegistration("/sw.js").then((existing) => {
+    navigator.serviceWorker.getRegistration(swUrl).then((existing) => {
       if (existing) {
         // Already registered — just check for updates
         void existing.update();
@@ -64,7 +66,7 @@ export function PwaRegister() {
         return;
       }
 
-      navigator.serviceWorker.register("/sw.js").then((registration) => {
+      navigator.serviceWorker.register(swUrl).then((registration) => {
         void registration.update();
 
         if (registration.waiting) {
@@ -85,7 +87,6 @@ export function PwaRegister() {
           // Silent fail - SW is progressive enhancement
         });
     });
-
   }, []);
 
   if (!waitingWorker) return null;

@@ -4,6 +4,7 @@ import { getSessionUserId } from "@/lib/session";
 import { prisma } from "@/lib/prisma";
 import { slugifyProjectName } from "@/lib/server-notes";
 import { guardUserWriteRequest } from "@/lib/request-guard";
+import { parseJsonBody } from "@/lib/http";
 
 const schema = z.object({
   name: z.string().min(1),
@@ -29,8 +30,9 @@ export async function POST(request: Request) {
   const guarded = guardUserWriteRequest(request, userId, "projects");
   if (guarded) return guarded;
 
-  const body = await request.json();
-  const parsed = schema.safeParse(body);
+  const body = await parseJsonBody(request);
+  if (!body.ok) return body.response;
+  const parsed = schema.safeParse(body.data);
   if (!parsed.success) return NextResponse.json({ ok: false, message: "项目名称不能为空" }, { status: 400 });
 
   const baseSlug = slugifyProjectName(parsed.data.name);

@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { slugifyProjectName } from "@/lib/server-notes";
 import { getSessionUserId } from "@/lib/session";
 import { guardUserWriteRequest } from "@/lib/request-guard";
+import { parseJsonBody } from "@/lib/http";
 
 const schema = z.object({
   name: z.string().trim().min(1, "项目名称不能为空"),
@@ -26,8 +27,9 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
   const project = await getOwnedProject(userId, id);
   if (!project) return NextResponse.json({ ok: false, message: "项目不存在" }, { status: 404 });
 
-  const body = await request.json();
-  const parsed = schema.safeParse(body);
+  const body = await parseJsonBody(request);
+  if (!body.ok) return body.response;
+  const parsed = schema.safeParse(body.data);
   if (!parsed.success) return NextResponse.json({ ok: false, message: parsed.error.issues[0]?.message || "参数错误" }, { status: 400 });
 
   const name = parsed.data.name.trim();

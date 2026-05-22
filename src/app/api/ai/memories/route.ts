@@ -3,6 +3,7 @@ import { z } from "zod";
 import { getSessionUserId } from "@/lib/session";
 import { prisma } from "@/lib/prisma";
 import { guardUserWriteRequest } from "@/lib/request-guard";
+import { parseJsonBody } from "@/lib/http";
 
 const schema = z.object({
   items: z.array(z.object({ content: z.string().min(1), type: z.string().min(1).default("preference"), confidence: z.number().min(0).max(1).default(0.7) })).max(12),
@@ -21,8 +22,9 @@ export async function POST(request: Request) {
   const guarded = guardUserWriteRequest(request, userId, "ai-memories");
   if (guarded) return guarded;
 
-  const body = await request.json();
-  const parsed = schema.safeParse(body);
+  const body = await parseJsonBody(request);
+  if (!body.ok) return body.response;
+  const parsed = schema.safeParse(body.data);
   if (!parsed.success) return NextResponse.json({ message: "参数不合法" }, { status: 400 });
 
   const saved = [] as string[];

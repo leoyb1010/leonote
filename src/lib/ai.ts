@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { encryptSecret, decryptSecret } from "@/lib/crypto-secret";
 import { checkRateLimit } from "@/lib/rate-limit";
+import { assertSafePublicUrl, safeFetch } from "@/lib/safe-url";
 
 const DEFAULT_BASE_URL =
   process.env.AI_BASE_URL ||
@@ -18,6 +19,7 @@ const DEFAULT_ALLOWED_AI_HOSTS = [
   "dashscope.aliyuncs.com",
   "open.bigmodel.cn",
 ];
+const ALLOW_AI_HTTP = process.env.LEONOTE_AI_ALLOW_HTTP === "true";
 
 export type AIResolvedSettings = {
   baseUrl: string;
@@ -45,7 +47,9 @@ export async function requireAISettings(userId: string) {
   if (!settings.baseUrl || !settings.apiKey || !settings.model) {
     throw new Error("AI 配置不完整，请先在设置页完成配置");
   }
-  assertSafeAIBaseUrl(settings.baseUrl);
+  await assertSafePublicUrl(assertSafeAIBaseUrl(settings.baseUrl), {
+    allowHttp: ALLOW_AI_HTTP,
+  });
   return settings;
 }
 
@@ -98,6 +102,7 @@ export async function saveAISettings(
   const apiKey = input.apiKey ?? current.apiKey;
   const encryptedKey = apiKey ? encryptSecret(apiKey) : "";
   const baseUrl = assertSafeAIBaseUrl(input.baseUrl ?? current.baseUrl);
+  await assertSafePublicUrl(baseUrl, { allowHttp: ALLOW_AI_HTTP });
 
   return prisma.aISetting.upsert({
     where: { userId },
@@ -167,14 +172,18 @@ export async function callChatJSON<T>({
     ],
   };
   if (reasoning) body.reasoning_effort = reasoning;
-  const res = await fetch(`${baseUrl}/chat/completions`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${settings.apiKey}`,
+  const { response: res } = await safeFetch(
+    `${baseUrl}/chat/completions`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${settings.apiKey}`,
+      },
+      body: JSON.stringify(body),
     },
-    body: JSON.stringify(body),
-  });
+    { allowHttp: ALLOW_AI_HTTP, maxRedirects: 3 },
+  );
 
   if (!res.ok) {
     throw new Error(`AI 请求失败：${res.status}`);
@@ -216,14 +225,18 @@ export async function callChatText({
     ],
   };
   if (reasoning) body.reasoning_effort = reasoning;
-  const res = await fetch(`${baseUrl}/chat/completions`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${settings.apiKey}`,
+  const { response: res } = await safeFetch(
+    `${baseUrl}/chat/completions`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${settings.apiKey}`,
+      },
+      body: JSON.stringify(body),
     },
-    body: JSON.stringify(body),
-  });
+    { allowHttp: ALLOW_AI_HTTP, maxRedirects: 3 },
+  );
 
   if (!res.ok) {
     throw new Error(`AI 请求失败：${res.status}`);

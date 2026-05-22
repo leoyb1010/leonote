@@ -3,6 +3,7 @@ import { z } from "zod";
 import { getSessionUserId } from "@/lib/session";
 import { getAISettings, maskSecret, saveAISettings } from "@/lib/ai";
 import { guardUserWriteRequest } from "@/lib/request-guard";
+import { parseJsonBody } from "@/lib/http";
 
 const schema = z.object({
   baseUrl: z.string().url().optional(),
@@ -35,10 +36,10 @@ export async function POST(request: Request) {
   const guarded = guardUserWriteRequest(request, userId, "ai-settings", { limit: 20 });
   if (guarded) return guarded;
 
-  const body = await request.json();
-  const parsed = schema.safeParse(body);
+  const body = await parseJsonBody(request);
+  if (!body.ok) return body.response;
+  const parsed = schema.safeParse(body.data);
   if (!parsed.success) return NextResponse.json({ message: "参数不合法" }, { status: 400 });
-
   let saved;
   try {
     saved = await saveAISettings(userId, parsed.data);
@@ -47,13 +48,13 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: false, message }, { status: 400 });
   }
 
-  const settings = await getAISettings(userId);
+  const resolved = await getAISettings(userId);
   return NextResponse.json({
     ok: true,
     settings: {
       baseUrl: saved.baseUrl,
-      apiKeyMasked: maskSecret(settings.apiKey),
-      hasApiKey: Boolean(settings.apiKey),
+      apiKeyMasked: maskSecret(resolved.apiKey),
+      hasApiKey: Boolean(resolved.apiKey),
       model: saved.model,
       fallbackModel: saved.fallbackModel,
       enableAutoOrganize: saved.enableAutoOrganize,
