@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import { AlertCircle, CheckCircle2, Clock3, Database, Loader2, Tags } from "lucide-react";
 import { BriefingHero, type BriefingHeroStats } from "./BriefingHero";
+import { MeshGradient } from "@/components/base/MeshGradient";
 import { BriefingFilters } from "./BriefingFilters";
 import { NewsColumn } from "./NewsColumn";
 import { NewsDetailModal } from "./NewsDetailModal";
@@ -376,7 +377,10 @@ export function BriefingShell({
 
   const streamTitle = category === "all" ? "全部资讯" : `${categoryLabel(category)}资讯`;
   return (
-    <PageContainer width="dashboard">
+    <div className="relative min-h-screen">
+      <MeshGradient />
+      <div className="relative z-10">
+        <PageContainer width="dashboard">
       <BriefingHero
         digest={digest}
         stats={stats}
@@ -515,6 +519,8 @@ export function BriefingShell({
         selected={selectedThinkingDetail}
         onClose={() => setSelectedThinkingDetail(null)}
       />
-    </PageContainer>
+        </PageContainer>
+      </div>
+    </div>
   );
 }

@@ -1,12 +1,14 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
-import { Activity, ArrowDownRight, ArrowUpRight, CalendarDays, Check, ChevronRight, CloudSun, Copy, FilePlus2, Gauge, Loader2, MoonStar, Newspaper, RefreshCw, Star, Tags, X } from "lucide-react";
+import { Activity, ArrowDownRight, ArrowUpRight, CalendarDays, Check, ChevronRight, CloudSun, Copy, FilePlus2, Gauge, Loader2, MoonStar, Newspaper, RefreshCw, Star, Tags, X, Sparkles } from "lucide-react";
 import { Button } from "@/components/base/Button";
 import { cardFloatIn, heroTitleReveal } from "@/lib/animations";
 import type { BriefingDigestSummary, BriefingRange, HoroscopeDTO, MarketSnapshotDTO, WeatherDTO } from "@/lib/briefing/types";
+import { SpotlightCard } from "@/components/base/SpotlightCard";
+import { NumberTicker } from "@/components/base/NumberTicker";
 
 export interface BriefingHeroStats {
   total: number;
@@ -36,8 +38,10 @@ interface Props {
   onTitleChange: (title: string) => void;
 }
 
+// === HOROSCOPE BUBBLE ===
 type DetailAnchor = { x: number; y: number; top: number; left: number; width: number; height: number };
 type SelectedHoroscope = { horoscope: HoroscopeDTO; anchor: DetailAnchor };
+
 function HoroscopeDetailBubble({
   selected,
   onClose,
@@ -68,81 +72,72 @@ function HoroscopeDetailBubble({
     : undefined;
 
   return createPortal(
-    <motion.div
-      className="fixed inset-0 z-[70]"
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-    >
-      <button
-        type="button"
-        className="absolute inset-0 bg-[var(--overlay-scrim)] backdrop-blur-sm min-[769px]:bg-transparent min-[769px]:backdrop-blur-0"
-        aria-label="关闭星座详情"
-        onClick={onClose}
-      />
-      <motion.article
-        className="floating-card-premium bottom-0 left-0 right-0 z-10 flex max-h-[100vh] max-h-[calc(100dvh-8px)] w-full flex-col overscroll-contain rounded-b-none min-[769px]:bottom-auto min-[769px]:left-auto min-[769px]:right-auto min-[769px]:max-h-[calc(100dvh-36px)] min-[769px]:rounded-[var(--radius-2xl)]"
-        style={{ position: "fixed", ...desktopStyle }}
-        initial={{ opacity: 0, y: 18, x: 0, scale: 0.98 }}
-        animate={{ opacity: 1, y: 0, x: 0, scale: 1 }}
-        exit={{ opacity: 0, y: 18, x: 0, scale: 0.98 }}
-        transition={{ duration: 0.2, ease: [0.2, 0, 0, 1] }}
+    <AnimatePresence>
+      <motion.div
+        className="fixed inset-0 z-[70]"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
       >
-        <header className="shrink-0 border-b border-[var(--hairline)] bg-[var(--material-elevated)] px-4 py-3 pr-[max(1rem,env(safe-area-inset-right))] pt-[calc(0.75rem+env(safe-area-inset-top))] min-[769px]:pt-3">
-          <div className="mx-auto mb-2 h-1 w-10 rounded-full bg-[var(--text-faint)] min-[769px]:hidden" />
-          <div className="flex items-start justify-between gap-3">
-            <div className="min-w-0">
-              <div className="flex flex-wrap items-center gap-1.5 text-[11px] text-[var(--text-muted)]">
-                <span className="inline-flex items-center gap-1 rounded-[var(--radius-pill)] bg-[var(--primary-soft)] px-2 py-0.5 text-[var(--primary)]">
-                  <MoonStar size={11} />
-                  今日星座
-                </span>
-                <span>{horoscope.signName}</span>
+        <button
+          type="button"
+          className="absolute inset-0 bg-black/20 backdrop-blur-md min-[769px]:bg-transparent min-[769px]:backdrop-blur-0"
+          aria-label="关闭星座详情"
+          onClick={onClose}
+        />
+        <motion.article
+          layoutId={`horoscope-card-${horoscope.id}`}
+          className="floating-card-premium bottom-0 left-0 right-0 z-10 flex max-h-[100vh] max-h-[calc(100dvh-8px)] w-full flex-col overscroll-contain rounded-b-none min-[769px]:bottom-auto min-[769px]:left-auto min-[769px]:right-auto min-[769px]:max-h-[calc(100dvh-36px)] min-[769px]:rounded-[24px] bg-white/80 dark:bg-[#1C1C1E]/80 backdrop-blur-2xl border border-white/20 dark:border-white/10 shadow-2xl"
+          style={{ position: "fixed", ...desktopStyle }}
+          initial={{ opacity: 0, y: 30, scale: 0.95 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          exit={{ opacity: 0, y: 20, scale: 0.95 }}
+          transition={{ type: "spring", damping: 25, stiffness: 300 }}
+        >
+          <header className="shrink-0 border-b border-black/5 dark:border-white/5 bg-transparent px-5 py-4 pt-[calc(1rem+env(safe-area-inset-top))] min-[769px]:pt-4">
+            <div className="mx-auto mb-3 h-1 w-12 rounded-full bg-black/20 dark:bg-white/20 min-[769px]:hidden" />
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0">
+                <div className="flex flex-wrap items-center gap-1.5 text-[11px] font-medium tracking-wide uppercase text-[var(--primary)]">
+                  <MoonStar size={12} className="animate-pulse" />
+                  <span>{horoscope.signName}</span>
+                </div>
+                <h3 className="mt-2 text-xl font-semibold tracking-tight text-[var(--text-primary)]">
+                  {horoscope.name}
+                </h3>
               </div>
-              <h3 className="mt-2 text-base font-semibold leading-snug text-[var(--text-primary)]">
-                {horoscope.name} · {horoscope.signName}
-              </h3>
+              <button
+                type="button"
+                onClick={onClose}
+                className="inline-flex min-h-9 min-w-9 items-center justify-center rounded-full bg-black/5 dark:bg-white/10 text-[var(--text-secondary)] transition hover:bg-black/10 dark:hover:bg-white/20 hover:scale-105 active:scale-95"
+                aria-label="关闭"
+              >
+                <X size={16} />
+              </button>
             </div>
-            <button
-              type="button"
-              onClick={onClose}
-              className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-xl border border-[var(--hairline)] text-[var(--text-muted)] transition hover:bg-[var(--interactive-hover)] hover:text-[var(--text-primary)]"
-              aria-label="关闭"
-            >
-              <X size={16} />
-            </button>
-          </div>
-        </header>
+          </header>
 
-        <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4">
-          <div className="mb-3 flex items-center gap-2">
-            <StarRating value={horoscope.stars} />
-            <span className="text-xs text-[var(--text-muted)]">{horoscope.stars}/5</span>
-          </div>
-          <p className="font-[var(--font-reading)] text-sm leading-7 text-[var(--text-secondary)]">
-            {horoscope.summary}
-          </p>
-          <div className="mt-4 flex flex-wrap gap-1.5 text-[11px] text-[var(--text-muted)]">
-            <span>来源：{horoscope.sourceName || "未知"}</span>
-            {horoscope.updatedAt ? (
-              <>
-                <span>·</span>
-                <span className="tabular">更新 {formatHoroscopeTime(horoscope.updatedAt)}</span>
-              </>
-            ) : null}
-            {horoscope.sourceDate ? (
-              <>
-                <span>·</span>
-                <span>运势日 {formatHoroscopeDate(horoscope.sourceDate)}</span>
-              </>
+          <div className="min-h-0 flex-1 overflow-y-auto px-5 py-5">
+            <div className="mb-4 flex items-center gap-2">
+              <StarRating value={horoscope.stars} />
+              <span className="text-sm font-medium text-[var(--text-secondary)]">{horoscope.stars}/5</span>
+            </div>
+            <p className="font-[var(--font-reading)] text-base leading-relaxed text-[var(--text-primary)]">
+              {horoscope.summary}
+            </p>
+            <div className="mt-6 flex flex-wrap gap-2 text-[11px] text-[var(--text-muted)] font-mono">
+              <span className="rounded-md bg-black/5 dark:bg-white/5 px-2 py-1">Source: {horoscope.sourceName || "Unknown"}</span>
+              {horoscope.updatedAt ? (
+                <span className="rounded-md bg-black/5 dark:bg-white/5 px-2 py-1 tabular-nums">Sync {formatHoroscopeTime(horoscope.updatedAt)}</span>
+              ) : null}
+            </div>
+            {horoscope.isFallback ? (
+              <p className="mt-3 text-[11px] text-[var(--warning)] flex items-center gap-1"><Loader2 size={10} className="animate-spin" />此为兜底内容，实时源稍后刷新</p>
             ) : null}
           </div>
-          {horoscope.isFallback ? (
-            <p className="mt-2 text-[11px] text-[var(--text-muted)]">此为兜底内容，实时源稍后刷新。</p>
-          ) : null}
-        </div>
-      </motion.article>
-    </motion.div>,
+        </motion.article>
+      </motion.div>
+    </AnimatePresence>,
     document.body,
   );
 }
@@ -153,8 +148,8 @@ function StarRating({ value }: { value: number }) {
       {Array.from({ length: 5 }).map((_, index) => (
         <Star
           key={index}
-          size={12}
-          className={index < value ? "fill-[var(--warning)] text-[var(--warning)]" : "text-[var(--text-faint)]"}
+          size={14}
+          className={index < value ? "fill-yellow-400 text-yellow-400 drop-shadow-sm" : "text-black/10 dark:text-white/10"}
         />
       ))}
     </span>
@@ -176,30 +171,24 @@ function formatHoroscopeDate(input: string | null | undefined) {
 }
 
 function HoroscopeStrip({ horoscopes, onSelect }: { horoscopes: HoroscopeDTO[]; onSelect: (horoscope: HoroscopeDTO, anchor: DetailAnchor) => void }) {
-  const latestUpdate = horoscopes
-    .map((item) => new Date(item.updatedAt))
-    .filter((date) => Number.isFinite(date.getTime()))
-    .sort((a, b) => b.getTime() - a.getTime())[0];
-  const sourceLabel = Array.from(new Set(horoscopes.map((item) => item.sourceName))).join(" / ") || "实时源待同步";
-
   return (
-    <div className="mt-3">
-      <div className="mb-2 flex flex-wrap items-center justify-between gap-2 text-[11px] text-[var(--text-muted)]">
-        <span className="inline-flex items-center gap-1.5">
-          <MoonStar size={13} />
-          今日星座
+    <div className="h-full flex flex-col">
+      <div className="mb-3 flex items-center justify-between gap-2">
+        <span className="inline-flex items-center gap-2 text-xs font-semibold tracking-wider text-[var(--text-secondary)] uppercase">
+          <Sparkles size={14} className="text-purple-500" />
+          Today's Stars
         </span>
-        <span className="tabular">更新 {formatHoroscopeTime(latestUpdate?.toISOString())}</span>
       </div>
-      <div className="grid gap-2 sm:grid-cols-3">
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-2 flex-1">
         {horoscopes.length === 0 ? (
-          <div className="rounded-[var(--radius-md)] border border-[var(--hairline)] bg-[var(--material-inset)] px-3 py-4 text-center text-[11px] leading-5 text-[var(--text-muted)] sm:col-span-3">
-            实时星座源暂未返回，稍后刷新。
+          <div className="flex items-center justify-center rounded-xl bg-black/5 dark:bg-white/5 p-4 text-[11px] text-[var(--text-muted)] sm:col-span-2">
+            <Loader2 size={14} className="animate-spin mr-2" /> 实时星座源同步中...
           </div>
         ) : (
-          horoscopes.map((item) => (
-            <button
+          horoscopes.slice(0, 4).map((item) => (
+            <motion.button
               key={item.id}
+              layoutId={`horoscope-card-${item.id}`}
               type="button"
               onClick={(event) => {
                 const rect = event.currentTarget.getBoundingClientRect();
@@ -212,31 +201,22 @@ function HoroscopeStrip({ horoscopes, onSelect }: { horoscopes: HoroscopeDTO[]; 
                   height: rect.height,
                 });
               }}
-              className="group min-h-[74px] cursor-pointer rounded-[var(--radius-md)] border border-[var(--hairline)] bg-[var(--material-inset)] px-3 py-2 text-left transition hover:-translate-y-0.5 hover:bg-[var(--material-muted)]"
+              whileHover={{ y: -2, scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              className="group flex flex-col justify-between cursor-pointer rounded-xl border border-white/20 dark:border-white/10 bg-white/40 dark:bg-black/20 p-3 text-left transition-colors hover:bg-white/60 dark:hover:bg-white/5 backdrop-blur-md"
             >
-              <div className="flex items-center justify-between gap-3 text-xs">
-                <span className="min-w-0 truncate font-medium text-[var(--text-secondary)]">
-                  {item.name} · {item.signName}
+              <div className="flex items-center justify-between gap-2 w-full">
+                <span className="truncate font-medium text-sm text-[var(--text-primary)]">
+                  {item.name}
                 </span>
-                <span className="shrink-0 tabular">
-                  <StarRating value={item.stars} />
-                </span>
+                <StarRating value={item.stars} />
               </div>
-              <p className="mt-1.5 line-clamp-2 text-[11px] leading-5 text-[var(--text-muted)]">
+              <p className="mt-2 line-clamp-2 text-xs leading-relaxed text-[var(--text-secondary)] opacity-80">
                 {item.summary}
               </p>
-              <div className="mt-1 flex items-center justify-end text-[var(--text-muted)]">
-                <ChevronRight size={11} className="transition group-hover:translate-x-0.5" />
-              </div>
-            </button>
+            </motion.button>
           ))
         )}
-      </div>
-      <div className="mt-2 flex min-w-0 items-center justify-between gap-2 text-[11px] leading-5 text-[var(--text-muted)]">
-        <span className="min-w-0 truncate">
-          来源：{sourceLabel}
-          {horoscopes[0]?.sourceDate ? ` · 运势日 ${formatHoroscopeDate(horoscopes[0].sourceDate)}` : ""}
-        </span>
       </div>
     </div>
   );
@@ -263,19 +243,21 @@ function MiniMetric({
 }: {
   icon: ReactNode;
   label: string;
-  value: ReactNode;
+  value: number | null;
   hint: string;
 }) {
   return (
-    <div className="rounded-[var(--radius-lg)] border border-[var(--hairline)] bg-[var(--material-inset)] px-3 py-2.5">
-      <div className="flex items-center gap-1.5 text-[11px] text-[var(--text-muted)]">
-        <span className="text-[var(--text-faint)]">{icon}</span>
+    <div className="h-full flex flex-col justify-between">
+      <div className="flex items-center gap-1.5 text-xs font-semibold tracking-wider text-[var(--text-secondary)] uppercase">
+        {icon}
         {label}
       </div>
-      <div className="mt-1.5 text-lg font-semibold leading-none text-[var(--text-primary)]">
-        {value}
+      <div className="mt-2">
+        <div className="text-3xl font-bold tracking-tighter text-[var(--text-primary)]">
+          {value === null ? "..." : <NumberTicker value={value} />}
+        </div>
+        <p className="mt-1 text-xs font-medium text-[var(--text-muted)]">{hint}</p>
       </div>
-      <p className="mt-1 text-[11px] leading-4 text-[var(--text-muted)]">{hint}</p>
     </div>
   );
 }
@@ -329,50 +311,60 @@ function MarketPulseStrip({
   const visible = orderHeroMarkets(markets).slice(0, 9);
 
   return (
-    <div className="mt-3 rounded-[var(--radius-xl)] border border-[var(--hairline)] bg-[var(--material-inset)] px-3 py-2.5">
-      <div className="mb-2 flex items-center justify-between gap-3">
-        <div className="flex min-w-0 items-center gap-1.5 text-[11px] text-[var(--text-muted)]">
-          <Activity size={13} />
-          <span>市场温度</span>
-          {error ? <span className="text-[var(--warning)]">显示缓存</span> : null}
+    <div className="h-full flex flex-col">
+      <div className="mb-4 flex items-center justify-between">
+        <div className="flex items-center gap-2 text-xs font-semibold tracking-wider text-[var(--text-secondary)] uppercase">
+          <Activity size={14} className="text-blue-500" />
+          <span>Market Pulse</span>
+          {error ? <span className="ml-2 text-[var(--warning)] px-2 py-0.5 bg-[var(--warning)]/10 rounded-full text-[10px]">缓存</span> : null}
         </div>
         <button
           type="button"
           onClick={onRefresh}
           disabled={refreshing}
-          title="刷新实时行情"
-          className="inline-flex h-7 w-7 items-center justify-center rounded-full border border-[var(--hairline)] text-[var(--text-muted)] transition hover:bg-[var(--interactive-hover)] hover:text-[var(--text-primary)] disabled:opacity-50"
+          className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-black/5 dark:bg-white/10 text-[var(--text-muted)] transition hover:bg-black/10 dark:hover:bg-white/20 hover:scale-105 active:scale-95 disabled:opacity-50"
         >
-          <RefreshCw size={12} className={refreshing ? "animate-spin" : ""} />
+          <RefreshCw size={12} className={refreshing ? "animate-spin text-blue-500" : ""} />
         </button>
       </div>
-      {visible.length === 0 ? (
-        <p className="text-xs text-[var(--text-muted)]">市场数据收集中。</p>
-      ) : (
-        <div className="grid grid-cols-1 gap-2 min-[380px]:grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 2xl:grid-cols-5 3xl:grid-cols-9">
-          {visible.map((item) => {
-            const up = item.changePct >= 0;
-            const Icon = up ? ArrowUpRight : ArrowDownRight;
-            return (
-              <span
-                key={item.symbol}
-                className="inline-flex min-w-0 items-center gap-1.5 rounded-[var(--radius-pill)] border border-[var(--hairline)] bg-[var(--material-elevated)] px-2.5 py-1.5 text-xs text-[var(--text-secondary)] sm:gap-2 sm:px-3"
-              >
-                <span className="min-w-0 truncate font-medium text-[var(--text-primary)]">{item.name}</span>
-                <span className="shrink-0 numeric-display text-[var(--text-muted)]">{formatMarketPrice(item)}</span>
-                <span className={`inline-flex items-center gap-0.5 numeric-display ${up ? "text-[var(--danger)]" : "text-[var(--success)]"}`}>
-                  <Icon size={11} />
-                  {up ? "+" : ""}{item.changePct.toFixed(2)}%
-                </span>
-              </span>
-            );
-          })}
-        </div>
-      )}
+
+      <div className="flex-1 overflow-x-auto no-scrollbar mask-edges">
+        {visible.length === 0 ? (
+          <div className="flex h-full items-center text-xs text-[var(--text-muted)]"><Loader2 size={12} className="animate-spin mr-2" />同步市场数据...</div>
+        ) : (
+          <div className="flex gap-3 pb-2 h-full items-center">
+            {visible.map((item, i) => {
+              const up = item.changePct >= 0;
+              const Icon = up ? ArrowUpRight : ArrowDownRight;
+              return (
+                <motion.div
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: i * 0.05, type: "spring", stiffness: 300 }}
+                  key={item.symbol}
+                  className="flex-shrink-0 min-w-[140px] flex flex-col gap-1.5 rounded-xl border border-white/20 dark:border-white/10 bg-white/40 dark:bg-black/20 p-3 backdrop-blur-md"
+                >
+                  <span className="font-medium text-sm text-[var(--text-primary)] truncate">{item.name}</span>
+                  <div className="flex items-end justify-between">
+                    <span className="text-lg font-bold font-mono tracking-tighter text-[var(--text-primary)]">
+                      <NumberTicker value={Number(formatMarketPrice(item))} />
+                    </span>
+                    <span className={`flex items-center text-xs font-bold ${up ? "text-red-500" : "text-green-500"}`}>
+                      <Icon size={12} strokeWidth={3} className="mr-0.5" />
+                      {Math.abs(item.changePct).toFixed(2)}%
+                    </span>
+                  </div>
+                </motion.div>
+              );
+            })}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
 
+// === MAIN HERO BENTO ===
 export function BriefingHero({
   stats,
   markets,
@@ -394,109 +386,153 @@ export function BriefingHero({
 }: Props) {
   const score = stats.averageScore == null ? null : Math.round(stats.averageScore);
   const [selectedHoroscope, setSelectedHoroscope] = useState<SelectedHoroscope | null>(null);
-  const horoscopeBrief = horoscopes.length
-    ? horoscopes.map((item) => `${item.name} ${item.stars}星`).join(" · ")
-    : "等待同步";
+
+  // Staggered animation variants
+  const container: any = {
+    hidden: { opacity: 0 },
+    show: {
+      opacity: 1,
+      transition: { staggerChildren: 0.1 }
+    }
+  };
+  
+  const itemAnim: any = {
+    hidden: { opacity: 0, y: 20 },
+    show: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 300, damping: 24 } }
+  };
 
   return (
-    <motion.section
-      variants={cardFloatIn}
-      initial="initial"
-      animate="animate"
-      className="card-premium relative overflow-hidden p-3.5 sm:p-5 md:p-6"
-    >
-      <div className="relative z-10">
-        <div className="flex flex-wrap items-center gap-2 text-xs text-[var(--text-muted)]">
-          <span className="inline-flex items-center gap-1.5 rounded-[var(--radius-pill)] border border-[var(--hairline)] bg-[var(--material-inset)] px-2.5 py-1">
-            <CalendarDays size={13} />
-            {dateLabel}
+    <div className="relative w-full z-10 pt-4 pb-8 sm:pt-6">
+      
+      {/* Header Info Row */}
+      <motion.div 
+        variants={itemAnim}
+        initial="hidden"
+        animate="show"
+        className="mb-6 flex flex-wrap items-center gap-3 text-xs"
+      >
+        <span className="inline-flex items-center gap-1.5 rounded-full border border-black/5 dark:border-white/10 bg-white/50 dark:bg-black/30 backdrop-blur-md px-3 py-1.5 font-medium shadow-sm">
+          <CalendarDays size={14} className="text-[var(--primary)]" />
+          {dateLabel}
+        </span>
+        <span className="rounded-full border border-black/5 dark:border-white/10 bg-white/50 dark:bg-black/30 backdrop-blur-md px-3 py-1.5 font-medium shadow-sm">
+          {rangeLabel(range)}
+        </span>
+        {weather ? (
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-black/5 dark:border-white/10 bg-white/50 dark:bg-black/30 backdrop-blur-md px-3 py-1.5 font-medium shadow-sm">
+            <CloudSun size={14} className="text-orange-400" />
+            深圳 {Math.round(weather.temp)}° · {weather.weatherLabel} · 💧 {weather.humidity}%
           </span>
-          <span className="rounded-[var(--radius-pill)] border border-[var(--hairline)] bg-[var(--material-inset)] px-2.5 py-1">
-            {rangeLabel(range)}
-          </span>
-          {weather ? (
-            <span className="inline-flex items-center gap-1.5 rounded-[var(--radius-pill)] border border-[var(--hairline)] bg-[var(--material-inset)] px-2.5 py-1">
-              <CloudSun size={13} />
-              深圳 {Math.round(weather.temp)}° · {weather.weatherLabel} · 湿度 {weather.humidity}%
-            </span>
-          ) : null}
-          <span className="inline-flex min-w-0 items-center gap-1.5 rounded-[var(--radius-pill)] border border-[var(--hairline)] bg-[var(--material-inset)] px-2.5 py-1">
-            <MoonStar size={13} />
-            <span className="truncate">今日星座 · {horoscopeBrief}</span>
-          </span>
+        ) : null}
+      </motion.div>
+
+      {/* Main Title & Actions */}
+      <motion.div 
+        variants={itemAnim}
+        initial="hidden"
+        animate="show"
+        className="mb-8 flex flex-col gap-5 lg:flex-row lg:items-end justify-between"
+      >
+        <div className="min-w-0 flex-1">
+          <input
+            aria-label="简报标题"
+            value={title}
+            onChange={(event) => onTitleChange(event.target.value)}
+            className="w-full bg-transparent text-4xl font-extrabold tracking-tight text-[var(--text-primary)] outline-none transition-colors placeholder:text-[var(--text-placeholder)] focus:text-[var(--primary)] sm:text-5xl lg:text-6xl"
+            placeholder="每日简报"
+          />
         </div>
 
-        <MarketPulseStrip
-          markets={markets}
-          refreshing={marketRefreshing}
-          error={marketError}
-          onRefresh={onMarketRefresh}
-        />
+        <div className="flex gap-2.5 overflow-x-auto pb-1 sm:overflow-visible sm:pb-0">
+          <Button variant="primary" size="sm" onClick={onRefresh} disabled={loading} className="gap-2 rounded-full px-5 shadow-lg shadow-[var(--primary)]/20 hover:shadow-xl hover:scale-105 transition-all">
+            {loading ? <Loader2 size={16} className="animate-spin" /> : <RefreshCw size={16} />}
+            <span className="font-semibold">刷新简报</span>
+          </Button>
+          <Button variant="secondary" size="sm" onClick={onImportDigest} disabled={importingDigest || stats.total === 0} className="gap-2 rounded-full px-5 backdrop-blur-md bg-white/50 dark:bg-white/10 hover:bg-white/80 dark:hover:bg-white/20 transition-all border border-black/5 dark:border-white/10">
+            {importingDigest ? <Loader2 size={16} className="animate-spin" /> : <FilePlus2 size={16} />}
+            存为笔记
+          </Button>
+          <Button variant="ghost" size="sm" onClick={onCopySummary} disabled={stats.total === 0} className="gap-2 rounded-full px-5 backdrop-blur-md bg-black/5 dark:bg-black/30 hover:bg-black/10 dark:hover:bg-black/50 transition-all">
+            {copied ? <Check size={16} className="text-green-500" /> : <Copy size={16} />}
+            {copied ? "已复制" : "复制摘要"}
+          </Button>
+        </div>
+      </motion.div>
 
-        <div className="mt-4 grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(360px,480px)] lg:items-end 3xl:grid-cols-[minmax(0,1fr)_minmax(420px,560px)]">
-          <div className="min-w-0">
-            <motion.div variants={heroTitleReveal}>
-            <input
-              aria-label="简报标题"
-              value={title}
-              onChange={(event) => onTitleChange(event.target.value)}
-              className="w-full max-w-3xl bg-transparent text-[1.55rem] font-semibold leading-tight text-[var(--text-primary)] outline-none transition-colors placeholder:text-[var(--text-placeholder)] focus:text-[var(--primary)] sm:text-[2.15rem] 2xl:text-[2.6rem] 3xl:text-[3rem]"
-              placeholder="每日简报"
+      {/* Bento Box Grid */}
+      <motion.div 
+        variants={container}
+        initial="hidden"
+        animate="show"
+        className="grid grid-cols-1 md:grid-cols-4 lg:grid-cols-6 gap-4 auto-rows-min"
+      >
+        {/* Row 1 */}
+        {/* Market Pulse (Span 4) */}
+        <motion.div variants={itemAnim} className="md:col-span-4 lg:col-span-4 h-full">
+          <SpotlightCard className="h-full p-5 min-h-[160px]">
+            <MarketPulseStrip
+              markets={markets}
+              refreshing={marketRefreshing}
+              error={marketError}
+              onRefresh={onMarketRefresh}
             />
-            </motion.div>
+          </SpotlightCard>
+        </motion.div>
 
-            <div className="mt-4 flex gap-2 overflow-x-auto pb-1 sm:flex-wrap sm:overflow-visible sm:pb-0">
-              <Button variant="primary" size="sm" onClick={onRefresh} disabled={loading} className="gap-1.5">
-                {loading ? <Loader2 size={14} className="animate-spin" /> : <RefreshCw size={14} />}
-                刷新简报
-              </Button>
-              <Button variant="secondary" size="sm" onClick={onImportDigest} disabled={importingDigest || stats.total === 0} className="gap-1.5">
-                {importingDigest ? <Loader2 size={14} className="animate-spin" /> : <FilePlus2 size={14} />}
-                存为笔记
-              </Button>
-              <Button variant="ghost" size="sm" onClick={onCopySummary} disabled={stats.total === 0} className="gap-1.5">
-                {copied ? <Check size={14} /> : <Copy size={14} />}
-                {copied ? "已复制" : "复制摘要"}
-              </Button>
-            </div>
-          </div>
-
-          <div className="grid gap-2 sm:grid-cols-2 3xl:grid-cols-3">
+        {/* Stats 1: News (Span 2) */}
+        <motion.div variants={itemAnim} className="md:col-span-2 lg:col-span-1 h-full">
+          <SpotlightCard className="h-full p-5">
             <MiniMetric
-              icon={<Newspaper size={13} />}
-              label="资讯"
-              value={<span className="numeric-display">{stats.total}</span>}
-              hint={`${stats.unread} 条未读`}
+              icon={<Newspaper size={14} />}
+              label="Information"
+              value={stats.total}
+              hint={`${stats.unread} Unread Items`}
             />
+          </SpotlightCard>
+        </motion.div>
+
+        {/* Stats 2: Quality (Span 2) */}
+        <motion.div variants={itemAnim} className="md:col-span-2 lg:col-span-1 h-full">
+          <SpotlightCard className="h-full p-5">
             <MiniMetric
-              icon={<Gauge size={13} />}
-              label="质量"
-              value={<span className="numeric-display">{score == null ? "..." : `${score}`}</span>}
+              icon={<Gauge size={14} />}
+              label="Avg Score"
+              value={score}
               hint={qualityLabel(score)}
             />
-            <div className="rounded-[var(--radius-lg)] border border-[var(--hairline)] bg-[var(--material-inset)] px-3 py-2.5 sm:col-span-2 3xl:col-span-1">
-              <div className="flex items-center gap-1.5 text-[11px] text-[var(--text-muted)]">
-                <Tags size={13} />
-                重要标签
-              </div>
-              <div className="mt-2 flex flex-wrap gap-1.5">
-                {(stats.topTags.length ? stats.topTags : ["等待标签"]).slice(0, 5).map((tag) => (
-                  <span
-                    key={tag}
-                    className="rounded-[var(--radius-pill)] border border-[var(--hairline)] bg-[var(--material-elevated)] px-2.5 py-1 text-xs text-[var(--text-secondary)]"
-                  >
-                    {tag}
-                  </span>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
+          </SpotlightCard>
+        </motion.div>
 
-        <HoroscopeStrip horoscopes={horoscopes} onSelect={(h, anchor) => setSelectedHoroscope({ horoscope: h, anchor })} />
-      </div>
+        {/* Row 2 */}
+        {/* Horoscope (Span 4) */}
+        <motion.div variants={itemAnim} className="md:col-span-4 lg:col-span-4 h-full">
+          <SpotlightCard className="h-full p-5 min-h-[180px]">
+             <HoroscopeStrip horoscopes={horoscopes} onSelect={(h, anchor) => setSelectedHoroscope({ horoscope: h, anchor })} />
+          </SpotlightCard>
+        </motion.div>
+
+        {/* Tags (Span 2) */}
+        <motion.div variants={itemAnim} className="md:col-span-4 lg:col-span-2 h-full">
+          <SpotlightCard className="h-full p-5 flex flex-col justify-between">
+            <div className="flex items-center gap-2 text-xs font-semibold tracking-wider text-[var(--text-secondary)] uppercase">
+              <Tags size={14} className="text-pink-500" />
+              Top Tags
+            </div>
+            <div className="mt-4 flex flex-wrap gap-2">
+              {(stats.topTags.length ? stats.topTags : ["Waiting Sync"]).slice(0, 6).map((tag) => (
+                <span
+                  key={tag}
+                  className="rounded-lg border border-black/5 dark:border-white/10 bg-white/40 dark:bg-black/30 backdrop-blur-md px-3 py-1.5 text-sm font-medium text-[var(--text-secondary)] shadow-sm hover:scale-105 transition-transform"
+                >
+                  #{tag}
+                </span>
+              ))}
+            </div>
+          </SpotlightCard>
+        </motion.div>
+      </motion.div>
 
       <HoroscopeDetailBubble selected={selectedHoroscope} onClose={() => setSelectedHoroscope(null)} />
-    </motion.section>
+    </div>
   );
 }
