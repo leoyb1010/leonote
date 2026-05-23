@@ -1,11 +1,10 @@
 "use client";
 
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, type Variants } from "framer-motion";
 import { useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
-import { Activity, ArrowDownRight, ArrowUpRight, CalendarDays, Check, ChevronRight, CloudSun, Copy, FilePlus2, Gauge, Loader2, MoonStar, Newspaper, RefreshCw, Star, Tags, X, Sparkles } from "lucide-react";
+import { Activity, ArrowDownRight, ArrowUpRight, CalendarDays, Check, CloudSun, Copy, FilePlus2, Gauge, Loader2, MoonStar, Newspaper, RefreshCw, Star, Tags, X, Sparkles } from "lucide-react";
 import { Button } from "@/components/base/Button";
-import { cardFloatIn, heroTitleReveal } from "@/lib/animations";
 import type { BriefingDigestSummary, BriefingRange, HoroscopeDTO, MarketSnapshotDTO, WeatherDTO } from "@/lib/briefing/types";
 import { SpotlightCard } from "@/components/base/SpotlightCard";
 import { NumberTicker } from "@/components/base/NumberTicker";
@@ -163,20 +162,13 @@ function formatHoroscopeTime(input: string | null | undefined) {
   return date.toLocaleTimeString("zh-CN", { hour: "2-digit", minute: "2-digit" });
 }
 
-function formatHoroscopeDate(input: string | null | undefined) {
-  if (!input) return "等待同步";
-  const date = new Date(input);
-  if (!Number.isFinite(date.getTime())) return "等待同步";
-  return date.toLocaleDateString("zh-CN", { timeZone: "Asia/Shanghai", month: "long", day: "numeric" });
-}
-
 function HoroscopeStrip({ horoscopes, onSelect }: { horoscopes: HoroscopeDTO[]; onSelect: (horoscope: HoroscopeDTO, anchor: DetailAnchor) => void }) {
   return (
     <div className="h-full flex flex-col">
       <div className="mb-3 flex items-center justify-between gap-2">
         <span className="inline-flex items-center gap-2 text-xs font-semibold tracking-wider text-[var(--text-secondary)] uppercase">
           <Sparkles size={14} className="text-purple-500" />
-          Today's Stars
+          Today&apos;s Stars
         </span>
       </div>
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-2 flex-1">
@@ -388,7 +380,7 @@ export function BriefingHero({
   const [selectedHoroscope, setSelectedHoroscope] = useState<SelectedHoroscope | null>(null);
 
   // Staggered animation variants
-  const container: any = {
+  const container: Variants = {
     hidden: { opacity: 0 },
     show: {
       opacity: 1,
@@ -396,7 +388,7 @@ export function BriefingHero({
     }
   };
   
-  const itemAnim: any = {
+  const itemAnim: Variants = {
     hidden: { opacity: 0, y: 20 },
     show: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 300, damping: 24 } }
   };

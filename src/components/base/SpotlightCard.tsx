@@ -1,7 +1,6 @@
 "use client";
 
 import { useRef, useState, type ReactNode, type HTMLAttributes } from "react";
-import { motion } from "framer-motion";
 
 interface SpotlightCardProps extends HTMLAttributes<HTMLDivElement> {
   children: ReactNode;

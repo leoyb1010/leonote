@@ -27,6 +27,7 @@ export function NumberTicker({ value, format = (v) => v.toString(), className = 
     });
 
     return () => controls.stop();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [value, format]); // displayValue is intentionally omitted to avoid loops
 
   return <span className={className}>{displayValue}</span>;
