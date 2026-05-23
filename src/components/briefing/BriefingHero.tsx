@@ -347,7 +347,7 @@ function MarketPulseStrip({
                   <span className="font-medium text-sm text-[var(--text-primary)] truncate">{item.name}</span>
                   <div className="flex items-end justify-between">
                     <span className="text-lg font-bold font-mono tracking-tighter text-[var(--text-primary)]">
-                      <NumberTicker value={Number(formatMarketPrice(item))} />
+                      <NumberTicker value={item.price} format={(val) => formatMarketPrice({ ...item, price: val })} />
                     </span>
                     <span className={`flex items-center text-xs font-bold ${up ? "text-red-500" : "text-green-500"}`}>
                       <Icon size={12} strokeWidth={3} className="mr-0.5" />
