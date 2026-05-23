@@ -1,65 +1,70 @@
-<div align="center">
+<h1 align="center">
+  <img src="./public/icon-192.png" width="64" height="64" alt="Leonote app icon" valign="middle">&nbsp;
+  Leonote
+</h1>
 
-# Leonote
-
-<p>
-  <em>「把想法安放成时间里的智慧。」 · "A quiet home for notes, memory, and daily intelligence."</em>
-</p>
-
-<p>
-  <a href="./README.md">简体中文</a>
-  ·
+<p align="center">
+  <b>自托管优先的个人笔记、长期记忆、每日简报、装备库与轻记账应用。</b><br>
+  把想法安放成时间里的智慧 — A quiet home for notes, memory, and daily intelligence.<br>
+  <a href="#产品预览">产品预览</a> ·
+  <a href="#核心模块">核心模块</a> ·
+  <a href="#快速开始">快速开始</a> ·
+  <a href="#跨设备使用">跨端</a> ·
+  <a href="#自托管生产部署">部署</a> ·
+  <a href="#技术栈">技术栈</a> ·
+  <a href="#版本记录">版本记录</a> ·
   <a href="./README.en.md">English</a>
 </p>
 
-<p>
-  <a href="#产品预览">产品预览</a>
-  ·
-  <a href="#核心模块">核心模块</a>
-  ·
-  <a href="#快速开始">快速开始</a>
-  ·
-  <a href="#自托管生产部署">部署</a>
-  ·
-  <a href="#版本记录">版本记录</a>
+<p align="center">
+  <a href="https://github.com/leoyb1010/leonote/releases">
+    <img alt="Version" src="https://img.shields.io/badge/version-v1.8.1-7B84F6?style=flat-square">
+  </a>
+  <img alt="Next.js" src="https://img.shields.io/badge/Next.js-16-111111?style=flat-square&logo=nextdotjs&logoColor=white">
+  <img alt="React" src="https://img.shields.io/badge/React-19-149ECA?style=flat-square&logo=react&logoColor=white">
+  <img alt="Tauri" src="https://img.shields.io/badge/Tauri-2-24C8DB?style=flat-square&logo=tauri&logoColor=white">
+  <img alt="Prisma" src="https://img.shields.io/badge/Prisma-6-2D3748?style=flat-square&logo=prisma&logoColor=white">
+  <img alt="PWA" src="https://img.shields.io/badge/PWA-ready-5EC9A8?style=flat-square">
+  <img alt="Design" src="https://img.shields.io/badge/Design-Quiet%20Material-8A95FF?style=flat-square">
+  <img alt="License" src="https://img.shields.io/badge/License-Personal%20Use-F26D6D?style=flat-square">
 </p>
 
-<p>
-  <img alt="Version" src="https://img.shields.io/badge/Version-v1.8.1-7B84F6?style=for-the-badge">
-  <img alt="License" src="https://img.shields.io/badge/License-Personal%20Use%20Only-F26D6D?style=for-the-badge">
-  <img alt="Next.js" src="https://img.shields.io/badge/Next.js-16-111111?style=for-the-badge&logo=nextdotjs">
-  <img alt="Tauri" src="https://img.shields.io/badge/Tauri-2-24C8DB?style=for-the-badge&logo=tauri">
-  <img alt="PWA" src="https://img.shields.io/badge/PWA-Ready-5EC9A8?style=for-the-badge">
-  <img alt="Quiet Material" src="https://img.shields.io/badge/Design-Quiet%20Material-8A95FF?style=for-the-badge">
+<p align="center">
+  <img src="./docs/images/leonote-briefing-desktop.png" width="960" alt="Leonote daily briefing on desktop">
 </p>
 
-<p>
-  <strong>自托管优先的个人笔记、长期记忆、每日简报、装备库与轻记账应用。</strong><br>
-  安静保存、温柔唤回，在 Mac / PC / iPad / 手机和桌面 WebView 壳之间保持同一个知识居所。
+<p align="center">
+  <sub>安静保存、温柔唤回。在 Mac / PC / iPad / 手机和桌面 WebView 壳之间保持同一个知识居所。</sub>
 </p>
 
-</div>
+<p align="center">
+  简体中文 | <a href="./README.en.md">English</a>
+</p>
 
 ---
 
 ## 产品预览
 
-<p align="center">
-  <img src="./docs/images/leonote-briefing-desktop.png" alt="Leonote 每日简报桌面端界面" width="100%">
-</p>
+> 截图随 v1.8.1 Quiet Material 文档维护，覆盖桌面端、笔记编辑、移动端简报与日程工作台。
 
-<p align="center">
-  <img src="./docs/images/leonote-home-desktop.png" alt="Leonote 今日页面桌面端界面" width="49%">
-  <img src="./docs/images/leonote-notes-desktop.png" alt="Leonote 笔记编辑桌面端界面" width="49%">
-</p>
-
-<p align="center">
-  <img src="./docs/images/leonote-mobile-briefing.png" alt="Leonote 每日简报移动端界面" width="320">
-</p>
-
-<p align="center">
-  <sub>截图随 v1.8.1 Quiet Material 文档维护，覆盖桌面端、笔记编辑、移动端简报与日程工作台。</sub>
-</p>
+<table>
+  <tr>
+    <td align="center"><b>每日简报 · 桌面端</b></td>
+    <td align="center"><b>今日页面 · 桌面端</b></td>
+  </tr>
+  <tr>
+    <td><img src="./docs/images/leonote-briefing-desktop.png" alt="Leonote daily briefing desktop" width="480"></td>
+    <td><img src="./docs/images/leonote-home-desktop.png" alt="Leonote today page desktop" width="480"></td>
+  </tr>
+  <tr>
+    <td align="center"><b>笔记编辑 · 桌面端</b></td>
+    <td align="center"><b>每日简报 · 移动端</b></td>
+  </tr>
+  <tr>
+    <td><img src="./docs/images/leonote-notes-desktop.png" alt="Leonote note editor desktop" width="480"></td>
+    <td align="center"><img src="./docs/images/leonote-mobile-briefing.png" alt="Leonote daily briefing mobile" width="240"></td>
+  </tr>
+</table>
 
 ## 核心模块
 
