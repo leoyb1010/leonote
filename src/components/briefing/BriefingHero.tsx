@@ -1,9 +1,9 @@
 "use client";
 
 import { motion, AnimatePresence, type Variants } from "framer-motion";
-import { useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
-import { Activity, ArrowDownRight, ArrowUpRight, CalendarDays, Check, CloudSun, Copy, FilePlus2, Gauge, Loader2, MoonStar, Newspaper, RefreshCw, Star, Tags, X, Sparkles } from "lucide-react";
+import { Activity, ArrowDownRight, ArrowUpRight, CalendarDays, Check, ChevronDown, CloudSun, Copy, FilePlus2, Gauge, Loader2, MoonStar, MoreHorizontal, Newspaper, RefreshCw, Star, Tags, X, Sparkles } from "lucide-react";
 import { Button } from "@/components/base/Button";
 import type { BriefingDigestSummary, BriefingRange, HoroscopeDTO, MarketSnapshotDTO, WeatherDTO } from "@/lib/briefing/types";
 import { SpotlightCard } from "@/components/base/SpotlightCard";
@@ -171,9 +171,10 @@ function HoroscopeStrip({ horoscopes, onSelect }: { horoscopes: HoroscopeDTO[]; 
           Today&apos;s Stars
         </span>
       </div>
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-2 flex-1">
+      {/* 移动端：单行横滚紧凑卡；md 及以上：2 列网格 */}
+      <div className="-mx-1 flex flex-1 gap-2 overflow-x-auto px-1 pb-1 no-scrollbar md:mx-0 md:grid md:grid-cols-2 md:gap-3 md:overflow-visible md:px-0 md:pb-0">
         {horoscopes.length === 0 ? (
-          <div className="flex items-center justify-center rounded-xl bg-black/5 dark:bg-white/5 p-4 text-[11px] text-[var(--text-muted)] sm:col-span-2">
+          <div className="flex w-full items-center justify-center rounded-xl bg-black/5 p-4 text-[11px] text-[var(--text-muted)] dark:bg-white/5 md:col-span-2">
             <Loader2 size={14} className="animate-spin mr-2" /> 实时星座源同步中...
           </div>
         ) : (
@@ -195,15 +196,15 @@ function HoroscopeStrip({ horoscopes, onSelect }: { horoscopes: HoroscopeDTO[]; 
               }}
               whileHover={{ y: -2, scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
-              className="group flex flex-col justify-between cursor-pointer rounded-xl border border-white/20 dark:border-white/10 bg-white/40 dark:bg-black/20 p-3 text-left transition-colors hover:bg-white/60 dark:hover:bg-white/5 backdrop-blur-md"
+              className="group flex min-w-[170px] shrink-0 cursor-pointer flex-col justify-between rounded-xl border border-white/20 bg-white/40 p-2.5 text-left backdrop-blur-md transition-colors hover:bg-white/60 dark:border-white/10 dark:bg-black/20 dark:hover:bg-white/5 md:min-w-0 md:shrink md:p-3"
             >
-              <div className="flex items-center justify-between gap-2 w-full">
-                <span className="truncate font-medium text-sm text-[var(--text-primary)]">
+              <div className="flex w-full items-center justify-between gap-2">
+                <span className="truncate text-sm font-medium text-[var(--text-primary)]">
                   {item.name}
                 </span>
                 <StarRating value={item.stars} />
               </div>
-              <p className="mt-2 line-clamp-2 text-xs leading-relaxed text-[var(--text-secondary)] opacity-80">
+              <p className="mt-1.5 line-clamp-1 text-xs leading-relaxed text-[var(--text-secondary)] opacity-80 md:mt-2 md:line-clamp-2">
                 {item.summary}
               </p>
             </motion.button>
@@ -225,6 +226,87 @@ function qualityLabel(score: number | null) {
   if (score >= 80) return "高质量";
   if (score >= 60) return "可读";
   return "待筛选";
+}
+
+function HeroMoreMenu({
+  onImportDigest,
+  onCopySummary,
+  importingDigest,
+  copied,
+  disabled,
+}: {
+  onImportDigest: () => void;
+  onCopySummary: () => void;
+  importingDigest: boolean;
+  copied: boolean;
+  disabled: boolean;
+}) {
+  const [open, setOpen] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const handleDocClick = (event: MouseEvent) => {
+      if (!containerRef.current?.contains(event.target as Node)) setOpen(false);
+    };
+    const handleKey = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setOpen(false);
+    };
+    document.addEventListener("mousedown", handleDocClick);
+    document.addEventListener("keydown", handleKey);
+    return () => {
+      document.removeEventListener("mousedown", handleDocClick);
+      document.removeEventListener("keydown", handleKey);
+    };
+  }, [open]);
+
+  return (
+    <div ref={containerRef} className="relative">
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        aria-label="更多操作"
+        aria-haspopup="menu"
+        aria-expanded={open}
+        className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-black/5 bg-white/60 text-[var(--text-secondary)] shadow-sm backdrop-blur-md transition active:scale-95 dark:border-white/10 dark:bg-white/10"
+      >
+        <MoreHorizontal size={16} />
+      </button>
+      {open ? (
+        <div
+          role="menu"
+          className="absolute right-0 top-full z-50 mt-2 w-44 overflow-hidden rounded-2xl border border-black/5 bg-white/95 shadow-xl backdrop-blur-2xl dark:border-white/10 dark:bg-[#1C1C1E]/95"
+        >
+          <button
+            type="button"
+            role="menuitem"
+            disabled={importingDigest || disabled}
+            onClick={() => {
+              setOpen(false);
+              onImportDigest();
+            }}
+            className="flex w-full items-center gap-2.5 px-4 py-3 text-left text-sm text-[var(--text-primary)] transition hover:bg-black/5 disabled:opacity-50 dark:hover:bg-white/5"
+          >
+            {importingDigest ? <Loader2 size={14} className="animate-spin" /> : <FilePlus2 size={14} />}
+            存为笔记
+          </button>
+          <button
+            type="button"
+            role="menuitem"
+            disabled={disabled}
+            onClick={() => {
+              setOpen(false);
+              onCopySummary();
+            }}
+            className="flex w-full items-center gap-2.5 border-t border-black/5 px-4 py-3 text-left text-sm text-[var(--text-primary)] transition hover:bg-black/5 disabled:opacity-50 dark:border-white/5 dark:hover:bg-white/5"
+          >
+            {copied ? <Check size={14} className="text-green-500" /> : <Copy size={14} />}
+            {copied ? "已复制" : "复制摘要"}
+          </button>
+        </div>
+      ) : null}
+    </div>
+  );
 }
 
 function MiniMetric({
@@ -301,26 +383,73 @@ function MarketPulseStrip({
   onRefresh: () => void;
 }) {
   const visible = orderHeroMarkets(markets).slice(0, 9);
+  const summary = visible.slice(0, 4);
+  // 移动端默认折叠成一行紧凑摘要；桌面端通过 CSS 始终展开
+  const [mobileExpanded, setMobileExpanded] = useState(false);
 
   return (
     <div className="h-full flex flex-col">
-      <div className="mb-4 flex items-center justify-between">
+      <div className="mb-3 flex items-center justify-between md:mb-4">
         <div className="flex items-center gap-2 text-xs font-semibold tracking-wider text-[var(--text-secondary)] uppercase">
           <Activity size={14} className="text-blue-500" />
           <span>Market Pulse</span>
           {error ? <span className="ml-2 text-[var(--warning)] px-2 py-0.5 bg-[var(--warning)]/10 rounded-full text-[10px]">缓存</span> : null}
         </div>
-        <button
-          type="button"
-          onClick={onRefresh}
-          disabled={refreshing}
-          className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-black/5 dark:bg-white/10 text-[var(--text-muted)] transition hover:bg-black/10 dark:hover:bg-white/20 hover:scale-105 active:scale-95 disabled:opacity-50"
-        >
-          <RefreshCw size={12} className={refreshing ? "animate-spin text-blue-500" : ""} />
-        </button>
+        <div className="flex items-center gap-1.5">
+          {/* 仅移动端：展开/收起开关 */}
+          <button
+            type="button"
+            onClick={() => setMobileExpanded((v) => !v)}
+            aria-label={mobileExpanded ? "收起市场" : "展开市场"}
+            aria-expanded={mobileExpanded}
+            className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-black/5 text-[var(--text-muted)] transition active:scale-95 dark:bg-white/10 md:hidden"
+          >
+            <ChevronDown size={14} className={`transition-transform ${mobileExpanded ? "rotate-180" : ""}`} />
+          </button>
+          <button
+            type="button"
+            onClick={onRefresh}
+            disabled={refreshing}
+            className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-black/5 dark:bg-white/10 text-[var(--text-muted)] transition hover:bg-black/10 dark:hover:bg-white/20 hover:scale-105 active:scale-95 disabled:opacity-50"
+          >
+            <RefreshCw size={12} className={refreshing ? "animate-spin text-blue-500" : ""} />
+          </button>
+        </div>
       </div>
 
-      <div className="flex-1 overflow-x-auto no-scrollbar mask-edges">
+      {/* 移动端折叠态：单行紧凑摘要（仅 mobileExpanded=false 且 < md 时显示）*/}
+      {!mobileExpanded ? (
+        <button
+          type="button"
+          onClick={() => setMobileExpanded(true)}
+          aria-label="展开行情"
+          className="-mx-1 flex items-center gap-2 overflow-x-auto px-1 text-left no-scrollbar md:hidden"
+        >
+          {summary.length === 0 ? (
+            <span className="inline-flex items-center text-xs text-[var(--text-muted)]">
+              <Loader2 size={12} className="animate-spin mr-1.5" />同步中
+            </span>
+          ) : (
+            summary.map((item) => {
+              const up = item.changePct >= 0;
+              return (
+                <span
+                  key={item.symbol}
+                  className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-white/20 bg-white/40 px-2.5 py-1 text-xs font-medium dark:border-white/10 dark:bg-black/20"
+                >
+                  <span className="text-[var(--text-secondary)]">{item.name}</span>
+                  <span className={up ? "text-red-500" : "text-green-500"}>
+                    {up ? "+" : "-"}{Math.abs(item.changePct).toFixed(2)}%
+                  </span>
+                </span>
+              );
+            })
+          )}
+        </button>
+      ) : null}
+
+      {/* 完整横滚卡：桌面端始终显示；移动端 mobileExpanded=true 时显示 */}
+      <div className={`flex-1 overflow-x-auto no-scrollbar mask-edges ${mobileExpanded ? "block" : "hidden md:block"}`}>
         {visible.length === 0 ? (
           <div className="flex h-full items-center text-xs text-[var(--text-muted)]"><Loader2 size={12} className="animate-spin mr-2" />同步市场数据...</div>
         ) : (
@@ -394,14 +523,14 @@ export function BriefingHero({
   };
 
   return (
-    <div className="relative w-full z-10 pt-4 pb-8 sm:pt-6">
-      
+    <div className="relative w-full z-10 pt-3 pb-4 sm:pt-6 md:pb-8">
+
       {/* Header Info Row */}
-      <motion.div 
+      <motion.div
         variants={itemAnim}
         initial="hidden"
         animate="show"
-        className="mb-6 flex flex-wrap items-center gap-3 text-xs"
+        className="mb-3 flex flex-wrap items-center gap-2 text-xs md:mb-6 md:gap-3"
       >
         <span className="inline-flex items-center gap-1.5 rounded-full border border-black/5 dark:border-white/10 bg-white/50 dark:bg-black/30 backdrop-blur-md px-3 py-1.5 font-medium shadow-sm">
           <CalendarDays size={14} className="text-[var(--primary)]" />
@@ -419,23 +548,45 @@ export function BriefingHero({
       </motion.div>
 
       {/* Main Title & Actions */}
-      <motion.div 
+      <motion.div
         variants={itemAnim}
         initial="hidden"
         animate="show"
-        className="mb-8 flex flex-col gap-5 lg:flex-row lg:items-end justify-between"
+        className="mb-4 flex flex-row items-center gap-3 lg:mb-8 lg:items-end lg:justify-between"
       >
         <div className="min-w-0 flex-1">
           <input
             aria-label="简报标题"
             value={title}
             onChange={(event) => onTitleChange(event.target.value)}
-            className="w-full bg-transparent text-4xl font-extrabold tracking-tight text-[var(--text-primary)] outline-none transition-colors placeholder:text-[var(--text-placeholder)] focus:text-[var(--primary)] sm:text-5xl lg:text-6xl"
+            className="w-full bg-transparent text-2xl font-bold tracking-tight text-[var(--text-primary)] outline-none transition-colors placeholder:text-[var(--text-placeholder)] focus:text-[var(--primary)] sm:text-4xl lg:text-6xl lg:font-extrabold"
             placeholder="每日简报"
           />
         </div>
 
-        <div className="flex gap-2.5 overflow-x-auto pb-1 sm:overflow-visible sm:pb-0">
+        {/* 移动端：紧凑刷新 + 更多菜单；桌面端：完整三按钮 */}
+        <div className="flex shrink-0 items-center gap-2 lg:hidden">
+          <Button
+            variant="primary"
+            size="sm"
+            onClick={onRefresh}
+            disabled={loading}
+            aria-label="刷新简报"
+            className="gap-1.5 rounded-full px-3 shadow-md shadow-[var(--primary)]/15"
+          >
+            {loading ? <Loader2 size={14} className="animate-spin" /> : <RefreshCw size={14} />}
+            <span className="text-xs font-semibold">刷新</span>
+          </Button>
+          <HeroMoreMenu
+            onImportDigest={onImportDigest}
+            onCopySummary={onCopySummary}
+            importingDigest={importingDigest}
+            copied={copied}
+            disabled={stats.total === 0}
+          />
+        </div>
+
+        <div className="hidden gap-2.5 overflow-x-auto pb-1 sm:overflow-visible sm:pb-0 lg:flex">
           <Button variant="primary" size="sm" onClick={onRefresh} disabled={loading} className="gap-2 rounded-full px-5 shadow-lg shadow-[var(--primary)]/20 hover:shadow-xl hover:scale-105 transition-all">
             {loading ? <Loader2 size={16} className="animate-spin" /> : <RefreshCw size={16} />}
             <span className="font-semibold">刷新简报</span>
@@ -461,7 +612,7 @@ export function BriefingHero({
         {/* Row 1 */}
         {/* Market Pulse (Span 4) */}
         <motion.div variants={itemAnim} className="md:col-span-4 lg:col-span-4 h-full">
-          <SpotlightCard className="h-full p-5 min-h-[160px]">
+          <SpotlightCard className="h-full p-3 md:p-5 md:min-h-[160px]">
             <MarketPulseStrip
               markets={markets}
               refreshing={marketRefreshing}
@@ -471,8 +622,8 @@ export function BriefingHero({
           </SpotlightCard>
         </motion.div>
 
-        {/* Stats 1: News (Span 2) */}
-        <motion.div variants={itemAnim} className="md:col-span-2 lg:col-span-1 h-full">
+        {/* Stats 1: News (Span 2) — 移动端隐藏，桌面端保留 */}
+        <motion.div variants={itemAnim} className="hidden md:block md:col-span-2 lg:col-span-1 h-full">
           <SpotlightCard className="h-full p-5">
             <MiniMetric
               icon={<Newspaper size={14} />}
@@ -483,8 +634,8 @@ export function BriefingHero({
           </SpotlightCard>
         </motion.div>
 
-        {/* Stats 2: Quality (Span 2) */}
-        <motion.div variants={itemAnim} className="md:col-span-2 lg:col-span-1 h-full">
+        {/* Stats 2: Quality (Span 2) — 移动端隐藏 */}
+        <motion.div variants={itemAnim} className="hidden md:block md:col-span-2 lg:col-span-1 h-full">
           <SpotlightCard className="h-full p-5">
             <MiniMetric
               icon={<Gauge size={14} />}
@@ -498,13 +649,13 @@ export function BriefingHero({
         {/* Row 2 */}
         {/* Horoscope (Span 4) */}
         <motion.div variants={itemAnim} className="md:col-span-4 lg:col-span-4 h-full">
-          <SpotlightCard className="h-full p-5 min-h-[180px]">
+          <SpotlightCard className="h-full p-3 md:p-5 md:min-h-[180px]">
              <HoroscopeStrip horoscopes={horoscopes} onSelect={(h, anchor) => setSelectedHoroscope({ horoscope: h, anchor })} />
           </SpotlightCard>
         </motion.div>
 
-        {/* Tags (Span 2) */}
-        <motion.div variants={itemAnim} className="md:col-span-4 lg:col-span-2 h-full">
+        {/* Tags (Span 2) — 移动端隐藏（已在底部 TagInsights 重复出现）*/}
+        <motion.div variants={itemAnim} className="hidden md:block md:col-span-4 lg:col-span-2 h-full">
           <SpotlightCard className="h-full p-5 flex flex-col justify-between">
             <div className="flex items-center gap-2 text-xs font-semibold tracking-wider text-[var(--text-secondary)] uppercase">
               <Tags size={14} className="text-pink-500" />

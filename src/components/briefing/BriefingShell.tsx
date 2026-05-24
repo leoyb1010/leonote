@@ -191,31 +191,6 @@ function BriefingMetaPanel({ meta }: { meta: BriefingMetaDTO }) {
   );
 }
 
-function MobileBriefingNav() {
-  const items = [
-    { href: "#briefing-radar", label: "雷达" },
-    { href: "#briefing-featured", label: "精选" },
-    { href: "#briefing-thinking", label: "思考" },
-    { href: "#briefing-stream", label: "资讯" },
-  ];
-
-  return (
-    <nav className="lg:hidden sticky top-0 z-20 -mx-4 mt-4 border-y border-[var(--hairline)] bg-[var(--bg-app)]/92 px-4 py-2 backdrop-blur sm:-mx-6 sm:px-6">
-      <div className="flex flex-wrap gap-2">
-        {items.map((item) => (
-          <a
-            key={item.href}
-            href={item.href}
-            className="min-h-9 shrink-0 rounded-full border border-[var(--hairline)] bg-[var(--material-inset)] px-3 text-xs leading-9 text-[var(--text-secondary)]"
-          >
-            {item.label}
-          </a>
-        ))}
-      </div>
-    </nav>
-  );
-}
-
 export function BriefingShell({
   initialDigest,
   initialItems,
@@ -469,8 +444,6 @@ export function BriefingShell({
           )}
         </div>
       </div>
-
-      <MobileBriefingNav />
 
       <motion.section
         key={`${range}-${category}`}
