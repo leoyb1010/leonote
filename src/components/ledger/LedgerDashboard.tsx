@@ -79,20 +79,21 @@ export function LedgerDashboard({ summary }: Props) {
 
   return (
     <section>
-      <h2 className="mb-4 text-sm font-medium text-[var(--text-secondary)]">本月看板</h2>
-      <div className="grid gap-3 md:grid-cols-2 3xl:grid-cols-4">
-        <div className="card-premium p-4 sm:p-5">
+      <h2 className="mb-2 text-sm font-medium text-[var(--text-secondary)] sm:mb-4">本月看板</h2>
+      <div className="grid grid-cols-2 gap-2 sm:gap-3 md:grid-cols-2 3xl:grid-cols-4">
+        <div className="card-premium p-3 sm:p-5">
           <p className="text-xs text-[var(--text-muted)]">本月支出</p>
-          <p className="mt-3 text-3xl font-semibold text-[var(--text-primary)] numeric-display">
+          <p className="mt-1.5 text-xl font-semibold text-[var(--text-primary)] numeric-display sm:mt-3 sm:text-3xl">
             {formatMoney(summary.totalAmount)}
           </p>
-          <p className={`mt-3 inline-flex items-center gap-1 text-xs ${delta === null ? "text-[var(--text-muted)]" : deltaClass}`}>
+          <p className={`mt-1.5 inline-flex items-center gap-1 text-[11px] sm:mt-3 sm:text-xs ${delta === null ? "text-[var(--text-muted)]" : deltaClass}`}>
             {delta !== null ? <DeltaIcon size={13} /> : null}
             {deltaText}
           </p>
         </div>
 
-        <div className="card-premium p-4 sm:p-5">
+        {/* 每日趋势：移动端隐藏（SVG 太占空间，桌面端保留）*/}
+        <div className="card-premium hidden p-3 sm:block sm:p-5">
           <div className="flex items-center justify-between gap-3">
             <p className="text-xs text-[var(--text-muted)]">每日趋势</p>
             <span className="text-xs text-[var(--text-faint)]">本月</span>
@@ -100,29 +101,29 @@ export function LedgerDashboard({ summary }: Props) {
           <TrendLine daily={summary.daily} />
         </div>
 
-        <div className="card-premium p-4 sm:p-5">
+        <div className="card-premium p-3 sm:p-5">
           <p className="text-xs text-[var(--text-muted)]">最大一笔</p>
           {summary.topExpense ? (
-            <Link href={`/ledger/${summary.topExpense.id}`} className="mt-3 block rounded-2xl transition-colors hover:bg-[var(--interactive-hover)]">
-              <p className="text-2xl font-semibold text-[var(--text-primary)] numeric-display">
+            <Link href={`/ledger/${summary.topExpense.id}`} className="mt-1.5 block rounded-2xl transition-colors hover:bg-[var(--interactive-hover)] sm:mt-3">
+              <p className="text-lg font-semibold text-[var(--text-primary)] numeric-display sm:text-2xl">
                 {formatMoney(summary.topExpense.amount, summary.topExpense.currency)}
               </p>
-              <p className="mt-2 truncate text-sm text-[var(--text-secondary)]">
+              <p className="mt-1 truncate text-xs text-[var(--text-secondary)] sm:mt-2 sm:text-sm">
                 {summary.topExpense.category?.emoji ?? "💰"} {summary.topExpense.note || summary.topExpense.category?.name || "一笔花费"}
               </p>
-              <p className="mt-2 text-xs text-[var(--text-muted)]">{formatRelativeTime(summary.topExpense.occurredAt)}</p>
+              <p className="mt-1 hidden text-xs text-[var(--text-muted)] sm:mt-2 sm:block">{formatRelativeTime(summary.topExpense.occurredAt)}</p>
             </Link>
           ) : (
-            <p className="mt-5 text-sm leading-6 text-[var(--text-muted)]">还没有哪一笔需要被特别看见。</p>
+            <p className="mt-2 text-xs leading-6 text-[var(--text-muted)] sm:mt-5 sm:text-sm">还没有哪一笔需要被特别看见。</p>
           )}
         </div>
 
-        <div className="card-premium p-4 sm:p-5">
+        <div className="card-premium p-3 sm:p-5">
           <p className="text-xs text-[var(--text-muted)]">日均 / 预测</p>
-          <p className="mt-3 text-2xl font-semibold text-[var(--text-primary)] numeric-display">
+          <p className="mt-1.5 text-lg font-semibold text-[var(--text-primary)] numeric-display sm:mt-3 sm:text-2xl">
             {formatMoney(summary.averageDaily)}
           </p>
-          <p className="mt-3 text-sm leading-6 text-[var(--text-secondary)]">{quietLine}</p>
+          <p className="mt-1.5 hidden text-sm leading-6 text-[var(--text-secondary)] sm:mt-3 sm:block">{quietLine}</p>
         </div>
       </div>
     </section>

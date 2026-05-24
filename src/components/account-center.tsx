@@ -57,29 +57,31 @@ export function AccountCenter() {
 
   return (
     <>
-      <GlassPanel blur="xl" className="mb-5 rounded-[var(--radius-lg)] p-5">
+      <GlassPanel blur="xl" className="mb-4 rounded-[var(--radius-lg)] p-3.5 sm:mb-5 sm:p-5">
         <div className="text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider">Account Center</div>
         {user ? (
           <>
             <div className="mt-3 flex items-center gap-3">
-              <div className="inline-flex h-12 w-12 items-center justify-center rounded-2xl border border-[var(--border-default)] bg-[var(--interactive-active)] text-[var(--ai-accent)]"><User2 className="h-5 w-5" /></div>
-              <div>
-                <div className="text-xl font-semibold text-[var(--text-primary)]">{user.name}</div>
-                <div className="mt-1 text-sm text-[var(--text-muted)]">{user.email}</div>
+              <div className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-[var(--border-default)] bg-[var(--interactive-active)] text-[var(--ai-accent)] sm:h-12 sm:w-12"><User2 className="h-5 w-5" /></div>
+              <div className="min-w-0">
+                <div className="truncate text-base font-semibold text-[var(--text-primary)] sm:text-xl">{user.name}</div>
+                <div className="mt-0.5 truncate text-xs text-[var(--text-muted)] sm:mt-1 sm:text-sm">{user.email}</div>
               </div>
             </div>
-            <div className="mt-4 grid grid-cols-2 gap-3 md:grid-cols-4">
+            {/* 4 个 status 子卡：移动端隐藏（信息量低，占空大）*/}
+            <div className="mt-4 hidden grid-cols-2 gap-3 sm:grid md:grid-cols-4">
               <div className="rounded-[var(--radius-md)] border border-[var(--border-default)] bg-[var(--interactive-active)] px-4 py-3"><div className="text-xs text-[var(--text-muted)]">账号状态</div><div className="mt-1 text-sm font-medium text-[var(--text-primary)]">正常</div></div>
               <div className="rounded-[var(--radius-md)] border border-[var(--border-default)] bg-[var(--interactive-active)] px-4 py-3"><div className="text-xs text-[var(--text-muted)]">登录方式</div><div className="mt-1 text-sm font-medium text-[var(--text-primary)]">邮箱 + 密码</div></div>
               <div className="rounded-[var(--radius-md)] border border-[var(--border-default)] bg-[var(--interactive-active)] px-4 py-3"><div className="text-xs text-[var(--text-muted)]">数据模式</div><div className="mt-1 text-sm font-medium text-[var(--text-primary)]">本地单人</div></div>
               <div className="rounded-[var(--radius-md)] border border-[var(--border-default)] bg-[var(--interactive-active)] px-4 py-3"><div className="text-xs text-[var(--text-muted)]">安全</div><div className="mt-1 text-sm font-medium text-[var(--text-primary)] inline-flex items-center gap-1"><Shield className="h-3.5 w-3.5 text-[var(--ai-accent)]" />签名会话</div></div>
             </div>
-            <div className="mt-3 space-y-1 text-sm text-[var(--text-muted)]">
+            {/* 创建/更新/模式：移动端隐藏 */}
+            <div className="mt-3 hidden space-y-1 text-sm text-[var(--text-muted)] sm:block">
               <div>创建时间：{new Date(user.createdAt).toLocaleString("zh-CN")}</div>
               <div>最近更新：{new Date(user.updatedAt).toLocaleString("zh-CN")}</div>
               <div>模式：单人模式 · 中文界面 · Web First</div>
             </div>
-            <div className="mt-4 flex gap-3">
+            <div className="mt-3 flex gap-2 sm:mt-4 sm:gap-3">
               <Link href="/profile" className={buttonClass("secondary", "lg")}>管理资料</Link>
               <Button size="lg" onClick={() => void logout()} loading={loading} icon={<LogOut className="h-4 w-4" />}>{loading ? "退出中" : "退出登录"}</Button>
             </div>

@@ -160,16 +160,16 @@ export function LedgerPage({ signedIn, categories, summary, gearItems, gearSumma
 
   return (
     <div className="space-y-6">
-      <section className="rounded-[var(--radius-2xl)] border border-[var(--hairline)] bg-[var(--material-elevated)] p-4 shadow-[var(--shadow-sm)] sm:p-5">
-        <div className="flex min-w-0 flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-          <div className="flex min-w-0 gap-3">
-            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[var(--material-inset)] text-[var(--primary)]">
+      <section className="rounded-[var(--radius-2xl)] border border-[var(--hairline)] bg-[var(--material-elevated)] p-3 shadow-[var(--shadow-sm)] sm:p-5">
+        <div className="flex min-w-0 flex-col gap-3 sm:gap-4 lg:flex-row lg:items-end lg:justify-between">
+          <div className="flex min-w-0 gap-2.5 sm:gap-3">
+            <span className="hidden h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[var(--material-inset)] text-[var(--primary)] sm:flex">
               <Boxes size={19} />
             </span>
             <div className="min-w-0">
-              <p className="text-xs text-[var(--text-muted)]">Object Library</p>
-              <h1 className="mt-1 text-2xl font-semibold text-[var(--text-primary)]">装备库与记账</h1>
-              <p className="mt-2 max-w-2xl text-sm leading-6 text-[var(--text-secondary)]">
+              <p className="hidden text-xs text-[var(--text-muted)] sm:block">Object Library</p>
+              <h1 className="text-lg font-semibold text-[var(--text-primary)] sm:mt-1 sm:text-2xl">装备库与记账</h1>
+              <p className="mt-1 hidden max-w-2xl text-sm leading-6 text-[var(--text-secondary)] sm:mt-2 sm:block">
                 设备、物品、价格、保修和日常支出放在同一个工作台里。
               </p>
             </div>
@@ -195,12 +195,12 @@ export function LedgerPage({ signedIn, categories, summary, gearItems, gearSumma
         />
       ) : (
         <>
-          <section className="border-b border-[var(--hairline)] pb-6">
-            <p className="text-xs tracking-wide text-[var(--text-muted)]">Ledger</p>
-            <h1 className="mt-2 text-[1.5rem] font-semibold text-[var(--text-primary)]">
+          <section className="border-b border-[var(--hairline)] pb-4 sm:pb-6">
+            <p className="hidden text-xs tracking-wide text-[var(--text-muted)] sm:block">Ledger</p>
+            <h1 className="text-base font-semibold text-[var(--text-primary)] sm:mt-2 sm:text-[1.5rem]">
               {buildHeroLine(localSummary)}
             </h1>
-            <p className="mt-3 max-w-2xl text-sm leading-6 text-[var(--text-secondary)]">
+            <p className="mt-2 hidden max-w-2xl text-sm leading-6 text-[var(--text-secondary)] sm:mt-3 sm:block">
               钱花在了让你成为现在这个你的事情上。先记下，不必立刻评判。
             </p>
           </section>

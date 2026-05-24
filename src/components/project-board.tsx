@@ -108,17 +108,18 @@ export function ProjectBoard({ initialProjects, signedIn }: { initialProjects: P
         description={`${items.length} 个项目 · 笔记可以在项目之间迁移和沉淀`}
       />
 
-      <section className="rounded-[var(--radius-2xl)] border border-[var(--hairline)] bg-[var(--material-elevated)] p-4 shadow-[var(--shadow-sm)] sm:p-5">
-        <div className="flex flex-col items-start justify-between gap-3 sm:flex-row sm:items-center">
+      <section className="rounded-[var(--radius-2xl)] border border-[var(--hairline)] bg-[var(--material-elevated)] p-3 shadow-[var(--shadow-sm)] sm:p-5">
+        <div className="flex flex-col items-start justify-between gap-2 sm:flex-row sm:items-center sm:gap-3">
           <div>
-            <div className="text-xs font-semibold text-[var(--text-muted)]">New Project</div>
-            <h2 className="mt-2 text-lg font-semibold text-[var(--text-primary)]">新建项目</h2>
+            <div className="hidden text-xs font-semibold text-[var(--text-muted)] sm:block">New Project</div>
+            <h2 className="text-base font-semibold text-[var(--text-primary)] sm:mt-2 sm:text-lg">新建项目</h2>
           </div>
-          <span className="rounded-[var(--radius-pill)] border border-[var(--border-default)] bg-[var(--interactive-active)] px-3 py-1 text-xs text-[var(--text-muted)]">看板视图</span>
+          <span className="hidden rounded-[var(--radius-pill)] border border-[var(--border-default)] bg-[var(--interactive-active)] px-3 py-1 text-xs text-[var(--text-muted)] sm:inline">看板视图</span>
         </div>
-        <div className="mt-4 grid gap-3 md:grid-cols-[minmax(0,1fr)_minmax(280px,0.9fr)_auto]">
+        <div className="mt-3 grid gap-2 sm:mt-4 sm:gap-3 md:grid-cols-[minmax(0,1fr)_minmax(280px,0.9fr)_auto]">
           <input value={name} onChange={(e) => setName(e.target.value)} placeholder="项目名称" className="h-11 w-full rounded-xl border border-[var(--hairline)] bg-[var(--material-inset)] px-4 text-sm text-[var(--text-primary)] outline-none placeholder:text-[var(--text-placeholder)] focus:border-[var(--border-focus)] transition-colors" />
-          <textarea value={description} onChange={(e) => setDescription(e.target.value)} placeholder="项目简介、目标或工作范围" className="min-h-[64px] w-full resize-none rounded-xl border border-[var(--hairline)] bg-[var(--material-inset)] px-4 py-3 text-sm text-[var(--text-primary)] outline-none placeholder:text-[var(--text-placeholder)] focus:border-[var(--border-focus)] transition-colors" />
+          {/* textarea 移动端隐藏：先用名字快速创建，后续可编辑补充描述 */}
+          <textarea value={description} onChange={(e) => setDescription(e.target.value)} placeholder="项目简介、目标或工作范围" className="hidden min-h-[64px] w-full resize-none rounded-xl border border-[var(--hairline)] bg-[var(--material-inset)] px-4 py-3 text-sm text-[var(--text-primary)] outline-none placeholder:text-[var(--text-placeholder)] focus:border-[var(--border-focus)] transition-colors sm:block" />
           <Button onClick={() => void createProject()} icon={<Plus size={16} />} className="w-full md:w-auto">创建项目</Button>
         </div>
       </section>
@@ -133,7 +134,7 @@ export function ProjectBoard({ initialProjects, signedIn }: { initialProjects: P
           const statusLabel = STATUS_OPTIONS.find((o) => o.value === (project.status || "active"))?.label ?? "进行中";
           return (
             <motion.div key={project.id} variants={staggerItem} layout>
-              <GlassPanel blur="lg" className="rounded-[var(--radius-2xl)] border-[var(--hairline)] p-5 transition duration-300">
+              <GlassPanel blur="lg" className="rounded-[var(--radius-2xl)] border-[var(--hairline)] p-3.5 transition duration-300 sm:p-5">
                 {editing ? (
                   <div className="space-y-3">
                     <input value={editingName} onChange={(e) => setEditingName(e.target.value)} placeholder="项目名称" className="w-full h-10 rounded-[var(--radius-sm)] border border-[var(--border-default)] bg-[var(--surface-base)] px-4 text-sm text-[var(--text-primary)] outline-none" />
@@ -156,10 +157,10 @@ export function ProjectBoard({ initialProjects, signedIn }: { initialProjects: P
                         </div>
                         <span className="inline-flex h-10 min-w-10 items-center justify-center rounded-2xl border border-[var(--border-default)] bg-[var(--interactive-active)] px-3 text-sm text-[var(--text-secondary)]">{project.noteCount}</span>
                       </div>
-                      <p className="mt-3 text-sm text-[var(--text-secondary)] leading-relaxed">{project.description || "暂未填写项目简介。"}</p>
-                      {project.updatedAt && <div className="mt-4 text-xs text-[var(--text-muted)]">最近活跃：{new Date(project.updatedAt).toLocaleString("zh-CN")}</div>}
+                      <p className="mt-2 line-clamp-2 text-sm text-[var(--text-secondary)] leading-relaxed sm:mt-3 sm:line-clamp-none">{project.description || "暂未填写项目简介。"}</p>
+                      {project.updatedAt && <div className="mt-3 hidden text-xs text-[var(--text-muted)] sm:mt-4 sm:block">最近活跃：{new Date(project.updatedAt).toLocaleString("zh-CN")}</div>}
                       {project.scheduleEvents?.length ? (
-                        <div className="mt-4 rounded-[var(--radius-lg)] border border-[var(--hairline)] bg-[var(--material-inset)] p-3">
+                        <div className="mt-3 hidden rounded-[var(--radius-lg)] border border-[var(--hairline)] bg-[var(--material-inset)] p-3 sm:mt-4 sm:block">
                           <div className="mb-2 flex items-center gap-2 text-xs text-[var(--text-muted)]">
                             <CalendarClock size={13} />
                             近期日程

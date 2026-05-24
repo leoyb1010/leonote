@@ -8,7 +8,10 @@ export default function FavoritesPage() {
     <PageContainer width="dashboard">
       <PageHeader title="收藏与记忆" />
       <div className="space-y-6">
-        <MemoryFactsPanel />
+        {/* MemoryFactsPanel 在移动端隐藏，让收藏列表直接进首屏；可在 /settings 查看 */}
+        <div className="hidden sm:block">
+          <MemoryFactsPanel />
+        </div>
         <ServerFilterView type="favorite" />
       </div>
     </PageContainer>

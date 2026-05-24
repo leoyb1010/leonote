@@ -55,13 +55,13 @@ export function AISettingsPanel() {
   };
 
   return (
-    <GlassPanel blur="xl" contentClassName="space-y-4" className="rounded-[var(--radius-lg)] p-5">
+    <GlassPanel blur="xl" contentClassName="space-y-3 sm:space-y-4" className="rounded-[var(--radius-lg)] p-3.5 sm:p-5">
       <div>
         <div className="text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider">AI Settings</div>
-        <h2 className="mt-2 text-base font-medium text-[var(--text-primary)] inline-flex items-center gap-2">
+        <h2 className="mt-1.5 text-base font-medium text-[var(--text-primary)] inline-flex items-center gap-2 sm:mt-2">
           <Bot className="h-4 w-4 text-[var(--ai-accent)]" />AI 工作搭子
         </h2>
-        <p className="mt-2 text-sm leading-relaxed text-[var(--text-muted)]">支持 DeepSeek OpenAI 兼容接口，可切换主模型 / 备用模型，并控制导入自动整理。</p>
+        <p className="mt-1.5 hidden text-sm leading-relaxed text-[var(--text-muted)] sm:mt-2 sm:block">支持 DeepSeek OpenAI 兼容接口，可切换主模型 / 备用模型，并控制导入自动整理。</p>
       </div>
 
       <div className="grid gap-3 md:grid-cols-2">

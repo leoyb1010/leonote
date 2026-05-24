@@ -45,13 +45,13 @@ export function MemoryFactsPanel() {
   );
 
   return (
-    <GlassPanel blur="xl" className="relative overflow-hidden rounded-[var(--radius-xl)] p-5">
-      <AISpark density={14} subdued className="opacity-60" />
-      <div className="relative z-10 space-y-5">
+    <GlassPanel blur="xl" className="relative overflow-hidden rounded-[var(--radius-xl)] p-3.5 sm:p-5">
+      <AISpark density={14} subdued className="hidden opacity-60 sm:block" />
+      <div className="relative z-10 space-y-3 sm:space-y-5">
         <div>
           <div className="text-[11px] font-semibold text-[var(--text-muted)]">Memory Facts</div>
-          <h2 className="mt-2 text-xl font-semibold text-[var(--text-primary)]">长期记忆</h2>
-          <p className="mt-2 text-sm leading-7 text-[var(--text-muted)]">
+          <h2 className="mt-1.5 text-base font-semibold text-[var(--text-primary)] sm:mt-2 sm:text-xl">长期记忆</h2>
+          <p className="mt-2 hidden text-sm leading-7 text-[var(--text-muted)] sm:block">
             这里放的是稳定信息，不是普通笔记。切换类别时使用 stagger 淡出重排，帮助你快速理解记忆分布。
           </p>
         </div>

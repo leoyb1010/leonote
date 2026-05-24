@@ -132,13 +132,13 @@ function statusIcon(status: string) {
 
 function MetricCard({ label, value, hint, icon }: { label: string; value: string; hint: string; icon: React.ReactNode }) {
   return (
-    <div className="quiet-inset min-w-0 rounded-[var(--radius-xl)] p-4">
+    <div className="quiet-inset min-w-0 rounded-[var(--radius-xl)] p-2.5 sm:p-4">
       <div className="flex items-center gap-2 text-xs text-[var(--text-muted)]">
-        <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-[var(--material-elevated)] text-[var(--text-secondary)]">{icon}</span>
+        <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-[var(--material-elevated)] text-[var(--text-secondary)] sm:h-7 sm:w-7">{icon}</span>
         {label}
       </div>
-      <p className="mt-3 text-2xl font-semibold text-[var(--text-primary)] numeric-display">{value}</p>
-      <p className="mt-1 text-xs text-[var(--text-muted)]">{hint}</p>
+      <p className="mt-1.5 text-lg font-semibold text-[var(--text-primary)] numeric-display sm:mt-3 sm:text-2xl">{value}</p>
+      <p className="mt-1 hidden text-xs text-[var(--text-muted)] sm:block">{hint}</p>
     </div>
   );
 }
@@ -322,7 +322,7 @@ export function SchedulePage({ initialEvents, references, signedIn }: Props) {
         actions={<Button icon={<Plus size={15} />} onClick={focusCreateForm}>加入日程</Button>}
       />
 
-      <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+      <section className="grid grid-cols-2 gap-2 sm:grid-cols-2 sm:gap-3 xl:grid-cols-4">
         <MetricCard label="今天" value={String(computedSummary.today)} hint="计划中的时间块" icon={<Clock3 size={15} />} />
         <MetricCard label="本周" value={String(computedSummary.week)} hint="本周安排总量" icon={<CalendarClock size={15} />} />
         <MetricCard label="待补" value={String(computedSummary.overdue)} hint="已过期未完成" icon={<Flag size={15} />} />
