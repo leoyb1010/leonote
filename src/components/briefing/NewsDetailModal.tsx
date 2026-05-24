@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { AnimatePresence, motion } from "framer-motion";
-import { ArrowUpRight, Bookmark, Clock3, FilePlus2, Loader2, Sparkles, Tags, X } from "lucide-react";
+import { ArrowUpRight, Bookmark, ChevronDown, Clock3, FilePlus2, Loader2, Sparkles, Tags, X } from "lucide-react";
 import { Button } from "@/components/base/Button";
 import { categoryLabel } from "@/lib/briefing/display";
 import { proxyImageUrl } from "@/lib/briefing/utils";
@@ -26,19 +26,45 @@ function formatTime(input: string) {
   });
 }
 
+const COMMENT_NOISE_RE = /^(回复|楼主|沙发|板凳|引用|附议|点赞|收藏|举报|顶|踩|来自|发表于|发布于|edited|reply|re[:：]|@[\w一-鿿-]+)/i;
+const COMMENT_META_RE = /(\d+\s*个?\s*(回复|评论|赞|楼|帖子))|^#?\d+\s*(楼|f|F)\b|^\d{1,2}[:：]\d{2}([:：]\d{2})?$|^\d{4}[-/.]\d{1,2}[-/.]\d{1,2}/;
+const SHORT_REPLY_RE = /^(同意|赞同|\+1|顶|\+\+|哈哈哈|niubi|nb|牛逼|👍|🆙|mark|占楼|学习了|确实|的确|没错|好的|谢谢|感谢)/i;
+
 function safeDetailText(input: string) {
-  return input
+  const lines = input
     .split(/\n+/)
     .map((line) => line.trim())
     .filter((line) => {
-      if (line.length < 8) return false;
+      if (line.length < 12) return false;
       if (/^(id|guid|url|source|content|score|json|rss|api)\s*[:=：]/i.test(line)) return false;
       if (/https?:\/\/|utm_|cookie|subscribe|copyright|read more/i.test(line)) return false;
+      if (COMMENT_NOISE_RE.test(line)) return false;
+      if (COMMENT_META_RE.test(line)) return false;
+      if (SHORT_REPLY_RE.test(line) && line.length < 40) return false;
+      // 行内带大量 emoji / 重复短回复符号也丢
+      if ((line.match(/[😂🤣👍😄😅🙏❤️🔥]/g)?.length ?? 0) >= 3) return false;
       return true;
-    })
-    .join("\n")
-    .slice(0, 1600)
-    .trim();
+    });
+
+  // 去重：避免同一段重复出现（社区帖常见）
+  const seen = new Set<string>();
+  const deduped: string[] = [];
+  for (const line of lines) {
+    const key = line.slice(0, 48);
+    if (seen.has(key)) continue;
+    seen.add(key);
+    deduped.push(line);
+  }
+
+  return deduped.join("\n").slice(0, 1600).trim();
+}
+
+function splitIntoSentences(text: string, limit = 4): string[] {
+  return text
+    .split(/(?<=[。！？!?])\s+|\n+/)
+    .map((s) => s.trim())
+    .filter((s) => s.length >= 14)
+    .slice(0, limit);
 }
 
 function scoreLabel(score: number | null) {
@@ -52,10 +78,18 @@ function scoreLabel(score: number | null) {
 export function NewsDetailModal({ item, anchorRect, onClose, onPatchItem }: Props) {
   const [saving, setSaving] = useState(false);
   const [imageHidden, setImageHidden] = useState(false);
+  const [showRawDetail, setShowRawDetail] = useState(false);
   const [panelPosition, setPanelPosition] = useState<{ top: number; left: number; width: number; maxHeight: number } | null>(null);
   const panelRef = useRef<HTMLDivElement>(null);
   const detailText = useMemo(() => safeDetailText(item.detailText || item.aiSummary || item.excerpt || ""), [item.detailText, item.aiSummary, item.excerpt]);
-  const summaryText = item.aiSummary || item.excerpt || detailText || "摘要正在生成，先看下方正文摘录。";
+  const summaryText = item.aiSummary?.trim() || item.excerpt?.trim() || splitIntoSentences(detailText, 2).join(" ") || "摘要正在生成，可阅读原文获取完整内容。";
+  // 当 aiKeyPoints 为空时，从 detailText 自动拆出 2-3 句作为关键要点兜底，避免详情只剩一坨"正文摘录"
+  const keyPoints = useMemo(() => {
+    if (item.aiKeyPoints.length > 0) return item.aiKeyPoints;
+    const sentences = splitIntoSentences(detailText, 3);
+    // 不要把摘要那句重复成"要点"
+    return sentences.filter((s) => !summaryText.includes(s.slice(0, 18)));
+  }, [item.aiKeyPoints, detailText, summaryText]);
   const imageUrl = !imageHidden ? proxyImageUrl(item.imageUrl) : null;
 
   useEffect(() => {
@@ -234,19 +268,22 @@ export function NewsDetailModal({ item, anchorRect, onClose, onPatchItem }: Prop
                 </div>
               ) : null}
 
-              <section className="mt-6 rounded-[var(--radius-lg)] border border-[var(--hairline)] bg-[var(--material-inset)] p-4">
-                <p className="mb-2 text-xs font-medium text-[var(--primary)]">智能摘要</p>
-                <p className="font-[var(--font-reading)] text-[15px] leading-7 text-[var(--text-secondary)]">
+              <section className="mt-6 rounded-[var(--radius-lg)] border border-[var(--primary-soft)] bg-[var(--primary-soft)]/40 p-4 sm:p-5">
+                <p className="mb-2 inline-flex items-center gap-1.5 text-xs font-medium text-[var(--primary)]">
+                  <Sparkles size={12} />
+                  核心摘要
+                </p>
+                <p className="font-[var(--font-reading)] text-[15px] leading-7 text-[var(--text-primary)] sm:text-base sm:leading-8">
                   {summaryText}
                 </p>
               </section>
 
-              {item.aiKeyPoints.length > 0 ? (
+              {keyPoints.length > 0 ? (
                 <section className="mt-5">
-                  <p className="mb-3 text-xs font-medium text-[var(--text-secondary)]">值得留意</p>
+                  <p className="mb-3 text-xs font-medium text-[var(--text-secondary)]">关键要点</p>
                   <ul className="space-y-2.5">
-                    {item.aiKeyPoints.map((point) => (
-                      <li key={point} className="flex gap-2.5 font-[var(--font-reading)] text-sm leading-6 text-[var(--text-secondary)]">
+                    {keyPoints.map((point) => (
+                      <li key={point} className="flex gap-2.5 font-[var(--font-reading)] text-[14px] leading-6 text-[var(--text-secondary)]">
                         <span className="mt-2.5 h-1.5 w-1.5 shrink-0 rounded-full bg-[var(--primary)] opacity-70" />
                         <span>{point}</span>
                       </li>
@@ -255,14 +292,31 @@ export function NewsDetailModal({ item, anchorRect, onClose, onPatchItem }: Prop
                 </section>
               ) : null}
 
-              {detailText ? (
+              {detailText && detailText !== summaryText ? (
                 <section className="mt-5">
-                  <p className="mb-3 text-xs font-medium text-[var(--text-secondary)]">正文摘录</p>
-                  <p className="whitespace-pre-line font-[var(--font-reading)] text-sm leading-7 text-[var(--text-secondary)]">
-                    {detailText}
-                  </p>
+                  <button
+                    type="button"
+                    onClick={() => setShowRawDetail((v) => !v)}
+                    className="inline-flex items-center gap-1.5 text-xs font-medium text-[var(--text-muted)] transition-colors hover:text-[var(--text-primary)]"
+                    aria-expanded={showRawDetail}
+                  >
+                    <ChevronDown
+                      size={14}
+                      className={`transition-transform ${showRawDetail ? "rotate-180" : ""}`}
+                    />
+                    {showRawDetail ? "收起原文摘录" : "展开原文摘录"}
+                  </button>
+                  {showRawDetail ? (
+                    <p className="mt-3 whitespace-pre-line font-[var(--font-reading)] text-[13px] leading-6 text-[var(--text-muted)]">
+                      {detailText}
+                    </p>
+                  ) : null}
                 </section>
               ) : null}
+
+              <p className="mt-6 text-[11px] leading-5 text-[var(--text-faint)]">
+                完整内容请点击底部「阅读原文」前往源站点查看。
+              </p>
             </div>
           </div>
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { AlertCircle, CheckCircle2, Clock3, Database, Loader2, Tags } from "lucide-react";
 import { BriefingHero, type BriefingHeroStats } from "./BriefingHero";
@@ -43,6 +43,16 @@ function formatDateLabel() {
     day: "numeric",
     weekday: "long",
   });
+}
+
+// 用上海时区的"自然日"作为简报跨日基准（与服务端 horoscope.ts shanghaiDayKey 对齐）
+function shanghaiDayKey(now: Date = new Date()) {
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Shanghai",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(now);
 }
 
 function formatShortTime(input: string | null) {
@@ -325,6 +335,31 @@ export function BriefingShell({
       document.removeEventListener("visibilitychange", onVisibility);
     };
   }, [refreshMarkets]);
+
+  // 跨日自动刷新：以上海时区为准，检测到换天就 force refresh 一次（星座/精选/digest 都会跟着更新）
+  const refreshRef = useRef<(r?: BriefingRange, c?: CategoryFilter, force?: boolean) => Promise<void>>(() => Promise.resolve());
+  useEffect(() => {
+    refreshRef.current = (r, c, force) => refresh(r ?? range, c ?? category, force ?? false);
+  });
+  useEffect(() => {
+    let lastDay = shanghaiDayKey();
+    const check = () => {
+      const today = shanghaiDayKey();
+      if (today !== lastDay) {
+        lastDay = today;
+        void refreshRef.current(undefined, undefined, true);
+      }
+    };
+    const interval = window.setInterval(check, 60_000);
+    const onVisibility = () => {
+      if (!document.hidden) check();
+    };
+    document.addEventListener("visibilitychange", onVisibility);
+    return () => {
+      window.clearInterval(interval);
+      document.removeEventListener("visibilitychange", onVisibility);
+    };
+  }, []);
 
   function patchItem(itemId: string, patch: Partial<Pick<NewsItemDTO, "isRead" | "isFavorited" | "isImported" | "importedNoteId">>) {
     setItems((prev) => prev.map((item) => (item.id === itemId ? { ...item, ...patch } : item)));
