@@ -171,8 +171,8 @@ function HoroscopeStrip({ horoscopes, onSelect }: { horoscopes: HoroscopeDTO[]; 
           Today&apos;s Stars
         </span>
       </div>
-      {/* 移动端：单行横滚紧凑卡；md 及以上：2 列网格 */}
-      <div className="-mx-1 flex flex-1 gap-2 overflow-x-auto px-1 pb-1 no-scrollbar md:mx-0 md:grid md:grid-cols-2 md:gap-3 md:overflow-visible md:px-0 md:pb-0">
+      {/* 移动端：纵向 list（每行一个家人全宽，1 屏看全 3 张）；md 及以上：保持原 2 列网格 */}
+      <div className="flex flex-1 flex-col gap-2 md:grid md:grid-cols-2 md:gap-3">
         {horoscopes.length === 0 ? (
           <div className="flex w-full items-center justify-center rounded-xl bg-black/5 p-4 text-[11px] text-[var(--text-muted)] dark:bg-white/5 md:col-span-2">
             <Loader2 size={14} className="animate-spin mr-2" /> 实时星座源同步中...
@@ -196,17 +196,27 @@ function HoroscopeStrip({ horoscopes, onSelect }: { horoscopes: HoroscopeDTO[]; 
               }}
               whileHover={{ y: -2, scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
-              className="group flex min-w-[170px] shrink-0 cursor-pointer flex-col justify-between rounded-xl border border-white/20 bg-white/40 p-2.5 text-left backdrop-blur-md transition-colors hover:bg-white/60 dark:border-white/10 dark:bg-black/20 dark:hover:bg-white/5 md:min-w-0 md:shrink md:p-3"
+              className="group cursor-pointer rounded-xl border border-white/20 bg-white/40 p-2.5 text-left backdrop-blur-md transition-colors hover:bg-white/60 dark:border-white/10 dark:bg-black/20 dark:hover:bg-white/5 md:p-3"
             >
-              <div className="flex w-full items-center justify-between gap-2">
-                <span className="truncate text-sm font-medium text-[var(--text-primary)]">
-                  {item.name}
+              {/* 移动端：水平 row（名字+摘要 vs 星等）；桌面端：纵向 col */}
+              <div className="flex items-center gap-3 md:flex-col md:items-stretch md:gap-0">
+                <div className="flex min-w-0 flex-1 flex-col md:contents">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="truncate text-sm font-medium text-[var(--text-primary)]">
+                      {item.name}
+                    </span>
+                    <span className="hidden md:inline-flex">
+                      <StarRating value={item.stars} />
+                    </span>
+                  </div>
+                  <p className="line-clamp-1 text-xs leading-snug text-[var(--text-secondary)] opacity-80 md:mt-2 md:line-clamp-2 md:leading-relaxed">
+                    {item.summary}
+                  </p>
+                </div>
+                <span className="shrink-0 md:hidden">
+                  <StarRating value={item.stars} />
                 </span>
-                <StarRating value={item.stars} />
               </div>
-              <p className="mt-1.5 line-clamp-1 text-xs leading-relaxed text-[var(--text-secondary)] opacity-80 md:mt-2 md:line-clamp-2">
-                {item.summary}
-              </p>
             </motion.button>
           ))
         )}
