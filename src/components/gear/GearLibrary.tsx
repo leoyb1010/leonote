@@ -560,7 +560,7 @@ export function GearLibrary({ initialItems, initialSummary, expenseCategories }:
       <section className="grid gap-3 rounded-[var(--radius-2xl)] border border-[var(--hairline)] bg-[var(--material-elevated)] p-4 shadow-[var(--shadow-sm)] lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center">
         <div className="min-w-0">
           <p className="text-xs text-[var(--text-muted)]">Gear Library</p>
-          <h2 className="mt-1 text-xl font-semibold text-[var(--text-primary)]">我的装备对象库</h2>
+          <h2 className="mt-1 text-xl font-semibold text-[var(--text-primary)]">Leo 物资装备库</h2>
           <p className="mt-2 max-w-2xl text-sm leading-6 text-[var(--text-secondary)]">
             设备型号、购买渠道、保修、价格和状态统一管理，链接读取和手动录入可以混用。
           </p>

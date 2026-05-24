@@ -4,7 +4,7 @@
 </h1>
 
 <p align="center">
-  <b>自托管优先的个人笔记、长期记忆、每日简报、装备库与轻记账应用。</b><br>
+  <b>自托管优先的个人笔记、长期记忆、每日简报、Leo 物资装备库与轻记账应用。</b><br>
   把想法安放成时间里的智慧 — A quiet home for notes, memory, and daily intelligence.<br>
   <a href="#产品预览">产品预览</a> ·
   <a href="#核心模块">核心模块</a> ·
@@ -18,7 +18,7 @@
 
 <p align="center">
   <a href="https://github.com/leoyb1010/leonote/releases">
-    <img alt="Version" src="https://img.shields.io/badge/version-v1.8.1-7B84F6?style=flat-square">
+    <img alt="Version" src="https://img.shields.io/badge/version-v1.8.2-7B84F6?style=flat-square">
   </a>
   <img alt="Next.js" src="https://img.shields.io/badge/Next.js-16-111111?style=flat-square&logo=nextdotjs&logoColor=white">
   <img alt="React" src="https://img.shields.io/badge/React-19-149ECA?style=flat-square&logo=react&logoColor=white">
@@ -75,7 +75,7 @@
 | AI 协助思考 | 从国内外当日大事件、AI 科技行业与重要公开信息中筛选深度影响事件，形成大事件雷达 + 7 条可继续推演的思考 |
 | 全局 AI 助手 | 从当前页面呼出，自动带入路径、标题、选中文本与页面摘要，适合边读边问、边写边整理 |
 | 日程 | 个人时间线、今日/本周视图、日程关联笔记/项目/装备，让内容进入具体时间块 |
-| 装备库与记账 | 设备/物品型号快速入库，记录价格、渠道、保修、序列号、状态与位置；可同步生成关联支出，并保留快速记账、分类管理、周/月统计、软删除与历史保留 |
+| Leo 物资装备库与记账 | 设备/物品型号快速入库，记录价格、渠道、保修、序列号、状态与位置；可同步生成关联支出，并保留快速记账、分类管理、周/月统计、软删除与历史保留 |
 | 自托管与跨端 | SQLite 单文件、Docker / PM2 / Node 部署、PWA、Tauri WebView 壳、Mac / PC / iPad / 手机统一访问 |
 
 ## 快速开始
@@ -202,8 +202,8 @@ RSSHUB_BASE_URL="https://rsshub.app"
 - 大屏工作台宽度升级到 1680px 档位，首页、笔记库、项目、装备与日程减少两侧空白，按页面类型提升信息密度
 - Cal-like 工作台视觉：统一 PageHeader、对象库列表、指标卡、快捷入口、图标语义和移动端底部导航
 
-### 装备库与记账 (v1.7)
-- `/ledger` 默认进入「装备库」模式，原轻记账完整保留在同页「记账」标签下
+### Leo 物资装备库与记账 (v1.7)
+- `/ledger` 默认进入「Leo 物资装备库」模式，原轻记账完整保留在同页「记账」标签下
 - 快速入库：输入设备/物品型号、价格、渠道、保修、序列号等自然文本，自动拆出品牌、分类、金额、购买渠道与保修日期
 - 链接识别：粘贴商品页链接可自动读取 JSON-LD / OpenGraph 中的设备型号、品牌、价格、币种、商品摘要与部分规格，作为可编辑草稿入库
 - 装备详情：支持状态、位置、序列号、购买日期、保修到期、规格 JSON、备注与软删除
@@ -418,6 +418,7 @@ Base URL 安全规则：
 
 | 版本 | 日期 | 更新内容 |
 |---|---|---|
+| **v1.8.2** | 2026-05-24 | 每日简报详情与移动端体验大升级，并整站铺开移动端紧凑化；品牌侧把"装备库"正式升级为「Leo 物资装备库」。简报详情：核心摘要改为醒目卡片置顶展示，关键要点在 `aiKeyPoints` 为空时自动从 `detailText` 拆出 2-3 句兜底，正文摘录默认折叠为"展开原文摘录"按钮，且强化 RSS 噪音过滤（评论标记 `回复/楼主/沙发/引用/Reply/Re:/@用户名`、楼层元数据 `12 个回复`/`#3 楼`、纯时间戳 / 日期前缀、`+1/同意/哈哈哈/mark` 等短回复、连续 emoji 行整行丢弃，并按行前 48 字符去重），社区源详情不再被评论占满。简报自动跨日：客户端按 `Asia/Shanghai` 自然日检测换天，每 60s + `visibilitychange→visible` 时校验，跨日时强制 `refresh=1` 调用，服务端 `getDailyHoroscopes(force)` 同步重拉，星座 / 大事件 / 资讯统一跟随北京日历滚动到新一天，不再需要手动 F5。简报移动端 Hero 紧凑化：标题改 `text-2xl` 单行；"刷新简报 / 存为笔记 / 复制摘要"三按钮在移动端折成"刷新 + ⋯ 菜单"，桌面端 Bento 保持原样；`Information` / `Avg Score` / `Top Tags` 三个 Bento stats 卡在 `md` 以下整体 hidden（侧栏 / 底部 TagInsights 已有同款）；`MobileBriefingNav` 锚点条移除；`Market Pulse` 默认折叠为一行 4 个紧凑 chip（前 3-4 个市场 + 涨跌幅），点击 chevron 展开完整横滚卡片；`HoroscopeStrip` 从原 2×2 网格改为移动端纵向 list（每行一个家人：左侧名字 + 摘要 line-clamp-1，右侧星等），三张卡 1 屏内全部可见。移动端首屏在第一条新闻之前从 ~1000px 压缩到 ~350px。整站铺开移动端紧凑化（桌面端 0 改动）：`/schedule` MetricCard 在 mobile 改为 `grid-cols-2` 紧凑布局，padding 缩小，hint 隐藏；`/ledger` 顶部 hero icon + `Object Library` eyebrow + 描述行在 mobile 隐藏，标题 `text-lg`，Ledger 子 hero 描述行隐藏，`LedgerDashboard` 改 `grid-cols-2` 紧凑卡且 `TrendLine` SVG 卡在 mobile 隐藏，`CategoryDistribution` 默认只显前 4 类、"还有 N 类"按钮展开；`/settings` `AccountCenter` 4 个 status 子卡 + 创建/更新/模式三行细节在 mobile 隐藏，头像 `h-10`，`AISettingsPanel` 与 `MemoryFactsPanel` 描述行 / `AISpark` 背景动画 mobile 隐藏，整体 padding 缩小；`/favorites` `MemoryFactsPanel` 整段在 mobile 隐藏（在 `/settings` 仍可查看），收藏列表直接进首屏；`/projects` 新建项目区域 `Object Library` eyebrow + "看板视图" chip mobile 隐藏，`textarea` 在 mobile 隐藏（先用名字快速创建、回头编辑补描述），项目卡 padding `p-3.5`、描述 `line-clamp-2`，"最近活跃" + "近期日程" 在 mobile 隐藏。品牌：`/ledger` 主标题、`GearLibrary` Hero 标题统一升级为「Leo 物资装备库」，README slogan / 核心模块表 / 功能总览章节标题同步；侧栏与移动端底部 Tab 因空间限制保留"装备库"短称 |
 | **v1.1.1** | 2026-05-22 | 安全加固：修复导入链接和 AI Base URL SSRF 重定向绕过；JSON API 非法 body 返回 400；笔记标签事务一致性；首个用户注册并发保护；自动保存 dirty 队列；PWA cache version 注入；E2E 数据库隔离说明 |
 | **v1.8.1** | 2026-05-18 | 按 review 文档完成第一轮 + 第二轮升级收尾：修复新建笔记保存失败的根因，当前数据库缺失 `NoteFts` 虚拟表时会导致 Prisma 创建笔记触发器报错，现在新增修复迁移与运行时自愈，创建/更新/删除笔记前会确保 FTS 表、触发器和回填数据存在；移动端底部导航改为「今天 / 简报 / 新建 / 笔记 / 装备库」，补齐装备库入口、safe-area 底部间距和 PWA manifest 快捷入口；首页、简报、笔记库、归档、收藏、搜索、日记和废纸篓统一使用更宽的工作台容器，减少 1440px-1920px 网页端两侧空白；简报继续压缩 Hero 与市场温度区，精选证据和全部资讯恢复大屏多列密度，行情刷新在页面隐藏时暂停，资讯收藏/已读失败会回滚；首页开始书写菜单改为受控弹层，快速记录支持 Enter 保存、Shift+Enter 换行并避开中文输入法误触；记账/装备库标签状态写入 URL，刷新或直接访问 `/ledger?tab=ledger` 不再丢状态；按钮 `asChild` 支持 loading/icon，命令面板补齐核心页面入口；PWA service worker 增加静态资源 cache-first 与更新提示，减少 App Router chunk stale 导致的首次点击失败；清理旧版重复 `app-shell` / `bottom-nav` 残留文件；刷新 README 最新桌面端、笔记编辑和移动端简报截图，并完成 typecheck、lint、test、build、CI 与多分辨率 Playwright 验证 |
 | **v1.8.0** | 2026-05-18 | 新增个人日程模块 `/schedule` 与 `/api/schedule`：支持今日/本周时间线、创建时间块、完成/恢复/软删除、颜色标记，并可关联笔记、项目和装备；首页接入今日日程，项目卡片显示近期关联日程；设计系统按 Cal-like 工作台方向继续统一，PageContainer 大屏宽度提升到 1680px，导航、PageHeader、首页、笔记库、项目、装备/记账入口统一为更清晰的对象库与工作台语言；补充日程 helper 回归测试 |

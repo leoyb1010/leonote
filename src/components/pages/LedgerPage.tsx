@@ -168,7 +168,7 @@ export function LedgerPage({ signedIn, categories, summary, gearItems, gearSumma
             </span>
             <div className="min-w-0">
               <p className="hidden text-xs text-[var(--text-muted)] sm:block">Object Library</p>
-              <h1 className="text-lg font-semibold text-[var(--text-primary)] sm:mt-1 sm:text-2xl">装备库与记账</h1>
+              <h1 className="text-lg font-semibold text-[var(--text-primary)] sm:mt-1 sm:text-2xl">Leo 物资装备库</h1>
               <p className="mt-1 hidden max-w-2xl text-sm leading-6 text-[var(--text-secondary)] sm:mt-2 sm:block">
                 设备、物品、价格、保修和日常支出放在同一个工作台里。
               </p>
