@@ -20,10 +20,10 @@ export function checkRateLimit(
     buckets.set(key, { count: 1, resetAt: now + windowMs });
     return { ok: true };
   }
-  bucket.count += 1;
-  if (bucket.count > limit) {
+  if (bucket.count >= limit) {
     return { ok: false, retryAfterMs: bucket.resetAt - now };
   }
+  bucket.count += 1;
 
   // Periodic cleanup: remove expired entries when map grows large
   if (buckets.size > 5000) {

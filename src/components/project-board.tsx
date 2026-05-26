@@ -33,8 +33,6 @@ export function ProjectBoard({ initialProjects, signedIn }: { initialProjects: P
   const [editingName, setEditingName] = useState("");
   const [editingDescription, setEditingDescription] = useState("");
   const [editingStatus, setEditingStatus] = useState("active");
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [draggingProjectId, setDraggingProjectId] = useState<string | null>(null);
   const [draggingNoteId, setDraggingNoteId] = useState<string | null>(null);
   const [dropTargetId, setDropTargetId] = useState<string | null>(null);
 
@@ -188,7 +186,7 @@ export function ProjectBoard({ initialProjects, signedIn }: { initialProjects: P
                     </div>
                     <div className="mt-4 space-y-3">
                       {(project.previewNotes || []).length ? (project.previewNotes || []).map((note) => (
-                        <div key={note.id} draggable onDragStart={(e) => { e.dataTransfer.setData("text/plain", note.id); setDraggingNoteId(note.id); setDraggingProjectId(project.id); }} onDragEnd={() => { setDraggingNoteId(null); setDraggingProjectId(null); setDropTargetId(null); }} className={draggingNoteId === note.id ? "opacity-60" : "opacity-100"}>
+                        <div key={note.id} draggable onDragStart={(e) => { e.dataTransfer.setData("text/plain", note.id); setDraggingNoteId(note.id); }} onDragEnd={() => { setDraggingNoteId(null); setDropTargetId(null); }} className={draggingNoteId === note.id ? "opacity-60" : "opacity-100"}>
                           <NoteCard note={note} compact className="cursor-grab active:cursor-grabbing" />
                         </div>
                       )) : <div className="rounded-[var(--radius-sm)] border border-[var(--border-default)] bg-[var(--interactive-hover)] px-3 py-3 text-xs text-[var(--text-muted)]">当前项目还没有可拖动的最近笔记。</div>}
