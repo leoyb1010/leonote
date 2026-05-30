@@ -26,11 +26,23 @@ function arg(flag: string): string | undefined {
 
 async function resolveUserId(): Promise<string> {
   const explicit = arg("--user");
-  if (explicit) return explicit;
-  const first = await prisma.user.findFirst({ orderBy: { createdAt: "asc" }, select: { id: true, email: true } });
-  if (!first) throw new Error("no user found — register the first leonote user before minting tokens");
-  console.log(`(using owner: ${first.email ?? first.id})`);
-  return first.id;
+  if (explicit) {
+    const u = await prisma.user.findFirst({
+      where: { OR: [{ id: explicit }, { email: explicit }] },
+      select: { id: true, email: true },
+    });
+    if (!u) throw new Error(`no user matches --user "${explicit}" (try id or email)`);
+    console.log(`(owner: ${u.email ?? u.id})`);
+    return u.id;
+  }
+  const users = await prisma.user.findMany({ orderBy: { createdAt: "asc" }, select: { id: true, email: true } });
+  if (users.length === 0) throw new Error("no user found — register the first leonote user before minting tokens");
+  if (users.length > 1) {
+    const list = users.map((u) => `  - ${u.email ?? "(no email)"}  (${u.id})`).join("\n");
+    throw new Error(`multiple users exist — pass --user <id|email> to pick the owner:\n${list}`);
+  }
+  console.log(`(owner: ${users[0].email ?? users[0].id})`);
+  return users[0].id;
 }
 
 async function main() {
