@@ -74,9 +74,11 @@ async function translateOneBatch(texts: string[], apiKey: string): Promise<strin
           { role: "system", content: "你是专业新闻编辑。将输入的外文或中英混杂资讯翻译/改写为自然、准确的简体中文（不要使用繁体）。输出的每行简体中文需与输入顺序一一对应，仅输出结果，不加编号。" },
           { role: "user", content: prompt },
         ],
+        // 推理型模型（deepseek-v4-flash）会先消耗 reasoning_content token，
+        // 需在"输出估算"之外预留充足推理余量，否则 content 被截断为空导致整批翻译回退原文
         max_tokens: Math.min(
-          6000,
-          Math.max(2048, Math.ceil(normalizedTexts.join("").length * 1.2) + texts.length * 80),
+          8000,
+          Math.max(4000, Math.ceil(normalizedTexts.join("").length * 1.2) + texts.length * 80 + 4000),
         ),
         temperature: 0.2,
       }),
@@ -151,7 +153,7 @@ export async function translateBatch(texts: string[]): Promise<string[]> {
   const apiKey = await getAIKey();
   if (!apiKey) { console.error("[translate] no API key"); return texts; }
 
-  const chunkSize = 12;
+  const chunkSize = 8; // 推理模型批次越小，单次推理开销越可控，避免超时与截断
   const result: string[] = [...texts];
   const maxItems = Number.isFinite(TRANSLATE_MAX_ITEMS)
     ? Math.max(0, TRANSLATE_MAX_ITEMS)

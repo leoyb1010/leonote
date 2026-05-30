@@ -17,7 +17,8 @@
     "test:e2e": "playwright test",
     "ci": "npm run lint && npm run typecheck && npm run test && npm run build",
     "briefing:cron": "tsx scripts/cron/briefing-worker.ts",
-    "reminder:cron": "tsx scripts/cron/reminder-worker.ts"
+    "reminder:cron": "tsx scripts/cron/reminder-worker.ts",
+    "agent:token": "tsx scripts/agent-token.ts"
   },
   "dependencies": {
     "@prisma/client": "^6.7.0",
