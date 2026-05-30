@@ -21,6 +21,7 @@ model User {
   dailyNotes   DailyNote[]
   projects     Project[]
   scheduleEvents ScheduleEvent[]
+  agentTokens AgentToken[]
 
   // v1.5 Ledger
   expenseCategories ExpenseCategory[]
@@ -33,6 +34,37 @@ model User {
   // UserBriefingState has no FK to User (ownership enforced via @@unique).
   aiSetting   AISetting?
   memoryFacts MemoryFact[]
+}
+
+model AgentToken {
+  id         String    @id @default(cuid())
+  userId     String
+  name       String
+  tokenHash  String    @unique
+  scopes     String    @default("note:write,schedule:write")
+  lastUsedAt DateTime?
+  revoked    Boolean   @default(false)
+  createdAt  DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, revoked])
+}
+
+model IngestLog {
+  id             String   @id @default(cuid())
+  userId         String
+  idempotencyKey String
+  source         String
+  rawPayload     String
+  resultNoteId   String?
+  resultEventId  String?
+  status         String
+  message        String   @default("")
+  createdAt      DateTime @default(now())
+
+  @@unique([userId, idempotencyKey])
+  @@index([userId, createdAt])
 }
 
 model Note {
@@ -200,6 +232,10 @@ model ScheduleEvent {
   projectId   String?
   gearItemId  String?
   color       String    @default("slate")
+  remindAt      DateTime?
+  remindOffset  Int?
+  reminderSent  Boolean   @default(false)
+  notifyChannel String?
   deletedAt   DateTime?
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
@@ -212,6 +248,7 @@ model ScheduleEvent {
   @@index([userId, startAt])
   @@index([userId, status])
   @@index([userId, deletedAt])
+  @@index([reminderSent, remindAt])
   @@index([noteId])
   @@index([projectId])
   @@index([gearItemId])

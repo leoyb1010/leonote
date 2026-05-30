@@ -22,6 +22,7 @@ describe("schedule helpers", () => {
     expect(scheduleStatusLabel("done")).toBe("已完成");
     expect(scheduleStatusLabel("unknown")).toBe("计划中");
     expect(scheduleSourceLabel("project")).toBe("项目");
+    expect(scheduleSourceLabel("agent")).toBe("外部 Agent");
     expect(scheduleSourceLabel("unknown")).toBe("手动");
   });
 });

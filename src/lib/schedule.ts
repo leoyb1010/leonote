@@ -2,7 +2,7 @@ import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 
 export const SCHEDULE_STATUS_OPTIONS = ["planned", "done", "canceled"] as const;
-export const SCHEDULE_SOURCE_OPTIONS = ["manual", "note", "project", "briefing", "gear"] as const;
+export const SCHEDULE_SOURCE_OPTIONS = ["manual", "note", "project", "briefing", "gear", "agent"] as const;
 export const SCHEDULE_COLOR_OPTIONS = ["slate", "violet", "blue", "emerald", "amber", "rose"] as const;
 
 export type ScheduleStatus = (typeof SCHEDULE_STATUS_OPTIONS)[number];
@@ -59,6 +59,7 @@ export function scheduleSourceLabel(source: string) {
     project: "项目",
     briefing: "简报",
     gear: "装备",
+    agent: "外部 Agent",
   };
   return labels[SCHEDULE_SOURCE_OPTIONS.includes(source as ScheduleSource) ? source as ScheduleSource : "manual"];
 }
@@ -79,6 +80,10 @@ export function toScheduleDTO(item: ScheduleEventWithRelations) {
     noteId: item.noteId,
     projectId: item.projectId,
     gearItemId: item.gearItemId,
+    remindAt: item.remindAt?.toISOString() ?? null,
+    remindOffset: item.remindOffset,
+    reminderSent: item.reminderSent,
+    notifyChannel: item.notifyChannel,
     createdAt: item.createdAt.toISOString(),
     updatedAt: item.updatedAt.toISOString(),
     note: item.note ? { id: item.note.id, title: item.note.title } : null,
