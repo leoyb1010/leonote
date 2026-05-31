@@ -68,6 +68,19 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
     parsed.data.gearItemId ? prisma.gearItem.findFirst({ where: { id: parsed.data.gearItemId, userId, deletedAt: null }, select: { id: true } }) : null,
   ]);
 
+  // When the event is rescheduled, the reminder must follow it. Without this,
+  // a reminder fires at the stale time (or never, if already sent and the event
+  // was moved into the future). Recompute remindAt from the offset and re-arm
+  // reminderSent when the new reminder time is still in the future.
+  const reminderUpdate: { remindAt?: Date; reminderSent?: boolean } = {};
+  if (parsed.data.startAt !== undefined && current.remindOffset != null) {
+    const newRemindAt = new Date(startAt.getTime() - current.remindOffset * 60000);
+    reminderUpdate.remindAt = newRemindAt;
+    if (newRemindAt.getTime() > Date.now()) {
+      reminderUpdate.reminderSent = false;
+    }
+  }
+
   const updated = await prisma.scheduleEvent.update({
     where: { id: current.id },
     data: {
@@ -79,6 +92,7 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
       status: parsed.data.status,
       source: parsed.data.source,
       color: parsed.data.color,
+      ...reminderUpdate,
       noteId: parsed.data.noteId === undefined ? undefined : parsed.data.noteId && note ? parsed.data.noteId : null,
       projectId: parsed.data.projectId === undefined ? undefined : parsed.data.projectId && project ? parsed.data.projectId : null,
       gearItemId: parsed.data.gearItemId === undefined ? undefined : parsed.data.gearItemId && gearItem ? parsed.data.gearItemId : null,

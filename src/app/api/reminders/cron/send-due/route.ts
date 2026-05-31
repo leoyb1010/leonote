@@ -61,7 +61,11 @@ export async function POST(request: Request) {
 
       const chatId = await resolveTelegramChatId(event.userId);
       if (!chatId) {
+        // No resolvable Telegram chat for this user — this is terminal, not
+        // transient. Mark it sent so it leaves the (oldest-100) window;
+        // otherwise these rows accumulate and starve all newer reminders.
         skipped += 1;
+        await prisma.scheduleEvent.update({ where: { id: event.id }, data: { reminderSent: true } });
         continue;
       }
 

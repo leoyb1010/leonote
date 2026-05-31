@@ -17,6 +17,15 @@ export function checkRateLimit(
   const now = Date.now();
   const bucket = buckets.get(key);
   if (!bucket || bucket.resetAt < now) {
+    // Cleanup must run on the new-key path too: a flood of distinct keys
+    // (e.g. login:email:<addr> with attacker-supplied emails) only ever hits
+    // this early-return branch, so the size-bounded cleanup below would never
+    // fire and the map would grow without bound.
+    if (buckets.size > 5000) {
+      for (const [k, v] of buckets) {
+        if (v.resetAt < now) buckets.delete(k);
+      }
+    }
     buckets.set(key, { count: 1, resetAt: now + windowMs });
     return { ok: true };
   }
