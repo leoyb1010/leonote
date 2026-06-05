@@ -112,6 +112,15 @@ function stringField(value: unknown): string {
   return typeof value === "string" ? value : "";
 }
 
+function isHttpUrl(value: string): boolean {
+  try {
+    const protocol = new URL(value).protocol;
+    return protocol === "http:" || protocol === "https:";
+  } catch {
+    return false;
+  }
+}
+
 function safePublishedAt(isoDate: unknown, pubDate: unknown) {
   const raw = stringField(isoDate) || stringField(pubDate);
   const date = raw ? new Date(raw) : new Date();
@@ -166,6 +175,9 @@ export async function fetchNewsSources() {
         const url = item.link?.trim();
         const title = item.title?.trim();
         if (!url || !title) continue;
+        // Only accept http(s) links. A feed item with a `javascript:`/`data:` link would
+        // otherwise be stored and rendered as <a href>, giving stored XSS on click.
+        if (!isHttpUrl(url)) continue;
 
         const publishedAt = safePublishedAt(item.isoDate, item.pubDate);
         const { excerpt, content } = itemText(item as Record<string, unknown>);
