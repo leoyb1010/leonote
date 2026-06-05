@@ -6,6 +6,7 @@ import { prisma } from "@/lib/prisma";
 import { PRESET_NEWS_SOURCES } from "../sources";
 import { deriveDisplayCategory, isLowValueCommunityItem } from "../display";
 import { extractImageUrl, stableExternalId, stripHtml, truncate } from "../normalize";
+import { assertSafePublicUrl } from "@/lib/safe-url";
 import type { BriefingCategory } from "../types";
 
 const proxyUrl = process.env.HTTPS_PROXY || process.env.HTTP_PROXY;
@@ -24,8 +25,13 @@ function inferCategory(defaultCategory: BriefingCategory, sourceName: string, ti
   return deriveDisplayCategory({ category: defaultCategory, sourceName, title, excerpt });
 }
 
-function fetchFeedXml(feedUrl: string, redirectCount = 0): Promise<string> {
-  if (redirectCount > 5) return Promise.reject(new Error("too many redirects"));
+async function fetchFeedXml(feedUrl: string, redirectCount = 0): Promise<string> {
+  if (redirectCount > 5) throw new Error("too many redirects");
+
+  // Block SSRF: reject local/internal/metadata targets before each hop. Because this function
+  // recurses on every redirect, validating here covers both the initial URL and all redirects.
+  // Feeds are commonly served over plain http, so http is allowed.
+  await assertSafePublicUrl(feedUrl, { allowHttp: true });
 
   return new Promise((resolve, reject) => {
     const mod = feedUrl.startsWith("https:") ? https : http;
