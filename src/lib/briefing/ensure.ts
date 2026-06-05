@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { generateBriefingDigest } from "./digest";
 import { fetchNewsSources } from "./fetchers/rss";
+import { fetchNewsNowSources } from "./fetchers/newsnow";
 
 type EnsureOptions = {
   force?: boolean;
@@ -85,6 +86,13 @@ export async function ensureBriefingFreshness(options: EnsureOptions = {}) {
         await fetchNewsSources();
       } catch (error) {
         console.error("[briefing] background fetch failed", error instanceof Error ? error.message : "unknown");
+      }
+
+      try {
+        // 实验性国内热榜源；默认关闭(需 BRIEFING_NEWSNOW_ENABLED=true)，失败不影响 RSS 与摘要。
+        await fetchNewsNowSources();
+      } catch (error) {
+        console.error("[briefing] background newsnow fetch failed", error instanceof Error ? error.message : "unknown");
       }
 
       try {
