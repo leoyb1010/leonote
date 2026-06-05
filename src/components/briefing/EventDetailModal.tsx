@@ -122,7 +122,7 @@ export function EventDetailModal({ selected, items, onClose }: Props) {
                 {relatedItems.map((item) => (
                   <a
                     key={item.id}
-                    href={item.url}
+                    href={/^https?:\/\//i.test(item.url) ? item.url : undefined}
                     target="_blank"
                     rel="noreferrer"
                     className="block rounded-[var(--radius-md)] border border-[var(--hairline)] bg-[var(--material-elevated)] px-3 py-2 transition hover:bg-[var(--interactive-hover)]"

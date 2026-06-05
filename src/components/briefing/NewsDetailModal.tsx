@@ -91,6 +91,9 @@ export function NewsDetailModal({ item, anchorRect, onClose, onPatchItem }: Prop
     return sentences.filter((s) => !summaryText.includes(s.slice(0, 18)));
   }, [item.aiKeyPoints, detailText, summaryText]);
   const imageUrl = !imageHidden ? proxyImageUrl(item.imageUrl) : null;
+  // Guard the outbound link: only render http(s) hrefs so a stored `javascript:`/`data:` url
+  // (from a malicious/compromised feed) can't execute on click. Defends rows already in the DB.
+  const safeUrl = /^https?:\/\//i.test(item.url) ? item.url : null;
 
   useEffect(() => {
     const originalOverflow = document.body.style.overflow;
@@ -329,12 +332,14 @@ export function NewsDetailModal({ item, anchorRect, onClose, onPatchItem }: Prop
               <Bookmark size={14} />
               {item.isFavorited ? "已收藏" : "收藏"}
             </Button>
-            <Button size="sm" variant="ghost" asChild>
-              <a href={item.url} target="_blank" rel="noreferrer" className="gap-1.5">
-                <ArrowUpRight size={14} />
-                阅读原文
-              </a>
-            </Button>
+            {safeUrl ? (
+              <Button size="sm" variant="ghost" asChild>
+                <a href={safeUrl} target="_blank" rel="noreferrer" className="gap-1.5">
+                  <ArrowUpRight size={14} />
+                  阅读原文
+                </a>
+              </Button>
+            ) : null}
             <Button size="sm" variant="ghost" onClick={onClose} className="ml-auto gap-1.5 sm:ml-0">
               <X size={14} />
               关闭
